@@ -12,7 +12,8 @@ struct VisionBoardDetailView: View {
     let visionBoard: VisionBoard
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var visionBoardManager: VisionBoardManager
-    
+
+    @StateObject private var speechManager = SpeechManager()
     @State private var showingShareSheet = false
     @State private var showingDeleteAlert = false
     @State private var showingFullScreenImage: VisionBoardImage?
@@ -111,6 +112,7 @@ struct VisionBoardDetailView: View {
         }
         .onDisappear {
             stopAffirmationTimer()
+            speechManager.stop()
         }
     }
     
@@ -224,9 +226,9 @@ struct VisionBoardDetailView: View {
                     .foregroundColor(.cosmicWhite)
                 
                 Spacer()
-                
+
                 Button("Read Aloud") {
-                    // TODO: Implement text-to-speech
+                    speechManager.speak(visionBoard.affirmations[currentAffirmationIndex])
                 }
                 .font(.caption)
                 .foregroundColor(.cosmicPurple)
@@ -593,15 +595,30 @@ struct ShareSheet: UIViewControllerRepresentable {
 
 // MARK: - View Extensions
 
-extension View {
-    func pinchToZoom() -> some View {
-        self.scaleEffect(1.0)
+private struct PinchToZoom: ViewModifier {
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(scale)
             .gesture(
                 MagnificationGesture()
                     .onChanged { value in
-                        // Handle zoom
+                        let delta = value / lastScale
+                        lastScale = value
+                        scale = min(max(scale * delta, 1.0), 5.0)
+                    }
+                    .onEnded { _ in
+                        lastScale = 1.0
                     }
             )
+    }
+}
+
+extension View {
+    func pinchToZoom() -> some View {
+        modifier(PinchToZoom())
     }
 }
 
