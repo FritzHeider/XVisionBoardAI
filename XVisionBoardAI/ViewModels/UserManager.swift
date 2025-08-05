@@ -177,8 +177,8 @@ class UserManager: ObservableObject {
     
     var remainingVisionBoards: Int {
         guard let user = currentUser else { return 0 }
-        let max = user.maxVisionBoards
-        return max == -1 ? Int.max : max(0, max - user.visionBoardCount)
+        let maxBoards = user.maxVisionBoards
+        return maxBoards == -1 ? Int.max : Swift.max(0, maxBoards - user.visionBoardCount)
     }
     
     var subscriptionDisplayName: String {
