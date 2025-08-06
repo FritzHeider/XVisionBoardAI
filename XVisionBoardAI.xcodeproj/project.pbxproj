@@ -1,0 +1,261 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		101 /* XVisionBoardAIApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100 /* XVisionBoardAIApp.swift */; };
+		103 /* ViewModels/VisionBoardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102 /* ViewModels/VisionBoardManager.swift */; };
+		105 /* ViewModels/UserManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104 /* ViewModels/UserManager.swift */; };
+		107 /* Utils/ColorScheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106 /* Utils/ColorScheme.swift */; };
+		109 /* Utils/ViewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108 /* Utils/ViewExtensions.swift */; };
+		111 /* Models/VisionBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110 /* Models/VisionBoard.swift */; };
+		113 /* Models/User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112 /* Models/User.swift */; };
+		115 /* Views/VisionBoardGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114 /* Views/VisionBoardGalleryView.swift */; };
+		117 /* Views/ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116 /* Views/ProfileView.swift */; };
+		119 /* Views/HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 118 /* Views/HomeView.swift */; };
+		121 /* Views/WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120 /* Views/WelcomeView.swift */; };
+		123 /* Views/CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122 /* Views/CameraView.swift */; };
+		125 /* Views/SubscriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 124 /* Views/SubscriptionView.swift */; };
+		127 /* Views/CreateVisionBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126 /* Views/CreateVisionBoardView.swift */; };
+		129 /* Views/AuthViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 128 /* Views/AuthViews.swift */; };
+		131 /* Views/ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130 /* Views/ContentView.swift */; };
+		133 /* Views/VisionBoardDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132 /* Views/VisionBoardDetailView.swift */; };
+		135 /* Services/StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134 /* Services/StoreManager.swift */; };
+		137 /* Services/CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136 /* Services/CameraManager.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		100 /* XVisionBoardAIApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XVisionBoardAIApp.swift; sourceTree = "<group>"; };
+		102 /* ViewModels/VisionBoardManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModels/VisionBoardManager.swift; sourceTree = "<group>"; };
+		104 /* ViewModels/UserManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModels/UserManager.swift; sourceTree = "<group>"; };
+		106 /* Utils/ColorScheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/ColorScheme.swift; sourceTree = "<group>"; };
+		108 /* Utils/ViewExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/ViewExtensions.swift; sourceTree = "<group>"; };
+		110 /* Models/VisionBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/VisionBoard.swift; sourceTree = "<group>"; };
+		112 /* Models/User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/User.swift; sourceTree = "<group>"; };
+		114 /* Views/VisionBoardGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/VisionBoardGalleryView.swift; sourceTree = "<group>"; };
+		116 /* Views/ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ProfileView.swift; sourceTree = "<group>"; };
+		118 /* Views/HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/HomeView.swift; sourceTree = "<group>"; };
+		120 /* Views/WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/WelcomeView.swift; sourceTree = "<group>"; };
+		122 /* Views/CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/CameraView.swift; sourceTree = "<group>"; };
+		124 /* Views/SubscriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SubscriptionView.swift; sourceTree = "<group>"; };
+		126 /* Views/CreateVisionBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/CreateVisionBoardView.swift; sourceTree = "<group>"; };
+		128 /* Views/AuthViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/AuthViews.swift; sourceTree = "<group>"; };
+		130 /* Views/ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ContentView.swift; sourceTree = "<group>"; };
+		132 /* Views/VisionBoardDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/VisionBoardDetailView.swift; sourceTree = "<group>"; };
+		134 /* Services/StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/StoreManager.swift; sourceTree = "<group>"; };
+		136 /* Services/CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/CameraManager.swift; sourceTree = "<group>"; };
+		7 /* XVisionBoardAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = XVisionBoardAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		3 = {
+			isa = PBXGroup;
+			children = (
+				100 /* XVisionBoardAIApp.swift */,
+				102 /* ViewModels/VisionBoardManager.swift */,
+				104 /* ViewModels/UserManager.swift */,
+				106 /* Utils/ColorScheme.swift */,
+				110 /* Models/VisionBoard.swift */,
+				112 /* Models/User.swift */,
+				114 /* Views/VisionBoardGalleryView.swift */,
+				108 /* Utils/ViewExtensions.swift */,
+				116 /* Views/ProfileView.swift */,
+				118 /* Views/HomeView.swift */,
+				120 /* Views/WelcomeView.swift */,
+				122 /* Views/CameraView.swift */,
+				124 /* Views/SubscriptionView.swift */,
+				126 /* Views/CreateVisionBoardView.swift */,
+				128 /* Views/AuthViews.swift */,
+				130 /* Views/ContentView.swift */,
+				132 /* Views/VisionBoardDetailView.swift */,
+				134 /* Services/StoreManager.swift */,
+				136 /* Services/CameraManager.swift */,
+			);
+			sourceTree = "<group>";
+		};
+		4 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7 /* XVisionBoardAI.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5 /* XVisionBoardAI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2 /* Build configuration list for PBXNativeTarget "XVisionBoardAI" */;
+			buildPhases = (
+				6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = XVisionBoardAI;
+			productName = XVisionBoardAI;
+			productReference = 7 /* XVisionBoardAI.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1530;
+			};
+			buildConfigurationList = 2 /* Build configuration list for PBXNativeTarget "XVisionBoardAI" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 3;
+			productRefGroup = 4 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5 /* XVisionBoardAI */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				101 /* XVisionBoardAIApp.swift in Sources */,
+				103 /* ViewModels/VisionBoardManager.swift in Sources */,
+				105 /* ViewModels/UserManager.swift in Sources */,
+				107 /* Utils/ColorScheme.swift in Sources */,
+				109 /* Utils/ViewExtensions.swift in Sources */,
+				111 /* Models/VisionBoard.swift in Sources */,
+				113 /* Models/User.swift in Sources */,
+				115 /* Views/VisionBoardGalleryView.swift in Sources */,
+				117 /* Views/ProfileView.swift in Sources */,
+				119 /* Views/HomeView.swift in Sources */,
+				121 /* Views/WelcomeView.swift in Sources */,
+				123 /* Views/CameraView.swift in Sources */,
+				125 /* Views/SubscriptionView.swift in Sources */,
+				127 /* Views/CreateVisionBoardView.swift in Sources */,
+				129 /* Views/AuthViews.swift in Sources */,
+				131 /* Views/ContentView.swift in Sources */,
+				133 /* Views/VisionBoardDetailView.swift in Sources */,
+				135 /* Services/StoreManager.swift in Sources */,
+				137 /* Services/CameraManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		21 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = XVisionBoardAI/Info.plist;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		22 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = XVisionBoardAI/Info.plist;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2 /* Build configuration list for PBXNativeTarget "XVisionBoardAI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				21 /* Debug */,
+				22 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 1 /* Project object */;
+}
