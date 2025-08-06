@@ -17,7 +17,7 @@ struct CameraView: View {
     @State private var showingImagePicker = false
     @State private var showingPermissionAlert = false
     
-    /Users/space/XVisionBoardAI/XVisionBoardAI/XVisionBoardAIApp.swiftvar body: some View {
+var body: some View {
         ZStack {
             Color.cosmicBlack.ignoresSafeArea()
             

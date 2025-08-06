@@ -13,85 +13,11 @@ import SwiftUI
 extension View {
     // MARK: - Cosmic Styling
     
-    func cosmicButton(isEnabled: Bool = true) -> some View {
-        self
-            .font(.headline)
-            .foregroundColor(isEnabled ? .black : .cosmicWhite.opacity(0.5))
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(
-                        isEnabled ?
-                        LinearGradient(
-                            colors: [.cosmicPurple, .cosmicBlue],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ) :
-                        LinearGradient(
-                            colors: [.gray, .gray],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-            )
-            .disabled(!isEnabled)
-    }
-    
-    func cosmicCard() -> some View {
-        self
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.cosmicGray)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [.cosmicPurple.opacity(0.3), .cosmicBlue.opacity(0.3)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
-                    )
-            )
-    }
-    
-    func manifestationTitle() -> some View {
-        self
-            .font(.title)
-            .fontWeight(.bold)
-            .foregroundStyle(
-                LinearGradient(
-                    colors: [.cosmicPurple, .cosmicBlue, .cosmicPink],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-    }
-    
-    func manifestationBody() -> some View {
-        self
-            .font(.body)
-            .foregroundColor(.cosmicWhite.opacity(0.9))
-    }
+
     
     // MARK: - Animations
     
-    func pulsing() -> some View {
-        self
-            .scaleEffect(1.0)
-            .animation(
-                Animation.easeInOut(duration: 1.5)
-                    .repeatForever(autoreverses: true),
-                value: UUID()
-            )
-            .onAppear {
-                withAnimation {
-                    // Trigger animation
-                }
-            }
-    }
+
     
     func floating() -> some View {
         self
@@ -166,40 +92,14 @@ extension View {
 // MARK: - Color Extensions
 
 extension Color {
-    // MARK: - Cosmic Color Palette
-    
-    static let cosmicBlack = Color(red: 0.05, green: 0.05, blue: 0.1)
-    static let cosmicGray = Color(red: 0.15, green: 0.15, blue: 0.2)
-    static let cosmicWhite = Color(red: 0.95, green: 0.95, blue: 1.0)
-    
-    static let cosmicPurple = Color(red: 0.6, green: 0.3, blue: 0.9)
-    static let cosmicBlue = Color(red: 0.2, green: 0.5, blue: 1.0)
-    static let cosmicPink = Color(red: 1.0, green: 0.3, blue: 0.7)
-    static let cosmicGold = Color(red: 1.0, green: 0.8, blue: 0.2)
+
     
     // MARK: - Gradient Colors
     
-    static let cosmicGradient = LinearGradient(
-        colors: [
-            Color(red: 0.1, green: 0.05, blue: 0.2),
-            Color(red: 0.2, green: 0.1, blue: 0.3),
-            Color(red: 0.15, green: 0.1, blue: 0.25)
-        ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-    
-    static let manifestationGradient = LinearGradient(
-        colors: [cosmicPurple, cosmicBlue, cosmicPink],
-        startPoint: .leading,
-        endPoint: .trailing
-    )
+ 
     
     // MARK: - Utility Methods
-    
-    func opacity(_ opacity: Double) -> Color {
-        self.opacity(opacity)
-    }
+   
 }
 
 // MARK: - Font Extensions

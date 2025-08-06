@@ -688,7 +688,7 @@ struct ExamplePrompt: View {
     let text: String
     
     var body: some View {
-        Text(""\(text)"")
+        Text("“\(text)”")
             .font(.caption)
             .foregroundColor(.cosmicWhite.opacity(0.8))
             .italic()

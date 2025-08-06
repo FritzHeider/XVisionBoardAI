@@ -9,6 +9,8 @@
 import Foundation
 import SwiftUI
 
+// MARK: - VisionBoard Model
+
 struct VisionBoard: Codable, Identifiable {
     let id: UUID
     var title: String
@@ -24,7 +26,7 @@ struct VisionBoard: Codable, Identifiable {
     var manifestationGoals: [String]
     var viewCount: Int
     var isFavorite: Bool
-    
+
     init(
         title: String,
         description: String,
@@ -47,27 +49,67 @@ struct VisionBoard: Codable, Identifiable {
         self.viewCount = 0
         self.isFavorite = false
     }
-    
+
     var userImage: UIImage? {
         UIImage(data: userImageData)
     }
-    
+
     var formattedCreatedDate: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         return formatter.string(from: createdAt)
     }
-    
+
     mutating func incrementViewCount() {
         viewCount += 1
         updatedAt = Date()
     }
-    
+
     mutating func toggleFavorite() {
         isFavorite.toggle()
         updatedAt = Date()
     }
 }
+
+// MARK: - VisionBoard Preview Data
+
+extension VisionBoard {
+    static var sampleVisionBoard: VisionBoard {
+        let fallbackImage = UIImage(systemName: "person.crop.circle") ?? UIImage()
+        let userImageData = fallbackImage.pngData() ?? Data()
+        let sampleImage = VisionBoardImage(prompt: "Sunrise over mountains", position: 0)
+
+        return VisionBoard(
+            title: "Dream Life",
+            description: "Visualize your ideal future with purpose and clarity.",
+            userImageData: userImageData,
+            layout: .grid3x3,
+            style: .cinematic
+        ).with {
+            $0.images = Array(repeating: sampleImage, count: 9)
+            $0.affirmations = [
+                "I am attracting the life I deserve.",
+                "Every step I take is toward abundance.",
+                "I am capable, confident, and creative."
+            ]
+            $0.manifestationGoals = [
+                "Launch my startup",
+                "Travel the world",
+                "Build passive income streams"
+            ]
+            $0.isFavorite = true
+            $0.viewCount = 42
+        }
+    }
+
+    func with(_ updates: (inout VisionBoard) -> Void) -> VisionBoard {
+        var copy = self
+        updates(&copy)
+        return copy
+    }
+}
+
+// MARK: - VisionBoardImage Model
 
 struct VisionBoardImage: Codable, Identifiable {
     let id: UUID
@@ -77,7 +119,7 @@ struct VisionBoardImage: Codable, Identifiable {
     var isPersonalized: Bool
     var position: Int
     var aspectRatio: Double
-    
+
     init(prompt: String, position: Int, isPersonalized: Bool = true) {
         self.id = UUID()
         self.prompt = prompt
@@ -85,18 +127,20 @@ struct VisionBoardImage: Codable, Identifiable {
         self.isPersonalized = isPersonalized
         self.aspectRatio = 1.0
     }
-    
+
     var image: UIImage? {
         guard let data = imageData else { return nil }
         return UIImage(data: data)
     }
 }
 
+// MARK: - VisionBoardLayout
+
 enum VisionBoardLayout: String, Codable, CaseIterable {
     case grid3x3 = "3x3"
     case collage = "collage"
     case singlePoster = "poster"
-    
+
     var displayName: String {
         switch self {
         case .grid3x3: return "3×3 Grid"
@@ -104,7 +148,7 @@ enum VisionBoardLayout: String, Codable, CaseIterable {
         case .singlePoster: return "Single Poster"
         }
     }
-    
+
     var description: String {
         switch self {
         case .grid3x3: return "9 personalized images in a classic grid"
@@ -112,7 +156,7 @@ enum VisionBoardLayout: String, Codable, CaseIterable {
         case .singlePoster: return "1 large inspirational poster"
         }
     }
-    
+
     var imageCount: Int {
         switch self {
         case .grid3x3: return 9
@@ -120,7 +164,7 @@ enum VisionBoardLayout: String, Codable, CaseIterable {
         case .singlePoster: return 1
         }
     }
-    
+
     var systemImage: String {
         switch self {
         case .grid3x3: return "grid"
@@ -130,14 +174,16 @@ enum VisionBoardLayout: String, Codable, CaseIterable {
     }
 }
 
+// MARK: - VisionBoardStyle
+
 enum VisionBoardStyle: String, Codable, CaseIterable {
-    case cinematic = "cinematic"
-    case luxurious = "luxurious"
-    case minimalist = "minimalist"
-    case natural = "natural"
-    case futuristic = "futuristic"
-    case artistic = "artistic"
-    
+    case cinematic
+    case luxurious
+    case minimalist
+    case natural
+    case futuristic
+    case artistic
+
     var displayName: String {
         switch self {
         case .cinematic: return "Cinematic"
@@ -148,7 +194,7 @@ enum VisionBoardStyle: String, Codable, CaseIterable {
         case .artistic: return "Artistic"
         }
     }
-    
+
     var description: String {
         switch self {
         case .cinematic: return "Movie-like scenes with dramatic lighting"
@@ -159,7 +205,7 @@ enum VisionBoardStyle: String, Codable, CaseIterable {
         case .artistic: return "Creative, abstract interpretations"
         }
     }
-    
+
     var primaryColor: Color {
         switch self {
         case .cinematic: return .blue
@@ -170,7 +216,7 @@ enum VisionBoardStyle: String, Codable, CaseIterable {
         case .artistic: return .cosmicPink
         }
     }
-    
+
     var gradientColors: [Color] {
         switch self {
         case .cinematic: return [.blue, .purple]
@@ -182,4 +228,3 @@ enum VisionBoardStyle: String, Codable, CaseIterable {
         }
     }
 }
-

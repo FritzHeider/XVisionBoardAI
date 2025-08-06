@@ -26,6 +26,7 @@
 		133 /* Views/VisionBoardDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132 /* Views/VisionBoardDetailView.swift */; };
 		135 /* Services/StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134 /* Services/StoreManager.swift */; };
 		137 /* Services/CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136 /* Services/CameraManager.swift */; };
+		B21BEFA02E43409E00EDBF92 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,17 +50,21 @@
 		134 /* Services/StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/StoreManager.swift; sourceTree = "<group>"; };
 		136 /* Services/CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/CameraManager.swift; sourceTree = "<group>"; };
 		7 /* XVisionBoardAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = XVisionBoardAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B21BEF9E2E4338C700EDBF92 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SpeechManager.swift; path = Services/SpeechManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		3 = {
 			isa = PBXGroup;
 			children = (
+				B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */,
+				B21BEF9E2E4338C700EDBF92 /* Info.plist */,
 				100 /* XVisionBoardAIApp.swift */,
 				102 /* ViewModels/VisionBoardManager.swift */,
 				104 /* ViewModels/UserManager.swift */,
-				106 /* Utils/ColorScheme.swift */,
 				110 /* Models/VisionBoard.swift */,
+				106 /* Utils/ColorScheme.swift */,
 				112 /* Models/User.swift */,
 				114 /* Views/VisionBoardGalleryView.swift */,
 				108 /* Utils/ViewExtensions.swift */,
@@ -136,6 +141,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				101 /* XVisionBoardAIApp.swift in Sources */,
+				B21BEFA02E43409E00EDBF92 /* SpeechManager.swift in Sources */,
 				103 /* ViewModels/VisionBoardManager.swift in Sources */,
 				105 /* ViewModels/UserManager.swift in Sources */,
 				107 /* Utils/ColorScheme.swift in Sources */,
@@ -194,7 +200,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = XVisionBoardAI/Info.plist;
+				INFOPLIST_FILE = Info.plist;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -235,7 +241,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = XVisionBoardAI/Info.plist;
+				INFOPLIST_FILE = Info.plist;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;

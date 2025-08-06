@@ -1,5 +1,5 @@
 //
-//  ColorScheme.swift
+//  CosmicTheme.swift
 //  XVisionBoardAI
 //
 //  Created by AI Assistant
@@ -8,35 +8,34 @@
 
 import SwiftUI
 
+// MARK: - Cosmic Color Palette
+
 extension Color {
-    // Cosmic Color Palette
     static let cosmicPurple = Color(red: 0.4, green: 0.3, blue: 0.8)
-    static let cosmicBlue = Color(red: 0.2, green: 0.4, blue: 0.9)
-    static let cosmicPink = Color(red: 0.8, green: 0.3, blue: 0.6)
-    static let cosmicGold = Color(red: 1.0, green: 0.8, blue: 0.2)
-    static let cosmicBlack = Color(red: 0.05, green: 0.05, blue: 0.1)
-    static let cosmicGray = Color(red: 0.15, green: 0.15, blue: 0.2)
-    static let cosmicWhite = Color(red: 0.95, green: 0.95, blue: 1.0)
+    static let cosmicBlue   = Color(red: 0.2, green: 0.4, blue: 0.9)
+    static let cosmicPink   = Color(red: 0.8, green: 0.3, blue: 0.6)
+    static let cosmicGold   = Color(red: 1.0, green: 0.8, blue: 0.2)
+    static let cosmicBlack  = Color(red: 0.05, green: 0.05, blue: 0.1)
+    static let cosmicGray   = Color(red: 0.15, green: 0.15, blue: 0.2)
+    static let cosmicWhite  = Color(red: 0.95, green: 0.95, blue: 1.0)
     
-    // Gradient Colors
     static let cosmicGradient = LinearGradient(
-        colors: [cosmicPurple, cosmicBlue, cosmicPink],
+        colors: [.cosmicPurple, .cosmicBlue, .cosmicPink],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
     
     static let goldGradient = LinearGradient(
-        colors: [cosmicGold, Color.orange],
+        colors: [.cosmicGold, Color.orange],
         startPoint: .leading,
         endPoint: .trailing
     )
     
-    // Manifestation specific colors
-    static let manifestationPrimary = cosmicPurple
-    static let manifestationSecondary = cosmicPink
-    static let manifestationAccent = cosmicGold
-    static let manifestationBackground = cosmicBlack
-    static let manifestationSurface = cosmicGray
+    static let manifestationPrimary     = cosmicPurple
+    static let manifestationSecondary   = cosmicPink
+    static let manifestationAccent      = cosmicGold
+    static let manifestationBackground  = cosmicBlack
+    static let manifestationSurface     = cosmicGray
 }
 
 // MARK: - Custom View Modifiers
@@ -70,7 +69,19 @@ struct CosmicButtonModifier: ViewModifier {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 25)
-                    .fill(isEnabled ? Color.cosmicGradient : Color.gray)
+                    .fill(
+                        isEnabled
+                        ? LinearGradient(
+                            colors: [.cosmicPurple, .cosmicBlue],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                        : LinearGradient(
+                            colors: [.gray, .gray],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
             )
             .scaleEffect(isEnabled ? 1.0 : 0.95)
             .opacity(isEnabled ? 1.0 : 0.6)
@@ -86,7 +97,8 @@ struct PulsingModifier: ViewModifier {
             .scaleEffect(isPulsing ? 1.05 : 1.0)
             .opacity(isPulsing ? 0.8 : 1.0)
             .animation(
-                Animation.easeInOut(duration: 1.5).repeatForever(autoreverses: true),
+                .easeInOut(duration: 1.5)
+                    .repeatForever(autoreverses: true),
                 value: isPulsing
             )
             .onAppear {
@@ -130,4 +142,3 @@ extension View {
             .foregroundColor(.cosmicWhite.opacity(0.8))
     }
 }
-
