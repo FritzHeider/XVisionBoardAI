@@ -11,6 +11,7 @@ import StoreKit
 
 @main
 struct XVisionBoardAIApp: App {
+    @AppStorage("isLoggedIn") private var isLoggedIn = false
     @StateObject private var storeManager = StoreManager()
     @StateObject private var userManager = UserManager()
     @StateObject private var visionBoardManager = VisionBoardManager()
