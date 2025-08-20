@@ -22,6 +22,9 @@ struct XVisionBoardAIApp: App {
                 .environmentObject(userManager)
                 .environmentObject(visionBoardManager)
                 .onAppear {
+                    #if DEBUG && targetEnvironment(simulator)
+                    configureDebugEnvironment()
+                    #endif
                     // Initialize app services
                     Task {
                         await storeManager.loadProducts()
