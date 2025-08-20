@@ -13,7 +13,7 @@ import Combine
 @MainActor
 class UserManager: ObservableObject {
     @Published var currentUser: User?
-    @Published var isLoggedIn = false
+    @AppStorage("isLoggedIn") var isLoggedIn = false
     @Published var hasCompletedOnboarding = false
     @Published var isLoading = false
     @Published var errorMessage: String?

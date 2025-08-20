@@ -11,6 +11,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var userManager: UserManager
     @EnvironmentObject var storeManager: StoreManager
+    @AppStorage("isLoggedIn") private var isLoggedIn = false
     @State private var selectedTab = 0
     @State private var showOnboarding = true
     
@@ -18,7 +19,7 @@ struct ContentView: View {
         Group {
             if showOnboarding && !userManager.hasCompletedOnboarding {
                 OnboardingView(showOnboarding: $showOnboarding)
-            } else if userManager.isLoggedIn {
+            } else if isLoggedIn {
                 MainTabView(selectedTab: $selectedTab)
             } else {
                 WelcomeView()
