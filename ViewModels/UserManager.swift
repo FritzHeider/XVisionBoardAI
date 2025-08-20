@@ -17,12 +17,30 @@ class UserManager: ObservableObject {
     @Published var hasCompletedOnboarding = false
     @Published var isLoading = false
     @Published var errorMessage: String?
-    
+
+    private(set) var authToken: String?
+
     private let userDefaults = UserDefaults.standard
     private let onboardingKey = "hasCompletedOnboarding"
     private let userKey = "currentUser"
-    
-    init() {
+    private let tokenStore: TokenStore
+
+    init(tokenStore: TokenStore? = nil) {
+#if DEBUG
+        if ProcessInfo.processInfo.environment["DEBUG_AUTO_LOGIN"] == "1" {
+            self.tokenStore = tokenStore ?? InMemoryTokenStore()
+            let user = User(email: "debug@example.com", username: "DebugUser")
+            currentUser = user
+            isLoggedIn = true
+            hasCompletedOnboarding = true
+            let token = UUID().uuidString
+            authToken = token
+            self.tokenStore.save(token)
+            return
+        }
+#endif
+
+        self.tokenStore = tokenStore ?? KeychainTokenStore()
         loadUserData()
         hasCompletedOnboarding = userDefaults.bool(forKey: onboardingKey)
     }
@@ -40,7 +58,11 @@ class UserManager: ObservableObject {
         let newUser = User(email: email, username: username)
         currentUser = newUser
         isLoggedIn = true
-        
+
+        let token = UUID().uuidString
+        authToken = token
+        tokenStore.save(token)
+
         saveUserData()
         isLoading = false
         return true
@@ -57,15 +79,21 @@ class UserManager: ObservableObject {
         let user = User(email: email, username: email.components(separatedBy: "@").first ?? "User")
         currentUser = user
         isLoggedIn = true
-        
+
+        let token = UUID().uuidString
+        authToken = token
+        tokenStore.save(token)
+
         saveUserData()
         isLoading = false
         return true
     }
-    
+
     func signOut() {
         currentUser = nil
         isLoggedIn = false
+        authToken = nil
+        tokenStore.clear()
         clearUserData()
     }
     
@@ -153,12 +181,14 @@ class UserManager: ObservableObject {
     }
     
     private func loadUserData() {
-        guard let userData = userDefaults.data(forKey: userKey) else { return }
-        
+        guard let token = tokenStore.load(),
+              let userData = userDefaults.data(forKey: userKey) else { return }
+
         do {
             let user = try JSONDecoder().decode(User.self, from: userData)
             currentUser = user
             isLoggedIn = true
+            authToken = token
         } catch {
             print("Failed to load user data: \(error)")
         }
