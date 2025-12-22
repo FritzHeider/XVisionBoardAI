@@ -20,6 +20,9 @@ struct VisionBoardDetailView: View {
     @State private var showingFullScreenImage: VisionBoardImage?
     @State private var currentAffirmationIndex = 0
     @State private var affirmationTimer: Timer?
+    @State private var soraVideo: SoraVideoAsset?
+    @State private var isGeneratingSoraVideo = false
+    @State private var soraStatusMessage: String?
     
     var body: some View {
         NavigationView {
@@ -41,6 +44,9 @@ struct VisionBoardDetailView: View {
                         if !visionBoard.manifestationGoals.isEmpty {
                             goalsSection
                         }
+                        
+                        // Sora video
+                        soraVideoSection
                         
                         // Actions
                         actionsSection
@@ -110,6 +116,7 @@ struct VisionBoardDetailView: View {
         }
         .onAppear {
             startAffirmationTimer()
+            soraVideo = visionBoard.soraVideo
         }
         .onDisappear {
             stopAffirmationTimer()
@@ -312,6 +319,73 @@ struct VisionBoardDetailView: View {
         }
     }
     
+    // MARK: - Sora Video Section
+    
+    private var soraVideoSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Sora Video (Beta)")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.cosmicWhite)
+                
+                Spacer()
+                
+                if let soraVideo {
+                    SoraStatusBadge(status: soraVideo.status)
+                }
+            }
+            
+            Text("Generate a short Sora video that visualizes you achieving this vision.")
+                .manifestationBody()
+                .multilineTextAlignment(.leading)
+            
+            if let soraVideo {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Status: \(soraStatusDescription(for: soraVideo.status))")
+                        .font(.subheadline)
+                        .foregroundColor(.cosmicWhite.opacity(0.9))
+                    
+                    if let download = soraVideo.downloadURL, let url = URL(string: download), soraVideo.isReady {
+                        Link("Open Sora Video", destination: url)
+                            .cosmicButton()
+                    } else if soraVideo.isInProgress {
+                        Text("Your video is still rendering. Tap refresh to check for updates.")
+                            .font(.caption)
+                            .foregroundColor(.cosmicWhite.opacity(0.7))
+                    }
+                }
+            }
+            
+            if let soraStatusMessage {
+                Text(soraStatusMessage)
+                    .font(.caption)
+                    .foregroundColor(.red)
+            }
+            
+            HStack(spacing: 12) {
+                if isGeneratingSoraVideo {
+                    ProgressView("Contacting Sora...")
+                        .progressViewStyle(CircularProgressViewStyle(tint: .cosmicPurple))
+                        .foregroundColor(.cosmicWhite)
+                } else if let soraVideo {
+                    Button("Refresh Sora Status") {
+                        refreshSoraStatus()
+                    }
+                    .cosmicButton()
+                    .disabled(soraVideo.status == .succeeded)
+                } else {
+                    Button("Generate Sora Video") {
+                        requestSoraVideo()
+                    }
+                    .cosmicButton()
+                }
+            }
+        }
+        .padding()
+        .cosmicCard()
+    }
+    
     // MARK: - Actions Section
     
     private var actionsSection: some View {
@@ -360,6 +434,61 @@ struct VisionBoardDetailView: View {
     
     // MARK: - Helper Methods
     
+    private func requestSoraVideo() {
+        Task {
+            await MainActor.run {
+                isGeneratingSoraVideo = true
+                soraStatusMessage = nil
+            }
+            
+            let asset = await visionBoardManager.generateSoraVideo(for: visionBoard)
+            
+            await MainActor.run {
+                soraVideo = asset ?? soraVideo
+                isGeneratingSoraVideo = false
+                
+                if asset == nil {
+                    soraStatusMessage = visionBoardManager.errorMessage ?? "Unable to start Sora video."
+                }
+            }
+        }
+    }
+    
+    private func refreshSoraStatus() {
+        Task {
+            await MainActor.run {
+                isGeneratingSoraVideo = true
+                soraStatusMessage = nil
+            }
+            
+            let asset = await visionBoardManager.refreshSoraVideoStatus(for: visionBoard)
+            
+            await MainActor.run {
+                soraVideo = asset ?? soraVideo
+                isGeneratingSoraVideo = false
+                
+                if asset == nil {
+                    soraStatusMessage = visionBoardManager.errorMessage ?? "No Sora video to refresh."
+                }
+            }
+        }
+    }
+    
+    private func soraStatusDescription(for status: SoraJobStatus) -> String {
+        switch status {
+        case .queued:
+            return "Queued"
+        case .processing:
+            return "Processing"
+        case .succeeded:
+            return "Ready"
+        case .failed:
+            return "Failed"
+        case .unknown:
+            return "Unknown"
+        }
+    }
+    
     private func startAffirmationTimer() {
         guard !visionBoard.affirmations.isEmpty else { return }
         
@@ -405,6 +534,36 @@ struct InfoBadge: View {
                 .font(.caption)
                 .foregroundColor(.cosmicWhite.opacity(0.8))
         }
+    }
+}
+
+struct SoraStatusBadge: View {
+    let status: SoraJobStatus
+    
+    private var style: (text: String, color: Color) {
+        switch status {
+        case .queued:
+            return ("Queued", .yellow)
+        case .processing:
+            return ("Processing", .cosmicPurple)
+        case .succeeded:
+            return ("Ready", .green)
+        case .failed:
+            return ("Failed", .red)
+        case .unknown:
+            return ("Unknown", .gray)
+        }
+    }
+    
+    var body: some View {
+        Text(style.text)
+            .font(.caption)
+            .fontWeight(.semibold)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(style.color.opacity(0.2))
+            .foregroundColor(style.color)
+            .clipShape(Capsule())
     }
 }
 
@@ -627,4 +786,3 @@ extension View {
     VisionBoardDetailView(visionBoard: VisionBoard.sampleVisionBoard)
         .environmentObject(VisionBoardManager())
 }
-

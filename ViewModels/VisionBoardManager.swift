@@ -17,11 +17,14 @@ class VisionBoardManager: ObservableObject {
     @Published var generationProgress: Double = 0.0
     @Published var errorMessage: String?
     @Published var currentGeneratingBoard: VisionBoard?
+    @Published var isRequestingSoraVideo = false
     
     private let userDefaults = UserDefaults.standard
     private let visionBoardsKey = "savedVisionBoards"
+    private let soraAPI: SoraAPIClient?
     
-    init() {
+    init(soraAPI: SoraAPIClient? = nil) {
+        self.soraAPI = soraAPI ?? SoraAPIClient(configuration: .fromEnvironment())
         loadVisionBoards()
     }
     
@@ -219,6 +222,107 @@ class VisionBoardManager: ObservableObject {
         }
     }
     
+    // MARK: - Sora Video Generation
+    
+    func generateSoraVideo(for visionBoard: VisionBoard) async -> SoraVideoAsset? {
+        errorMessage = nil
+        
+        guard let soraAPI else {
+            errorMessage = "Sora API key is missing. Add SORA_API_KEY to your Info.plist or environment."
+            return nil
+        }
+        
+        guard let index = visionBoards.firstIndex(where: { $0.id == visionBoard.id }) else {
+            errorMessage = "Vision board could not be found."
+            return nil
+        }
+        
+        isRequestingSoraVideo = true
+        defer { isRequestingSoraVideo = false }
+        
+        do {
+            let prompt = soraPrompt(for: visionBoard)
+            let response = try await soraAPI.generateVideo(
+                prompt: prompt,
+                duration: 12,
+                aspectRatio: "16:9",
+                resolution: "1280x720",
+                referenceImageData: visionBoard.userImageData
+            )
+            
+            var soraAsset = SoraVideoAsset(
+                jobId: response.id,
+                status: response.status,
+                downloadURL: response.downloadURL?.absoluteString,
+                thumbnailURL: response.thumbnailURL?.absoluteString,
+                prompt: prompt,
+                createdAt: Date(),
+                lastUpdated: Date()
+            )
+            
+            visionBoards[index].soraVideo = soraAsset
+            saveVisionBoards()
+            
+            // Update with any immediate status change
+            if let refreshed = await refreshSoraVideoStatus(for: visionBoard) {
+                soraAsset = refreshed
+            }
+            
+            return soraAsset
+        } catch {
+            errorMessage = "Sora video generation failed: \(error.localizedDescription)"
+            return nil
+        }
+    }
+    
+    func refreshSoraVideoStatus(for visionBoard: VisionBoard) async -> SoraVideoAsset? {
+        errorMessage = nil
+        
+        guard let soraAPI else {
+            errorMessage = "Sora API is not configured."
+            return visionBoard.soraVideo
+        }
+        
+        let storedBoard = visionBoards.first(where: { $0.id == visionBoard.id })
+        guard var soraAsset = storedBoard?.soraVideo ?? visionBoard.soraVideo else {
+            errorMessage = "No Sora video request found for this vision board."
+            return nil
+        }
+        
+        do {
+            let response = try await soraAPI.fetchVideoStatus(id: soraAsset.jobId)
+            soraAsset.status = response.status
+            soraAsset.downloadURL = response.downloadURL?.absoluteString ?? soraAsset.downloadURL
+            soraAsset.thumbnailURL = response.thumbnailURL?.absoluteString ?? soraAsset.thumbnailURL
+            soraAsset.lastUpdated = Date()
+            
+            if let index = visionBoards.firstIndex(where: { $0.id == visionBoard.id }) {
+                visionBoards[index].soraVideo = soraAsset
+                saveVisionBoards()
+            }
+            
+            return soraAsset
+        } catch {
+            errorMessage = "Failed to refresh Sora status: \(error.localizedDescription)"
+            return soraAsset
+        }
+    }
+    
+    private func soraPrompt(for visionBoard: VisionBoard) -> String {
+        var components: [String] = [
+            visionBoard.description,
+            "Create a short cinematic motion clip where the user confidently appears in each frame, celebrating their wins."
+        ]
+        
+        if !visionBoard.manifestationGoals.isEmpty {
+            components.append("Goals: \(visionBoard.manifestationGoals.joined(separator: \", \")).")
+        }
+        
+        components.append("Style: \(visionBoard.style.displayName) with \(visionBoard.layout.displayName) framing.")
+        
+        return components.joined(separator: " ")
+    }
+    
     // MARK: - Vision Board Management
     
     func deleteVisionBoard(_ visionBoard: VisionBoard) {
@@ -286,4 +390,3 @@ class VisionBoardManager: ObservableObject {
         visionBoards.reduce(0) { $0 + $1.viewCount }
     }
 }
-
