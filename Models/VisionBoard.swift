@@ -26,6 +26,7 @@ struct VisionBoard: Codable, Identifiable {
     var manifestationGoals: [String]
     var viewCount: Int
     var isFavorite: Bool
+    var soraVideo: SoraVideoAsset?
 
     init(
         title: String,
@@ -48,6 +49,7 @@ struct VisionBoard: Codable, Identifiable {
         self.manifestationGoals = []
         self.viewCount = 0
         self.isFavorite = false
+        self.soraVideo = nil
     }
 
     var userImage: UIImage? {
@@ -99,6 +101,12 @@ extension VisionBoard {
             ]
             $0.isFavorite = true
             $0.viewCount = 42
+            $0.soraVideo = SoraVideoAsset(
+                jobId: "sample-job",
+                status: .succeeded,
+                downloadURL: "https://example.com/video.mp4",
+                prompt: "Cinematic manifestation sequence"
+            )
         }
     }
 
