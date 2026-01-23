@@ -550,6 +550,8 @@ struct SoraStatusBadge: View {
             return ("Ready", .green)
         case .failed:
             return ("Failed", .red)
+        case .canceled:
+            return ("Canceled", .orange)
         case .unknown:
             return ("Unknown", .gray)
         }

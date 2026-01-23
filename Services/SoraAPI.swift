@@ -13,6 +13,8 @@ struct SoraAPIConfiguration {
     let organization: String?
     let project: String?
     let baseURL: URL
+    let model: String
+    let videoPath: String
 
     static func fromEnvironment(bundle: Bundle = .main) -> SoraAPIConfiguration? {
         let environment = ProcessInfo.processInfo.environment
@@ -28,12 +30,20 @@ struct SoraAPIConfiguration {
 
         let organization = environment["SORA_ORG_ID"] ?? bundle.object(forInfoDictionaryKey: "SORA_ORG_ID") as? String
         let project = environment["SORA_PROJECT_ID"] ?? bundle.object(forInfoDictionaryKey: "SORA_PROJECT_ID") as? String
+        let model = environment["SORA_MODEL"] ??
+            bundle.object(forInfoDictionaryKey: "SORA_MODEL") as? String ??
+            "sora-1"
+        let videoPath = environment["SORA_VIDEO_PATH"] ??
+            bundle.object(forInfoDictionaryKey: "SORA_VIDEO_PATH") as? String ??
+            "video/generations"
 
         return SoraAPIConfiguration(
             apiKey: apiKey,
             organization: organization,
             project: project,
-            baseURL: baseURL
+            baseURL: baseURL,
+            model: model,
+            videoPath: videoPath
         )
     }
 }
@@ -41,18 +51,72 @@ struct SoraAPIConfiguration {
 struct SoraVideoRequest: Encodable {
     let prompt: String
     let model: String
-    let duration: Int
+    let durationSeconds: Int
     let aspectRatio: String
     let resolution: String
-    let referenceImage: String?
+    let inputImage: String?
 
     enum CodingKeys: String, CodingKey {
         case prompt
         case model
-        case duration
+        case durationSeconds = "duration_seconds"
         case aspectRatio = "aspect_ratio"
         case resolution
-        case referenceImage = "reference_image"
+        case inputImage = "input_image"
+    }
+}
+
+private struct SoraVideoPayload: Decodable {
+    let id: String?
+    let status: SoraJobStatus?
+    let downloadURL: URL?
+    let thumbnailURL: URL?
+    let eta: Int?
+    let message: String?
+    let output: [SoraVideoOutput]?
+    let outputs: [SoraVideoOutput]?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case status
+        case downloadURL = "download_url"
+        case thumbnailURL = "thumbnail_url"
+        case eta
+        case message
+        case output
+        case outputs
+    }
+}
+
+private struct SoraVideoOutput: Decodable {
+    let url: URL?
+    let downloadURL: URL?
+    let thumbnailURL: URL?
+    let videoURL: URL?
+    let imageURL: URL?
+    let type: String?
+    let kind: String?
+    let role: String?
+    let name: String?
+
+    enum CodingKeys: String, CodingKey {
+        case url
+        case downloadURL = "download_url"
+        case thumbnailURL = "thumbnail_url"
+        case videoURL = "video_url"
+        case imageURL = "image_url"
+        case type
+        case kind
+        case role
+        case name
+    }
+
+    var resolvedURL: URL? {
+        url ?? downloadURL ?? videoURL ?? imageURL ?? thumbnailURL
+    }
+
+    var normalizedType: String {
+        (type ?? kind ?? role ?? name ?? "").lowercased()
     }
 }
 
@@ -64,13 +128,59 @@ struct SoraVideoResponse: Decodable {
     let eta: Int?
     let message: String?
 
-    enum CodingKeys: String, CodingKey {
-        case id
-        case status
-        case downloadURL = "download_url"
-        case thumbnailURL = "thumbnail_url"
-        case eta
-        case message
+    private enum RootKeys: String, CodingKey {
+        case data
+        case result
+    }
+
+    init(from decoder: Decoder) throws {
+        if let payload = try? SoraVideoPayload(from: decoder), let id = payload.id {
+            self = SoraVideoResponse.fromPayload(id: id, payload: payload)
+            return
+        }
+
+        let root = try decoder.container(keyedBy: RootKeys.self)
+        if let payload = try? root.decode(SoraVideoPayload.self, forKey: .data), let id = payload.id {
+            self = SoraVideoResponse.fromPayload(id: id, payload: payload)
+            return
+        }
+
+        if let payload = try? root.decode(SoraVideoPayload.self, forKey: .result), let id = payload.id {
+            self = SoraVideoResponse.fromPayload(id: id, payload: payload)
+            return
+        }
+
+        throw DecodingError.keyNotFound(
+            SoraVideoPayload.CodingKeys.id,
+            DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Missing Sora response ID.")
+        )
+    }
+
+    private static func fromPayload(id: String, payload: SoraVideoPayload) -> SoraVideoResponse {
+        let outputs = payload.output ?? payload.outputs
+        let (videoURL, thumbnailURL) = extractOutputURLs(outputs)
+
+        return SoraVideoResponse(
+            id: id,
+            status: payload.status ?? .unknown,
+            downloadURL: payload.downloadURL ?? videoURL,
+            thumbnailURL: payload.thumbnailURL ?? thumbnailURL,
+            eta: payload.eta,
+            message: payload.message
+        )
+    }
+
+    private static func extractOutputURLs(_ outputs: [SoraVideoOutput]?) -> (URL?, URL?) {
+        guard let outputs, !outputs.isEmpty else { return (nil, nil) }
+
+        let videoOutput = outputs.first(where: { $0.normalizedType.contains("video") })
+        let thumbnailOutput = outputs.first(where: { output in
+            let type = output.normalizedType
+            return type.contains("thumbnail") || type.contains("preview") || type.contains("image")
+        })
+
+        let fallback = outputs.first?.resolvedURL
+        return (videoOutput?.resolvedURL ?? fallback, thumbnailOutput?.resolvedURL)
     }
 }
 
@@ -129,14 +239,14 @@ final class SoraAPIClient {
     ) async throws -> SoraVideoResponse {
         let requestBody = SoraVideoRequest(
             prompt: prompt,
-            model: "sora-1.1",
-            duration: duration,
+            model: configuration.model,
+            durationSeconds: duration,
             aspectRatio: aspectRatio,
             resolution: resolution,
-            referenceImage: referenceImageData?.base64EncodedString()
+            inputImage: referenceImageData?.base64EncodedString()
         )
 
-        var request = try makeRequest(path: "videos", method: "POST")
+        var request = try makeRequest(path: configuration.videoPath, method: "POST")
         request.httpBody = try encoder.encode(requestBody)
 
         let (data, response) = try await session.data(for: request)
@@ -144,13 +254,14 @@ final class SoraAPIClient {
     }
 
     func fetchVideoStatus(id: String) async throws -> SoraVideoResponse {
-        let request = try makeRequest(path: "videos/\(id)", method: "GET")
+        let request = try makeRequest(path: "\(configuration.videoPath)/\(id)", method: "GET")
         let (data, response) = try await session.data(for: request)
         return try decodeResponse(data: data, response: response)
     }
     
     private func makeRequest(path: String, method: String) throws -> URLRequest {
-        let url = configuration.baseURL.appendingPathComponent(path)
+        let trimmedPath = path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let url = configuration.baseURL.appendingPathComponent(trimmedPath)
 
         var request = URLRequest(url: url)
         request.httpMethod = method

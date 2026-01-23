@@ -27,6 +27,8 @@ Sora-powered video previews are supported through the `SoraAPIClient`. To enable
 - `SORA_BASE_URL` (defaults to `https://api.openai.com/v1`)
 - `SORA_ORG_ID` (optional)
 - `SORA_PROJECT_ID` (optional)
+- `SORA_MODEL` (defaults to `sora-1`)
+- `SORA_VIDEO_PATH` (defaults to `video/generations`)
 
 Without these values the app will continue to work, but Sora video generation buttons will show a configuration error.
 

@@ -13,12 +13,26 @@ enum SoraJobStatus: String, Codable {
     case processing
     case succeeded
     case failed
+    case canceled
     case unknown
 
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        let value = try container.decode(String.self)
-        self = SoraJobStatus(rawValue: value) ?? .unknown
+        let value = try container.decode(String.self).lowercased()
+        switch value {
+        case "queued", "pending":
+            self = .queued
+        case "processing", "running", "in_progress":
+            self = .processing
+        case "succeeded", "completed", "success":
+            self = .succeeded
+        case "failed", "error":
+            self = .failed
+        case "canceled", "cancelled":
+            self = .canceled
+        default:
+            self = .unknown
+        }
     }
 }
 
