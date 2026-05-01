@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct WelcomeView: View {
-    @EnvironmentObject var userManager: UserManager
+    @Environment(UserManager.self) var userManager
     @State private var showingSignUp = false
     @State private var showingSignIn = false
     
@@ -119,7 +119,7 @@ struct FeatureBadge: View {
 
 struct OnboardingView: View {
     @Binding var showOnboarding: Bool
-    @EnvironmentObject var userManager: UserManager
+    @Environment(UserManager.self) var userManager
     @State private var currentPage = 0
     
     private let pages = [
@@ -259,11 +259,11 @@ struct OnboardingPageView: View {
 
 #Preview {
     WelcomeView()
-        .environmentObject(UserManager())
+        .environment(UserManager())
 }
 
 #Preview("Onboarding") {
     OnboardingView(showOnboarding: .constant(true))
-        .environmentObject(UserManager())
+        .environment(UserManager())
 }
 

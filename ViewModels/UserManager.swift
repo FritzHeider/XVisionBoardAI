@@ -8,15 +8,17 @@
 
 import Foundation
 import SwiftUI
-import Combine
 
 @MainActor
-class UserManager: ObservableObject {
-    @Published var currentUser: User?
-    @AppStorage("isLoggedIn") var isLoggedIn = false
-    @Published var hasCompletedOnboarding = false
-    @Published var isLoading = false
-    @Published var errorMessage: String?
+@Observable
+class UserManager {
+    var currentUser: User?
+    var isLoggedIn = false {
+        didSet { UserDefaults.standard.set(isLoggedIn, forKey: "isLoggedIn") }
+    }
+    var hasCompletedOnboarding = false
+    var isLoading = false
+    var errorMessage: String?
 
     private(set) var authToken: String?
 
@@ -41,6 +43,7 @@ class UserManager: ObservableObject {
 #endif
 
         self.tokenStore = tokenStore ?? KeychainTokenStore()
+        isLoggedIn = UserDefaults.standard.bool(forKey: "isLoggedIn")
         loadUserData()
         hasCompletedOnboarding = userDefaults.bool(forKey: onboardingKey)
     }
@@ -125,13 +128,6 @@ class UserManager: ObservableObject {
         saveUserData()
     }
     
-    func updateSubscription(_ subscriptionType: SubscriptionType) {
-        guard var user = currentUser else { return }
-        user.subscriptionType = subscriptionType
-        currentUser = user
-        saveUserData()
-    }
-    
     func incrementVisionBoardCount() {
         guard var user = currentUser else { return }
         user.visionBoardCount += 1
@@ -198,29 +194,6 @@ class UserManager: ObservableObject {
         userDefaults.removeObject(forKey: userKey)
     }
     
-    // MARK: - User Capabilities
-    
-    var canCreateVisionBoard: Bool {
-        guard let user = currentUser else { return false }
-        return user.canCreateVisionBoard
-    }
-    
-    var remainingVisionBoards: Int {
-        guard let user = currentUser else { return 0 }
-        let maxBoards = user.maxVisionBoards
-        return maxBoards == -1 ? Int.max : Swift.max(0, maxBoards - user.visionBoardCount)
-    }
-    
-    var subscriptionDisplayName: String {
-        currentUser?.subscriptionType.displayName ?? "Free"
-    }
-    
-    var isProUser: Bool {
-        currentUser?.subscriptionType == .pro || currentUser?.subscriptionType == .premium
-    }
-    
-    var isPremiumUser: Bool {
-        currentUser?.subscriptionType == .premium
-    }
+    var visionBoardCount: Int { currentUser?.visionBoardCount ?? 0 }
 }
 

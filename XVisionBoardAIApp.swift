@@ -11,17 +11,16 @@ import StoreKit
 
 @main
 struct XVisionBoardAIApp: App {
-    @AppStorage("isLoggedIn") private var isLoggedIn = false
-    @StateObject private var storeManager = StoreManager()
-    @StateObject private var userManager = UserManager()
-    @StateObject private var visionBoardManager = VisionBoardManager()
+    @State private var storeManager = StoreManager()
+    @State private var userManager = UserManager()
+    @State private var visionBoardManager = VisionBoardManager()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(storeManager)
-                .environmentObject(userManager)
-                .environmentObject(visionBoardManager)
+                .environment(storeManager)
+                .environment(userManager)
+                .environment(visionBoardManager)
                 .onAppear {
                     #if DEBUG && targetEnvironment(simulator)
                     configureDebugEnvironment()

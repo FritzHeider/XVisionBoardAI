@@ -14,51 +14,27 @@ struct User: Codable, Identifiable {
     var email: String
     var username: String
     var profileImageData: Data?
-    var subscriptionType: SubscriptionType
     var createdAt: Date
     var lastLoginAt: Date
     var visionBoardCount: Int
     var manifestationGoals: [String]
     var preferences: UserPreferences
-    
-    init(
-        email: String,
-        username: String,
-        profileImageData: Data? = nil,
-        subscriptionType: SubscriptionType = .free
-    ) {
+
+    init(email: String, username: String, profileImageData: Data? = nil) {
         self.id = UUID()
         self.email = email
         self.username = username
         self.profileImageData = profileImageData
-        self.subscriptionType = subscriptionType
         self.createdAt = Date()
         self.lastLoginAt = Date()
         self.visionBoardCount = 0
         self.manifestationGoals = []
         self.preferences = UserPreferences()
     }
-    
+
     var profileImage: UIImage? {
         guard let data = profileImageData else { return nil }
         return UIImage(data: data)
-    }
-    
-    var canCreateVisionBoard: Bool {
-        switch subscriptionType {
-        case .free:
-            return visionBoardCount < 1
-        case .pro, .premium:
-            return true
-        }
-    }
-    
-    var maxVisionBoards: Int {
-        switch subscriptionType {
-        case .free: return 1
-        case .pro: return 50
-        case .premium: return -1 // Unlimited
-        }
     }
 }
 

@@ -12,9 +12,9 @@ import AVFoundation // if using AVSpeechSynthesizer
 struct VisionBoardDetailView: View {
     let visionBoard: VisionBoard
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var visionBoardManager: VisionBoardManager
+    @Environment(VisionBoardManager.self) var visionBoardManager
 
-    @StateObject private var speechManager = SpeechManager()
+    @State private var speechManager = SpeechManager()
     @State private var showingShareSheet = false
     @State private var showingDeleteAlert = false
     @State private var showingFullScreenImage: VisionBoardImage?
@@ -22,7 +22,7 @@ struct VisionBoardDetailView: View {
     @State private var affirmationTimer: Timer?
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.cosmicBlack.ignoresSafeArea()
                 
@@ -625,6 +625,6 @@ extension View {
 
 #Preview {
     VisionBoardDetailView(visionBoard: VisionBoard.sampleVisionBoard)
-        .environmentObject(VisionBoardManager())
+        .environment(VisionBoardManager())
 }
 

@@ -11,8 +11,8 @@ import StoreKit
 
 struct SubscriptionView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var storeManager: StoreManager
-    @EnvironmentObject var userManager: UserManager
+    @Environment(StoreManager.self) var storeManager
+    @Environment(UserManager.self) var userManager
     
     @State private var selectedPlan: SubscriptionPlan?
     @State private var showingPurchaseSuccess = false
@@ -54,7 +54,7 @@ struct SubscriptionView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.cosmicBlack.ignoresSafeArea()
                 
@@ -156,7 +156,7 @@ struct SubscriptionView: View {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
                 
-                Text("Current Plan: \(userManager.subscriptionDisplayName)")
+                Text("Current Plan: \(storeManager.subscriptionDisplayName)")
                     .font(.headline)
                     .foregroundColor(.cosmicWhite)
                 
@@ -352,7 +352,7 @@ struct SubscriptionView: View {
         Task {
             let success = await storeManager.purchase(product)
             if success {
-                userManager.updateSubscription(selectedPlan?.subscriptionType ?? .free)
+                await storeManager.updatePurchasedProducts()
                 showingPurchaseSuccess = true
             }
         }
@@ -564,7 +564,7 @@ struct FeatureCell: View {
 
 #Preview {
     SubscriptionView()
-        .environmentObject(StoreManager())
-        .environmentObject(UserManager())
+        .environment(StoreManager())
+        .environment(UserManager())
 }
 

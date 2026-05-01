@@ -9,8 +9,8 @@
 import SwiftUI
 
 struct VisionBoardGalleryView: View {
-    @EnvironmentObject var visionBoardManager: VisionBoardManager
-    @EnvironmentObject var userManager: UserManager
+    @Environment(VisionBoardManager.self) var visionBoardManager
+    @Environment(UserManager.self) var userManager
     
     @State private var searchText = ""
     @State private var selectedFilter: FilterOption = .all
@@ -57,7 +57,7 @@ struct VisionBoardGalleryView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.cosmicBlack.ignoresSafeArea()
                 
@@ -253,7 +253,7 @@ struct FilterButton: View {
 struct VisionBoardGridItem: View {
     let visionBoard: VisionBoard
     let action: () -> Void
-    @EnvironmentObject var visionBoardManager: VisionBoardManager
+    @Environment(VisionBoardManager.self) var visionBoardManager
     
     var body: some View {
         Button(action: action) {
@@ -349,7 +349,7 @@ struct PersonalizedBadge: View {
 
 struct FavoriteButton: View {
     let visionBoard: VisionBoard
-    @EnvironmentObject var visionBoardManager: VisionBoardManager
+    @Environment(VisionBoardManager.self) var visionBoardManager
     
     var body: some View {
         Button(action: {
@@ -407,7 +407,7 @@ struct ViewCountBadge: View {
 
 #Preview {
     VisionBoardGalleryView()
-        .environmentObject(VisionBoardManager())
-        .environmentObject(UserManager())
+        .environment(VisionBoardManager())
+        .environment(UserManager())
 }
 

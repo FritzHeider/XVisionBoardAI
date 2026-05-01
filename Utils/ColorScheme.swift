@@ -36,6 +36,24 @@ extension Color {
     static let manifestationAccent      = cosmicGold
     static let manifestationBackground  = cosmicBlack
     static let manifestationSurface     = cosmicGray
+
+    // MARK: - Adaptive (light/dark)
+    static let adaptiveBackground = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(red: 0.05, green: 0.05, blue: 0.1, alpha: 1)
+            : .white
+    })
+    static let adaptiveSurface = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(red: 0.15, green: 0.15, blue: 0.2, alpha: 1)
+            : UIColor(red: 0.9, green: 0.9, blue: 0.9, alpha: 1)
+    })
+    static let adaptiveText = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(red: 0.95, green: 0.95, blue: 1.0, alpha: 1)
+            : .black
+    })
+    static let adaptiveCTA = Color(UIColor.systemBlue)
 }
 
 // MARK: - Custom View Modifiers

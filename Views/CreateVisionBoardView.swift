@@ -10,9 +10,9 @@ import SwiftUI
 
 struct CreateVisionBoardView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var userManager: UserManager
-    @EnvironmentObject var visionBoardManager: VisionBoardManager
-    @EnvironmentObject var storeManager: StoreManager
+    @Environment(UserManager.self) var userManager
+    @Environment(VisionBoardManager.self) var visionBoardManager
+    @Environment(StoreManager.self) var storeManager
     
     @State private var currentStep: CreationStep = .selfie
     @State private var capturedSelfie: UIImage?
@@ -55,7 +55,7 @@ struct CreateVisionBoardView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.cosmicBlack.ignoresSafeArea()
                 
@@ -629,7 +629,7 @@ struct CreateVisionBoardView: View {
         case .layout: currentStep = .style
         case .style: currentStep = .goals
         case .goals:
-            if userManager.canCreateVisionBoard {
+            if storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards) {
                 generateVisionBoard()
             } else {
                 showingUpgrade = true
@@ -650,15 +650,15 @@ struct CreateVisionBoardView: View {
     }
     
     private func generateVisionBoard() {
-        guard let selfieData = capturedSelfie?.jpegData(compressionQuality: 0.8) else { return }
-        
+        guard let selfie = capturedSelfie else { return }
+
         currentStep = .generate
-        
+
         Task {
             let visionBoard = await visionBoardManager.createVisionBoard(
                 title: title,
                 description: description,
-                userImageData: selfieData,
+                userImage: selfie,
                 layout: selectedLayout,
                 style: selectedStyle,
                 manifestationGoals: manifestationGoals
@@ -802,8 +802,8 @@ struct GenerationStep: View {
 
 #Preview {
     CreateVisionBoardView()
-        .environmentObject(UserManager())
-        .environmentObject(VisionBoardManager())
-        .environmentObject(StoreManager())
+        .environment(UserManager())
+        .environment(VisionBoardManager())
+        .environment(StoreManager())
 }
 

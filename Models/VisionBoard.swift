@@ -15,7 +15,7 @@ struct VisionBoard: Codable, Identifiable {
     let id: UUID
     var title: String
     var description: String
-    var userImageData: Data
+    var userImageFilename: String
     var layout: VisionBoardLayout
     var style: VisionBoardStyle
     var images: [VisionBoardImage]
@@ -30,14 +30,14 @@ struct VisionBoard: Codable, Identifiable {
     init(
         title: String,
         description: String,
-        userImageData: Data,
+        userImageFilename: String,
         layout: VisionBoardLayout = .grid3x3,
         style: VisionBoardStyle = .cinematic
     ) {
         self.id = UUID()
         self.title = title
         self.description = description
-        self.userImageData = userImageData
+        self.userImageFilename = userImageFilename
         self.layout = layout
         self.style = style
         self.images = []
@@ -51,7 +51,7 @@ struct VisionBoard: Codable, Identifiable {
     }
 
     var userImage: UIImage? {
-        UIImage(data: userImageData)
+        ImageStore.load(userImageFilename)
     }
 
     var formattedCreatedDate: String {
@@ -75,14 +75,12 @@ struct VisionBoard: Codable, Identifiable {
 
 extension VisionBoard {
     static var sampleVisionBoard: VisionBoard {
-        let fallbackImage = UIImage(systemName: "person.crop.circle") ?? UIImage()
-        let userImageData = fallbackImage.pngData() ?? Data()
         let sampleImage = VisionBoardImage(prompt: "Sunrise over mountains", position: 0)
 
         return VisionBoard(
             title: "Dream Life",
             description: "Visualize your ideal future with purpose and clarity.",
-            userImageData: userImageData,
+            userImageFilename: "",
             layout: .grid3x3,
             style: .cinematic
         ).with {

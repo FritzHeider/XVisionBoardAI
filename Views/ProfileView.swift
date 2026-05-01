@@ -9,16 +9,16 @@
 import SwiftUI
 
 struct ProfileView: View {
-    @EnvironmentObject var userManager: UserManager
-    @EnvironmentObject var storeManager: StoreManager
-    @EnvironmentObject var visionBoardManager: VisionBoardManager
+    @Environment(UserManager.self) var userManager
+    @Environment(StoreManager.self) var storeManager
+    @Environment(VisionBoardManager.self) var visionBoardManager
     
     @State private var showingSubscriptionView = false
     @State private var showingSignOutAlert = false
     @State private var showingDeleteAccountAlert = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.cosmicBlack.ignoresSafeArea()
                 
@@ -109,7 +109,7 @@ struct ProfileView: View {
                     Image(systemName: storeManager.hasActiveSubscription ? "crown.fill" : "star.fill")
                         .foregroundColor(storeManager.hasActiveSubscription ? .cosmicGold : .gray)
                     
-                    Text(userManager.subscriptionDisplayName)
+                    Text(storeManager.subscriptionDisplayName)
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.cosmicWhite)
@@ -426,8 +426,8 @@ struct SettingsRow: View {
 
 #Preview {
     ProfileView()
-        .environmentObject(UserManager())
-        .environmentObject(StoreManager())
-        .environmentObject(VisionBoardManager())
+        .environment(UserManager())
+        .environment(StoreManager())
+        .environment(VisionBoardManager())
 }
 

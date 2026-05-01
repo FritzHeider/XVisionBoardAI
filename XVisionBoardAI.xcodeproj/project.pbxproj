@@ -25,9 +25,9 @@
 		131 /* Views/ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130 /* Views/ContentView.swift */; };
 		133 /* Views/VisionBoardDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132 /* Views/VisionBoardDetailView.swift */; };
 		135 /* Services/StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134 /* Services/StoreManager.swift */; };
-137 /* Services/CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136 /* Services/CameraManager.swift */; };
-138 /* Services/TokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139 /* Services/TokenStore.swift */; };
-B21BEFA02E43409E00EDBF92 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */; };
+		137 /* Services/CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136 /* Services/CameraManager.swift */; };
+		138 /* Services/TokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139 /* Services/TokenStore.swift */; };
+		B21BEFA02E43409E00EDBF92 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,11 +49,11 @@ B21BEFA02E43409E00EDBF92 /* SpeechManager.swift in Sources */ = {isa = PBXBuildF
 		130 /* Views/ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ContentView.swift; sourceTree = "<group>"; };
 		132 /* Views/VisionBoardDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/VisionBoardDetailView.swift; sourceTree = "<group>"; };
 		134 /* Services/StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/StoreManager.swift; sourceTree = "<group>"; };
-136 /* Services/CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/CameraManager.swift; sourceTree = "<group>"; };
-139 /* Services/TokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenStore.swift; sourceTree = "<group>"; };
-7 /* XVisionBoardAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = XVisionBoardAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
-B21BEF9E2E4338C700EDBF92 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SpeechManager.swift; path = Services/SpeechManager.swift; sourceTree = "<group>"; };
+		136 /* Services/CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/CameraManager.swift; sourceTree = "<group>"; };
+		139 /* Services/TokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenStore.swift; sourceTree = "<group>"; };
+		7 /* XVisionBoardAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = XVisionBoardAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B21BEF9E2E4338C700EDBF92 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SpeechManager.swift; path = Services/SpeechManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -79,12 +79,12 @@ B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */ = {isa = PBXFileReference; fi
 				128 /* Views/AuthViews.swift */,
 				130 /* Views/ContentView.swift */,
 				132 /* Views/VisionBoardDetailView.swift */,
-134 /* Services/StoreManager.swift */,
-136 /* Services/CameraManager.swift */,
-139 /* Services/TokenStore.swift */,
-);
-sourceTree = "<group>";
-};
+				134 /* Services/StoreManager.swift */,
+				136 /* Services/CameraManager.swift */,
+				139 /* Services/TokenStore.swift */,
+			);
+			sourceTree = "<group>";
+		};
 		4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -161,12 +161,12 @@ sourceTree = "<group>";
 				129 /* Views/AuthViews.swift in Sources */,
 				131 /* Views/ContentView.swift in Sources */,
 				133 /* Views/VisionBoardDetailView.swift in Sources */,
-135 /* Services/StoreManager.swift in Sources */,
-137 /* Services/CameraManager.swift in Sources */,
-138 /* Services/TokenStore.swift in Sources */,
-);
-runOnlyForDeploymentPostprocessing = 0;
-};
+				135 /* Services/StoreManager.swift in Sources */,
+				137 /* Services/CameraManager.swift in Sources */,
+				138 /* Services/TokenStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
@@ -175,6 +175,7 @@ runOnlyForDeploymentPostprocessing = 0;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -194,6 +195,7 @@ runOnlyForDeploymentPostprocessing = 0;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEVELOPMENT_TEAM = CCK3M3DML9;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -206,6 +208,7 @@ runOnlyForDeploymentPostprocessing = 0;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = Info.plist;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xvisionboardai.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
@@ -217,6 +220,7 @@ runOnlyForDeploymentPostprocessing = 0;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -236,6 +240,7 @@ runOnlyForDeploymentPostprocessing = 0;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEVELOPMENT_TEAM = CCK3M3DML9;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -246,6 +251,7 @@ runOnlyForDeploymentPostprocessing = 0;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xvisionboardai.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;

@@ -11,11 +11,12 @@ import StoreKit
 import SwiftUI
 
 @MainActor
-class StoreManager: ObservableObject {
-    @Published var products: [Product] = []
-    @Published var purchasedProducts: Set<String> = []
-    @Published var isLoading = false
-    @Published var errorMessage: String?
+@Observable
+class StoreManager {
+    var products: [Product] = []
+    var purchasedProducts: Set<String> = []
+    var isLoading = false
+    var errorMessage: String?
     
     private let productIdentifiers: Set<String> = [
         "com.xvisionboardai.pro.monthly",
@@ -172,32 +173,29 @@ class StoreManager: ObservableObject {
     }
     
     // MARK: - Feature Access
-    
-    func canCreateVisionBoard() -> Bool {
+
+    func canCreateVisionBoard(currentCount: Int) -> Bool {
         switch currentSubscription {
-        case .free:
-            // Check if user has reached free limit
-            return true // This would be checked against user's actual usage
-        case .pro, .premium:
-            return true
+        case .free: return currentCount < 1
+        case .pro: return currentCount < 50
+        case .premium: return true
         }
     }
-    
-    func canExportHD() -> Bool {
-        currentSubscription != .free
-    }
-    
-    func canUseAdvancedAI() -> Bool {
-        currentSubscription == .premium
-    }
-    
+
+    func canExportHD() -> Bool { currentSubscription != .free }
+    func canUseAdvancedAI() -> Bool { currentSubscription == .premium }
+
     func maxVisionBoards() -> Int {
         switch currentSubscription {
         case .free: return 1
         case .pro: return 50
-        case .premium: return -1 // Unlimited
+        case .premium: return -1
         }
     }
+
+    var subscriptionDisplayName: String { currentSubscription.displayName }
+    var isProUser: Bool { currentSubscription == .pro || currentSubscription == .premium }
+    var isPremiumUser: Bool { currentSubscription == .premium }
 }
 
 // MARK: - Extensions

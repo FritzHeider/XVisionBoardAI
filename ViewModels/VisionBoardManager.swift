@@ -8,15 +8,15 @@
 
 import Foundation
 import SwiftUI
-import Combine
 
 @MainActor
-class VisionBoardManager: ObservableObject {
-    @Published var visionBoards: [VisionBoard] = []
-    @Published var isGenerating = false
-    @Published var generationProgress: Double = 0.0
-    @Published var errorMessage: String?
-    @Published var currentGeneratingBoard: VisionBoard?
+@Observable
+class VisionBoardManager {
+    var visionBoards: [VisionBoard] = []
+    var isGenerating = false
+    var generationProgress: Double = 0.0
+    var errorMessage: String?
+    var currentGeneratingBoard: VisionBoard?
     
     private let userDefaults = UserDefaults.standard
     private let visionBoardsKey = "savedVisionBoards"
@@ -30,55 +30,47 @@ class VisionBoardManager: ObservableObject {
     func createVisionBoard(
         title: String,
         description: String,
-        userImageData: Data,
+        userImage: UIImage,
         layout: VisionBoardLayout,
         style: VisionBoardStyle,
         manifestationGoals: [String]
     ) async -> VisionBoard? {
-        
+
         isGenerating = true
         generationProgress = 0.0
         errorMessage = nil
-        
-        var visionBoard = VisionBoard(
-            title: title,
-            description: description,
-            userImageData: userImageData,
-            layout: layout,
-            style: style
-        )
-        visionBoard.manifestationGoals = manifestationGoals
-        
-        currentGeneratingBoard = visionBoard
-        
+
         do {
-            // Generate AI affirmations
+            let filename = try ImageStore.save(userImage)
+
+            var visionBoard = VisionBoard(
+                title: title,
+                description: description,
+                userImageFilename: filename,
+                layout: layout,
+                style: style
+            )
+            visionBoard.manifestationGoals = manifestationGoals
+            currentGeneratingBoard = visionBoard
+
             generationProgress = 0.2
-            visionBoard.affirmations = await generateAffirmations(
+            visionBoard.affirmations = try await generateAffirmations(
                 description: description,
                 goals: manifestationGoals,
                 style: style
             )
-            
-            // Generate personalized images
+
             generationProgress = 0.4
-            let images = await generatePersonalizedImages(
-                for: visionBoard,
-                userImageData: userImageData
-            )
-            visionBoard.images = images
-            
+            visionBoard.images = try await generatePersonalizedImages(for: visionBoard)
+
             generationProgress = 1.0
-            
-            // Save the vision board
             visionBoards.append(visionBoard)
             saveVisionBoards()
-            
+
             isGenerating = false
             currentGeneratingBoard = nil
-            
             return visionBoard
-            
+
         } catch {
             errorMessage = "Failed to create vision board: \(error.localizedDescription)"
             isGenerating = false
@@ -93,10 +85,9 @@ class VisionBoardManager: ObservableObject {
         description: String,
         goals: [String],
         style: VisionBoardStyle
-    ) async -> [String] {
-        
-        // Simulate AI processing
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
+    ) async throws -> [String] {
+
+        try await Task.sleep(nanoseconds: 2_000_000_000)
         
         let baseAffirmations = [
             "I am living my dream life with confidence and joy",
@@ -131,26 +122,20 @@ class VisionBoardManager: ObservableObject {
         return (customAffirmations + baseAffirmations).prefix(5).map { $0 }
     }
     
-    private func generatePersonalizedImages(
-        for visionBoard: VisionBoard,
-        userImageData: Data
-    ) async -> [VisionBoardImage] {
-        
+    private func generatePersonalizedImages(for visionBoard: VisionBoard) async throws -> [VisionBoardImage] {
         var images: [VisionBoardImage] = []
         let imageCount = visionBoard.layout.imageCount
-        
+
         let prompts = generateImagePrompts(
             description: visionBoard.description,
             goals: visionBoard.manifestationGoals,
             style: visionBoard.style,
             count: imageCount
         )
-        
+
         for (index, prompt) in prompts.enumerated() {
             generationProgress = 0.4 + (0.5 * Double(index) / Double(imageCount))
-            
-            // Simulate image generation
-            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            try await Task.sleep(nanoseconds: 1_000_000_000)
             
             var image = VisionBoardImage(
                 prompt: prompt,
@@ -222,6 +207,7 @@ class VisionBoardManager: ObservableObject {
     // MARK: - Vision Board Management
     
     func deleteVisionBoard(_ visionBoard: VisionBoard) {
+        ImageStore.delete(visionBoard.userImageFilename)
         visionBoards.removeAll { $0.id == visionBoard.id }
         saveVisionBoards()
     }

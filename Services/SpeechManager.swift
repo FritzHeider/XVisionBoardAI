@@ -10,7 +10,8 @@ import Foundation
 import AVFoundation
 
 @MainActor
-class SpeechManager: ObservableObject {
+@Observable
+class SpeechManager {
     private let synthesizer = AVSpeechSynthesizer()
 
     func speak(_ text: String) {

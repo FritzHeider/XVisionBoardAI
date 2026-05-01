@@ -9,23 +9,21 @@
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var userManager: UserManager
-    @EnvironmentObject var storeManager: StoreManager
-    @AppStorage("isLoggedIn") private var isLoggedIn = false
+    @Environment(UserManager.self) var userManager
+    @Environment(StoreManager.self) var storeManager
     @State private var selectedTab = 0
     @State private var showOnboarding = true
-    
+
     var body: some View {
         Group {
             if showOnboarding && !userManager.hasCompletedOnboarding {
                 OnboardingView(showOnboarding: $showOnboarding)
-            } else if isLoggedIn {
+            } else if userManager.isLoggedIn {
                 MainTabView(selectedTab: $selectedTab)
             } else {
                 WelcomeView()
             }
         }
-        .preferredColorScheme(.dark)
         .onAppear {
             setupAppearance()
         }
@@ -40,7 +38,7 @@ struct ContentView: View {
 
 struct MainTabView: View {
     @Binding var selectedTab: Int
-    @EnvironmentObject var userManager: UserManager
+    @Environment(UserManager.self) var userManager
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -79,8 +77,8 @@ struct MainTabView: View {
 
 #Preview {
     ContentView()
-        .environmentObject(UserManager())
-        .environmentObject(StoreManager())
-        .environmentObject(VisionBoardManager())
+        .environment(UserManager())
+        .environment(StoreManager())
+        .environment(VisionBoardManager())
 }
 

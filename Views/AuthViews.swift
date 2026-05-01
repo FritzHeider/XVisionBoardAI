@@ -10,7 +10,7 @@ import SwiftUI
 
 struct SignUpView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var userManager: UserManager
+    @Environment(UserManager.self) var userManager
     
     @State private var email = ""
     @State private var username = ""
@@ -28,7 +28,7 @@ struct SignUpView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.cosmicBlack.ignoresSafeArea()
                 
@@ -142,7 +142,7 @@ struct SignUpView: View {
 
 struct SignInView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var userManager: UserManager
+    @Environment(UserManager.self) var userManager
     
     @State private var email = ""
     @State private var password = ""
@@ -153,7 +153,7 @@ struct SignInView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.cosmicBlack.ignoresSafeArea()
                 
@@ -281,11 +281,11 @@ struct CustomTextField: View {
 
 #Preview("Sign Up") {
     SignUpView()
-        .environmentObject(UserManager())
+        .environment(UserManager())
 }
 
 #Preview("Sign In") {
     SignInView()
-        .environmentObject(UserManager())
+        .environment(UserManager())
 }
 

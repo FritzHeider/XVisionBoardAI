@@ -9,15 +9,15 @@
 import SwiftUI
 
 struct HomeView: View {
-    @EnvironmentObject var userManager: UserManager
-    @EnvironmentObject var visionBoardManager: VisionBoardManager
-    @EnvironmentObject var storeManager: StoreManager
+    @Environment(UserManager.self) var userManager
+    @Environment(VisionBoardManager.self) var visionBoardManager
+    @Environment(StoreManager.self) var storeManager
     
     @State private var showingCreateView = false
     @State private var showingUpgradeView = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.cosmicBlack.ignoresSafeArea()
                 
@@ -103,7 +103,7 @@ struct HomeView: View {
                 Image(systemName: storeManager.hasActiveSubscription ? "crown.fill" : "star.fill")
                     .foregroundColor(storeManager.hasActiveSubscription ? .cosmicGold : .gray)
                 
-                Text(userManager.subscriptionDisplayName)
+                Text(storeManager.subscriptionDisplayName)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.cosmicWhite)
@@ -147,7 +147,7 @@ struct HomeView: View {
             
             StatCard(
                 title: "Remaining",
-                value: userManager.remainingVisionBoards == Int.max ? "∞" : "\(userManager.remainingVisionBoards)",
+                value: storeManager.maxVisionBoards() == -1 ? "∞" : "\(max(0, storeManager.maxVisionBoards() - visionBoardManager.totalVisionBoards))",
                 icon: "plus.circle.fill",
                 color: .cosmicGold
             )
@@ -194,7 +194,7 @@ struct HomeView: View {
             .cosmicCard()
             
             Button("Start with Your Selfie") {
-                if userManager.canCreateVisionBoard {
+                if storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards) {
                     showingCreateView = true
                 } else {
                     showingUpgradeView = true
@@ -356,7 +356,7 @@ struct ManifestationTip: View {
 
 struct VisionBoardCard: View {
     let visionBoard: VisionBoard
-    @EnvironmentObject var visionBoardManager: VisionBoardManager
+    @Environment(VisionBoardManager.self) var visionBoardManager
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -419,8 +419,8 @@ struct VisionBoardCard: View {
 
 #Preview {
     HomeView()
-        .environmentObject(UserManager())
-        .environmentObject(VisionBoardManager())
-        .environmentObject(StoreManager())
+        .environment(UserManager())
+        .environment(VisionBoardManager())
+        .environment(StoreManager())
 }
 
