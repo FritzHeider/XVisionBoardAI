@@ -113,17 +113,18 @@ class UserManager {
     
     // MARK: - User Profile Management
     
-    func updateProfile(username: String? = nil, profileImageData: Data? = nil) {
+    func updateProfile(username: String? = nil, profileImage: UIImage? = nil) {
         guard var user = currentUser else { return }
-        
+
         if let username = username {
             user.username = username
         }
-        
-        if let imageData = profileImageData {
-            user.profileImageData = imageData
+
+        if let image = profileImage {
+            if let old = user.profileImageFilename { ImageStore.delete(old) }
+            user.profileImageFilename = try? ImageStore.save(image, filename: user.id.uuidString + "_profile")
         }
-        
+
         currentUser = user
         saveUserData()
     }

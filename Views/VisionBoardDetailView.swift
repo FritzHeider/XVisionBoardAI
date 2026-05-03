@@ -436,25 +436,13 @@ struct StyleInfoCard: View {
 struct VisionBoardImageView: View {
     let image: VisionBoardImage
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             ZStack {
-                if let uiImage = image.image {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(minHeight: 100)
-                        .clipped()
-                } else {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.cosmicGray)
-                        .frame(minHeight: 100)
-                        .overlay(
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .cosmicPurple))
-                        )
-                }
+                imageContent
+                    .frame(minHeight: 100)
+                    .clipped()
                 
                 if image.isPersonalized {
                     VStack {
@@ -469,6 +457,32 @@ struct VisionBoardImageView: View {
             }
             .cornerRadius(8)
         }
+    }
+
+    @ViewBuilder
+    private var imageContent: some View {
+        if let uiImage = image.image {
+            Image(uiImage: uiImage)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        } else if let urlString = image.imageURL, let url = URL(string: urlString) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let img):
+                    img.resizable().aspectRatio(contentMode: .fill)
+                default:
+                    imagePlaceholder
+                }
+            }
+        } else {
+            imagePlaceholder
+        }
+    }
+
+    private var imagePlaceholder: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .fill(Color.cosmicGray)
+            .overlay(ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .cosmicPurple)))
     }
 }
 
@@ -538,17 +552,27 @@ struct ActionButton: View {
 struct FullScreenImageView: View {
     let image: VisionBoardImage
     let onDismiss: () -> Void
-    
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            
-            if let uiImage = image.image {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .pinchToZoom()
+
+            Group {
+                if let uiImage = image.image {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } else if let urlString = image.imageURL, let url = URL(string: urlString) {
+                    AsyncImage(url: url) { phase in
+                        if case .success(let img) = phase {
+                            img.resizable().aspectRatio(contentMode: .fit)
+                        } else {
+                            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        }
+                    }
+                }
             }
+            .pinchToZoom()
             
             VStack {
                 HStack {

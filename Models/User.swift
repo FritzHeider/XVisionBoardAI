@@ -13,18 +13,18 @@ struct User: Codable, Identifiable {
     let id: UUID
     var email: String
     var username: String
-    var profileImageData: Data?
+    var profileImageFilename: String?
     var createdAt: Date
     var lastLoginAt: Date
     var visionBoardCount: Int
     var manifestationGoals: [String]
     var preferences: UserPreferences
 
-    init(email: String, username: String, profileImageData: Data? = nil) {
+    init(email: String, username: String, profileImageFilename: String? = nil) {
         self.id = UUID()
         self.email = email
         self.username = username
-        self.profileImageData = profileImageData
+        self.profileImageFilename = profileImageFilename
         self.createdAt = Date()
         self.lastLoginAt = Date()
         self.visionBoardCount = 0
@@ -33,8 +33,8 @@ struct User: Codable, Identifiable {
     }
 
     var profileImage: UIImage? {
-        guard let data = profileImageData else { return nil }
-        return UIImage(data: data)
+        guard let filename = profileImageFilename else { return nil }
+        return ImageStore.load(filename)
     }
 }
 
