@@ -8,6 +8,7 @@
 
 import SwiftUI
 import AVFoundation // if using AVSpeechSynthesizer
+import UserNotifications
 
 struct VisionBoardDetailView: View {
     let visionBoard: VisionBoard
@@ -327,7 +328,7 @@ struct VisionBoardDetailView: View {
                     title: "Daily Visualization",
                     description: "Spend 5-10 minutes visualizing these images"
                 ) {
-                    // Start visualization session
+                    scheduleDailyReminder()
                 }
                 
                 ActionButton(
@@ -382,13 +383,35 @@ struct VisionBoardDetailView: View {
         var content = "Check out my personalized vision board: \(visionBoard.title)\n\n"
         content += "\(visionBoard.description)\n\n"
         content += "My affirmations:\n"
-        
+
         for affirmation in visionBoard.affirmations {
             content += "• \(affirmation)\n"
         }
-        
+
         content += "\nCreated with XVisionBoard AI - See yourself living your dreams!"
         return content
+    }
+
+    private func scheduleDailyReminder() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
+            guard granted else { return }
+            let content = UNMutableNotificationContent()
+            content.title = "Time to Visualize 🌟"
+            let affirmation = visionBoard.affirmations.randomElement() ?? "I am living my dream life"
+            content.body = affirmation
+            content.sound = .default
+
+            var components = DateComponents()
+            components.hour = 8
+            components.minute = 0
+            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+            let request = UNNotificationRequest(
+                identifier: "daily-visualization-\(visionBoard.id)",
+                content: content,
+                trigger: trigger
+            )
+            UNUserNotificationCenter.current().add(request)
+        }
     }
 }
 
