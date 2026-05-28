@@ -158,6 +158,14 @@ class VisionBoardManager {
             )
             image.imageURL = generatedURL ?? "https://picsum.photos/400/400?random=\(index+Int.random(in: 0..<1000))"
 
+            // Download and cache the image locally
+            if let urlString = image.imageURL,
+               let url = URL(string: urlString),
+               let (imgData, _) = try? await URLSession.shared.data(from: url),
+               UIImage(data: imgData) != nil {
+                image.imageData = imgData
+            }
+
             images.append(image)
         }
 
