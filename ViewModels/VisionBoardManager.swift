@@ -50,7 +50,7 @@ class VisionBoardManager {
                 layout: layout,
                 style: style
             )
-            visionBoard.manifestationGoals = manifestationGoals
+            visionBoard.manifestationGoals = manifestationGoals.map { ManifestationGoal(title: $0) }
             currentGeneratingBoard = visionBoard
 
             generationProgress = 0.2
@@ -128,7 +128,7 @@ class VisionBoardManager {
 
         let prompts = generateImagePrompts(
             description: visionBoard.description,
-            goals: visionBoard.manifestationGoals,
+            goals: visionBoard.manifestationGoals.map(\.title),
             style: visionBoard.style,
             count: imageCount
         )
@@ -206,6 +206,19 @@ class VisionBoardManager {
     
     // MARK: - Vision Board Management
     
+    func toggleGoalAchieved(_ goal: ManifestationGoal, in boardID: UUID) {
+        guard let boardIndex = visionBoards.firstIndex(where: { $0.id == boardID }),
+              let goalIndex = visionBoards[boardIndex].manifestationGoals.firstIndex(where: { $0.id == goal.id }) else {
+            return
+        }
+        if visionBoards[boardIndex].manifestationGoals[goalIndex].isAchieved {
+            visionBoards[boardIndex].manifestationGoals[goalIndex].unmarkAchieved()
+        } else {
+            visionBoards[boardIndex].manifestationGoals[goalIndex].markAchieved()
+        }
+        saveVisionBoards()
+    }
+
     func deleteVisionBoard(_ visionBoard: VisionBoard) {
         ImageStore.delete(visionBoard.userImageFilename)
         visionBoards.removeAll { $0.id == visionBoard.id }

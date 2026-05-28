@@ -49,7 +49,7 @@ struct VisionBoardGalleryView: View {
             boards = boards.filter { board in
                 board.title.localizedCaseInsensitiveContains(searchText) ||
                 board.description.localizedCaseInsensitiveContains(searchText) ||
-                board.manifestationGoals.contains { $0.localizedCaseInsensitiveContains(searchText) }
+                board.manifestationGoals.contains { $0.title.localizedCaseInsensitiveContains(searchText) }
             }
         }
         
@@ -322,7 +322,7 @@ struct VisionBoardGridItem: View {
                         .foregroundColor(.cosmicWhite.opacity(0.7))
                     
                     if !visionBoard.manifestationGoals.isEmpty {
-                        Text(visionBoard.manifestationGoals.prefix(2).joined(separator: ", "))
+                        Text(visionBoard.manifestationGoals.prefix(2).map(\.title).joined(separator: ", "))
                             .font(.caption)
                             .foregroundColor(.cosmicPurple)
                             .lineLimit(1)

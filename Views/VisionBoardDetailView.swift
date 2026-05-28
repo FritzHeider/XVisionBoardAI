@@ -305,8 +305,8 @@ struct VisionBoardDetailView: View {
                 GridItem(.flexible()),
                 GridItem(.flexible())
             ], spacing: 12) {
-                ForEach(visionBoard.manifestationGoals, id: \.self) { goal in
-                    GoalCard(goal: goal)
+                ForEach(visionBoard.manifestationGoals) { goal in
+                    GoalCard(goal: goal.title)
                 }
             }
         }
