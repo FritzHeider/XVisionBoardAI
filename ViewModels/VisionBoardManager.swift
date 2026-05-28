@@ -61,7 +61,7 @@ class VisionBoardManager {
             )
 
             generationProgress = 0.4
-            visionBoard.images = try await generatePersonalizedImages(for: visionBoard)
+            visionBoard.images = try await generatePersonalizedImages(for: visionBoard, userImage: userImage)
 
             generationProgress = 1.0
             visionBoards.append(visionBoard)
@@ -130,9 +130,10 @@ class VisionBoardManager {
         return Array((affirmations + base).prefix(5))
     }
     
-    private func generatePersonalizedImages(for visionBoard: VisionBoard) async throws -> [VisionBoardImage] {
+    private func generatePersonalizedImages(for visionBoard: VisionBoard, userImage: UIImage) async throws -> [VisionBoardImage] {
         var images: [VisionBoardImage] = []
         let imageCount = visionBoard.layout.imageCount
+        let userImageData = userImage.jpegData(compressionQuality: 0.8)
 
         let prompts = generateImagePrompts(
             description: visionBoard.description,
@@ -143,21 +144,23 @@ class VisionBoardManager {
 
         for (index, prompt) in prompts.enumerated() {
             generationProgress = 0.4 + (0.5 * Double(index) / Double(imageCount))
-            try await Task.sleep(nanoseconds: 1_000_000_000)
-            
+
             var image = VisionBoardImage(
                 prompt: prompt,
                 position: index,
                 isPersonalized: true
             )
-            
-            // In a real app, this would call an AI image generation API
-            // For now, we'll use placeholder data
-            image.imageURL = "https://picsum.photos/400/400?random=\(index)"
-            
+
+            let generatedURL = try? await ImageGenerationService.generateImage(
+                prompt: prompt,
+                referenceImageData: userImageData,
+                style: visionBoard.style.displayName
+            )
+            image.imageURL = generatedURL ?? "https://picsum.photos/400/400?random=\(index+Int.random(in: 0..<1000))"
+
             images.append(image)
         }
-        
+
         return images
     }
     

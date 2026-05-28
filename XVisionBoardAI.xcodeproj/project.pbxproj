@@ -31,6 +31,7 @@
 		143 /* Views/Components/SharedCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142 /* Views/Components/SharedCards.swift */; };
 		B21BEFA02E43409E00EDBF92 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */; };
 		145 /* Services/ClaudeAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144 /* Services/ClaudeAPIService.swift */; };
+		147 /* Services/ImageGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146 /* Services/ImageGenerationService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -57,6 +58,7 @@
 		140 /* Utils/ImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/ImageStore.swift; sourceTree = "<group>"; };
 		142 /* Views/Components/SharedCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Components/SharedCards.swift; sourceTree = "<group>"; };
 		144 /* Services/ClaudeAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeAPIService.swift; sourceTree = "<group>"; };
+		146 /* Services/ImageGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ImageGenerationService.swift; sourceTree = "<group>"; };
 		7 /* XVisionBoardAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = XVisionBoardAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B21BEF9E2E4338C700EDBF92 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SpeechManager.swift; path = Services/SpeechManager.swift; sourceTree = "<group>"; };
@@ -91,6 +93,7 @@
 				140 /* Utils/ImageStore.swift */,
 				142 /* Views/Components/SharedCards.swift */,
 				144 /* Services/ClaudeAPIService.swift */,
+				146 /* Services/ImageGenerationService.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -176,6 +179,7 @@
 				141 /* Utils/ImageStore.swift in Sources */,
 				143 /* Views/Components/SharedCards.swift in Sources */,
 				145 /* Services/ClaudeAPIService.swift in Sources */,
+				147 /* Services/ImageGenerationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
