@@ -18,6 +18,8 @@ struct VisionBoardDetailView: View {
     @State private var speechManager = SpeechManager()
     @State private var showingShareSheet = false
     @State private var showingDeleteAlert = false
+    @State private var shareImage: UIImage?
+    @State private var showingImageShare = false
     @State private var showingFullScreenImage: VisionBoardImage?
     @State private var currentAffirmationIndex = 0
     @State private var affirmationTask: Task<Void, Never>?
@@ -94,6 +96,11 @@ struct VisionBoardDetailView: View {
         }
         .sheet(isPresented: $showingShareSheet) {
             ShareSheet(items: [createShareableContent()])
+        }
+        .sheet(isPresented: $showingImageShare) {
+            if let img = shareImage {
+                ShareSheet(items: [img])
+            }
         }
         .alert("Delete Vision Board", isPresented: $showingDeleteAlert) {
             Button("Delete", role: .destructive) {
@@ -336,7 +343,10 @@ struct VisionBoardDetailView: View {
                     title: "Share Your Vision",
                     description: "Share with friends for accountability"
                 ) {
-                    showingShareSheet = true
+                    if let img = renderBoardImage() {
+                        shareImage = img
+                        showingImageShare = true
+                    }
                 }
                 
                 ActionButton(
@@ -344,7 +354,9 @@ struct VisionBoardDetailView: View {
                     title: "Set as Wallpaper",
                     description: "Keep your vision visible daily"
                 ) {
-                    // Set as wallpaper
+                    if let img = renderBoardImage() {
+                        UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
+                    }
                 }
                 
                 ActionButton(
@@ -390,6 +402,21 @@ struct VisionBoardDetailView: View {
 
         content += "\nCreated with XVisionBoard AI - See yourself living your dreams!"
         return content
+    }
+
+    @MainActor
+    private func renderBoardImage() -> UIImage? {
+        let gridView = LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 4) {
+            ForEach(visionBoard.images.prefix(9)) { img in
+                VisionBoardImageView(image: img) { }
+                    .frame(height: 120)
+            }
+        }
+        .frame(width: 400)
+        .background(Color.cosmicBlack)
+        let renderer = ImageRenderer(content: gridView)
+        renderer.scale = UIScreen.main.scale
+        return renderer.uiImage
     }
 
     private func scheduleDailyReminder() {
