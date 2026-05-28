@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 struct CreateVisionBoardView: View {
     @Environment(\.dismiss) private var dismiss
@@ -25,6 +26,10 @@ struct CreateVisionBoardView: View {
     @State private var showingCamera = false
     @State private var showingUpgrade = false
     @State private var createdVisionBoard: VisionBoard?
+    @State private var showingPhotoPicker = false
+    @State private var photoPickerItem: PhotosPickerItem?
+    @State private var generationError: String?
+    @State private var showingBoardDetail = false
     
     enum CreationStep: CaseIterable {
         case selfie, details, layout, style, goals, generate, complete
@@ -97,13 +102,27 @@ struct CreateVisionBoardView: View {
         .sheet(isPresented: $showingUpgrade) {
             SubscriptionView()
         }
-        .onChange(of: visionBoardManager.isGenerating) { _, isGenerating in
-            if !isGenerating && currentStep == .generate {
-                if let visionBoard = visionBoardManager.currentGeneratingBoard {
-                    createdVisionBoard = visionBoard
-                    currentStep = .complete
+        .sheet(isPresented: $showingBoardDetail, onDismiss: { dismiss() }) {
+            if let board = createdVisionBoard {
+                VisionBoardDetailView(visionBoard: board)
+            }
+        }
+        .photosPicker(isPresented: $showingPhotoPicker, selection: $photoPickerItem, matching: .images)
+        .onChange(of: photoPickerItem) { _, item in
+            Task {
+                if let data = try? await item?.loadTransferable(type: Data.self),
+                   let image = UIImage(data: data) {
+                    capturedSelfie = image
                 }
             }
+        }
+        .alert("Generation Failed", isPresented: Binding(
+            get: { generationError != nil },
+            set: { if !$0 { generationError = nil } }
+        )) {
+            Button("OK") { generationError = nil }
+        } message: {
+            Text(generationError ?? "")
         }
     }
     
@@ -204,8 +223,7 @@ struct CreateVisionBoardView: View {
                     .cosmicButton()
                     
                     Button("Upload Photo") {
-                        // Handle photo upload
-                        showingCamera = true
+                        showingPhotoPicker = true
                     }
                     .cosmicButton()
                 }
@@ -546,8 +564,7 @@ struct CreateVisionBoardView: View {
             
             VStack(spacing: 16) {
                 Button("View Your Vision Board") {
-                    // Navigate to vision board detail
-                    dismiss()
+                    showingBoardDetail = true
                 }
                 .cosmicButton()
                 
@@ -663,9 +680,14 @@ struct CreateVisionBoardView: View {
                 style: selectedStyle,
                 manifestationGoals: manifestationGoals
             )
-            
-            if visionBoard != nil {
+
+            if let board = visionBoard {
                 userManager.incrementVisionBoardCount()
+                createdVisionBoard = board
+                currentStep = .complete
+            } else {
+                generationError = visionBoardManager.errorMessage ?? "Generation failed. Please try again."
+                currentStep = .goals
             }
         }
     }
