@@ -16,6 +16,7 @@ struct VisionBoardDetailView: View {
     @Environment(VisionBoardManager.self) var visionBoardManager
 
     @State private var speechManager = SpeechManager()
+    @State private var showingEditView = false
     @State private var showingShareSheet = false
     @State private var showingDeleteAlert = false
     @State private var shareImage: UIImage?
@@ -71,6 +72,10 @@ struct VisionBoardDetailView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
+                        Button(action: { showingEditView = true }) {
+                            Label("Edit Vision Board", systemImage: "pencil")
+                        }
+
                         Button(action: {
                             visionBoardManager.toggleFavorite(visionBoard)
                         }) {
@@ -79,11 +84,11 @@ struct VisionBoardDetailView: View {
                                 systemImage: visionBoard.isFavorite ? "heart.slash" : "heart"
                             )
                         }
-                        
+
                         Button("Share") {
                             showingShareSheet = true
                         }
-                        
+
                         Button("Delete", role: .destructive) {
                             showingDeleteAlert = true
                         }
@@ -93,6 +98,9 @@ struct VisionBoardDetailView: View {
                     }
                 }
             }
+        }
+        .sheet(isPresented: $showingEditView) {
+            EditVisionBoardView(visionBoard: visionBoard)
         }
         .sheet(isPresented: $showingShareSheet) {
             ShareSheet(items: [createShareableContent()])
