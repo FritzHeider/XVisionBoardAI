@@ -116,10 +116,14 @@ struct VisionBoard: Codable, Identifiable {
         ImageStore.load(userImageFilename)
     }
 
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        return f
+    }()
+
     var formattedCreatedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: createdAt)
+        VisionBoard.dateFormatter.string(from: createdAt)
     }
 
     mutating func incrementViewCount() {

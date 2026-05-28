@@ -97,7 +97,7 @@ struct CreateVisionBoardView: View {
         .sheet(isPresented: $showingUpgrade) {
             SubscriptionView()
         }
-        .onChange(of: visionBoardManager.isGenerating) { isGenerating in
+        .onChange(of: visionBoardManager.isGenerating) { _, isGenerating in
             if !isGenerating && currentStep == .generate {
                 if let visionBoard = visionBoardManager.currentGeneratingBoard {
                     createdVisionBoard = visionBoard
