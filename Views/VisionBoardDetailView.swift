@@ -19,7 +19,7 @@ struct VisionBoardDetailView: View {
     @State private var showingDeleteAlert = false
     @State private var showingFullScreenImage: VisionBoardImage?
     @State private var currentAffirmationIndex = 0
-    @State private var affirmationTimer: Timer?
+    @State private var affirmationTask: Task<Void, Never>?
     
     var body: some View {
         NavigationStack {
@@ -109,10 +109,10 @@ struct VisionBoardDetailView: View {
             }
         }
         .onAppear {
-            startAffirmationTimer()
+            startAffirmationCycle()
         }
         .onDisappear {
-            stopAffirmationTimer()
+            stopAffirmationCycle()
             speechManager.stop()
         }
     }
@@ -359,20 +359,23 @@ struct VisionBoardDetailView: View {
     }
     
     // MARK: - Helper Methods
-    
-    private func startAffirmationTimer() {
+
+    private func startAffirmationCycle() {
         guard !visionBoard.affirmations.isEmpty else { return }
-        
-        affirmationTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
-            withAnimation {
-                currentAffirmationIndex = (currentAffirmationIndex + 1) % visionBoard.affirmations.count
+        affirmationTask = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(5))
+                guard !Task.isCancelled else { break }
+                await MainActor.run {
+                    withAnimation { currentAffirmationIndex = (currentAffirmationIndex + 1) % visionBoard.affirmations.count }
+                }
             }
         }
     }
-    
-    private func stopAffirmationTimer() {
-        affirmationTimer?.invalidate()
-        affirmationTimer = nil
+
+    private func stopAffirmationCycle() {
+        affirmationTask?.cancel()
+        affirmationTask = nil
     }
     
     private func createShareableContent() -> String {
