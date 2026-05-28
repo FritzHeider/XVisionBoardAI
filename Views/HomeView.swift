@@ -172,22 +172,25 @@ struct HomeView: View {
             
             // Why personalization works
             VStack(spacing: 12) {
-                PersonalizationBenefit(
+                IconRow(
                     icon: "heart.fill",
                     title: "Emotional Connection",
-                    description: "Seeing yourself makes dreams feel achievable"
+                    description: "Seeing yourself makes dreams feel achievable",
+                    iconColor: .cosmicGold
                 )
-                
-                PersonalizationBenefit(
+
+                IconRow(
                     icon: "brain.head.profile",
                     title: "Subconscious Programming",
-                    description: "Your brain recognizes you in success scenarios"
+                    description: "Your brain recognizes you in success scenarios",
+                    iconColor: .cosmicGold
                 )
-                
-                PersonalizationBenefit(
+
+                IconRow(
                     icon: "bolt.fill",
                     title: "Faster Results",
-                    description: "Studies show 3x acceleration in manifestation"
+                    description: "Studies show 3x acceleration in manifestation",
+                    iconColor: .cosmicGold
                 )
             }
             .padding()
@@ -245,22 +248,25 @@ struct HomeView: View {
                 .foregroundColor(.cosmicWhite)
             
             VStack(spacing: 12) {
-                ManifestationTip(
+                IconRow(
                     icon: "clock.fill",
                     title: "Daily Visualization",
-                    description: "Spend 5-10 minutes daily viewing your vision boards"
+                    description: "Spend 5-10 minutes daily viewing your vision boards",
+                    iconColor: .cosmicPurple
                 )
-                
-                ManifestationTip(
+
+                IconRow(
                     icon: "heart.text.square.fill",
                     title: "Feel the Emotions",
-                    description: "Experience the joy and excitement of achieving your goals"
+                    description: "Experience the joy and excitement of achieving your goals",
+                    iconColor: .cosmicPurple
                 )
-                
-                ManifestationTip(
+
+                IconRow(
                     icon: "target",
                     title: "Take Inspired Action",
-                    description: "Let your vision boards guide your daily decisions and actions"
+                    description: "Let your vision boards guide your daily decisions and actions",
+                    iconColor: .cosmicPurple
                 )
             }
             .padding()
@@ -271,84 +277,30 @@ struct HomeView: View {
 
 // MARK: - Supporting Views
 
-struct StatCard: View {
-    let title: String
-    let value: String
-    let icon: String
-    let color: Color
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(color)
-            
-            Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(.cosmicWhite)
-            
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.cosmicWhite.opacity(0.7))
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .cosmicCard()
-    }
-}
-
-struct PersonalizationBenefit: View {
+struct IconRow: View {
     let icon: String
     let title: String
     let description: String
-    
+    let iconColor: Color
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundColor(.cosmicGold)
+                .foregroundColor(iconColor)
                 .frame(width: 24)
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(.cosmicWhite)
-                
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.cosmicWhite.opacity(0.8))
-            }
-            
-            Spacer()
-        }
-    }
-}
 
-struct ManifestationTip: View {
-    let icon: String
-    let title: String
-    let description: String
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(.cosmicPurple)
-                .frame(width: 24)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.cosmicWhite)
-                
                 Text(description)
                     .font(.caption)
                     .foregroundColor(.cosmicWhite.opacity(0.8))
             }
-            
+
             Spacer()
         }
     }
