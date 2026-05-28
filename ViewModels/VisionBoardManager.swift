@@ -86,40 +86,48 @@ class VisionBoardManager {
         goals: [String],
         style: VisionBoardStyle
     ) async throws -> [String] {
+        do {
+            return try await ClaudeAPIService.generateAffirmations(
+                description: description,
+                goals: goals,
+                style: style.displayName
+            )
+        } catch ClaudeAPIError.missingAPIKey {
+            // Fall through to template affirmations when no key configured
+        } catch {
+            // Log but fall through to templates on any API error
+            print("Claude API error: \(error)")
+        }
+        return templateAffirmations(goals: goals, style: style)
+    }
 
-        try await Task.sleep(nanoseconds: 2_000_000_000)
-        
-        let baseAffirmations = [
+    private func templateAffirmations(goals: [String], style: VisionBoardStyle) -> [String] {
+        var affirmations: [String] = []
+        for goal in goals.prefix(3) {
+            affirmations.append("I am successfully achieving my goal of \(goal.lowercased())")
+        }
+        switch style {
+        case .luxurious:
+            affirmations.append("I live in luxury and abundance flows to me effortlessly")
+        case .natural:
+            affirmations.append("I am in harmony with nature and my authentic self")
+        case .futuristic:
+            affirmations.append("I embrace innovation and create my future with technology")
+        case .artistic:
+            affirmations.append("My creativity flows freely and inspires others")
+        case .minimalist:
+            affirmations.append("I find peace and clarity in simplicity and focus")
+        case .cinematic:
+            affirmations.append("My life unfolds like an inspiring movie with perfect timing")
+        }
+        let base = [
             "I am living my dream life with confidence and joy",
             "Every day brings me closer to my manifestation goals",
             "I attract abundance and success in all areas of my life",
             "My vision is becoming my reality through focused intention",
             "I am worthy of all the success and happiness I desire"
         ]
-        
-        // Customize based on goals and style
-        var customAffirmations: [String] = []
-        
-        for goal in goals.prefix(3) {
-            customAffirmations.append("I am successfully achieving my goal of \(goal.lowercased())")
-        }
-        
-        switch style {
-        case .luxurious:
-            customAffirmations.append("I live in luxury and abundance flows to me effortlessly")
-        case .natural:
-            customAffirmations.append("I am in harmony with nature and my authentic self")
-        case .futuristic:
-            customAffirmations.append("I embrace innovation and create my future with technology")
-        case .artistic:
-            customAffirmations.append("My creativity flows freely and inspires others")
-        case .minimalist:
-            customAffirmations.append("I find peace and clarity in simplicity and focus")
-        case .cinematic:
-            customAffirmations.append("My life unfolds like an inspiring movie with perfect timing")
-        }
-        
-        return (customAffirmations + baseAffirmations).prefix(5).map { $0 }
+        return Array((affirmations + base).prefix(5))
     }
     
     private func generatePersonalizedImages(for visionBoard: VisionBoard) async throws -> [VisionBoardImage] {
