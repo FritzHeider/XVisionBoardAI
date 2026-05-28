@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcodebuild -project XVisionBoardAI.xcodeproj -scheme XVisionBoardAI -destination 'platform=iOS Simulator,name=iPhone 16' build)",
+      "Bash(sudo xcode-select -s /Applications/Xcode.app/Contents/Developer)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project /Users/drop/XVisionBoardAI/.claude/worktrees/improve-all-20/XVisionBoardAI.xcodeproj -scheme XVisionBoardAI -destination 'platform=iOS Simulator,name=iPhone 16' build)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -license accept)",
+      "Bash(xcrun --sdk iphonesimulator --show-sdk-path)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun *)",
+      "Bash(swiftc *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project XVisionBoardAI.xcodeproj -scheme XVisionBoardAI -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project XVisionBoardAI.xcodeproj -scheme XVisionBoardAI -destination 'generic/platform=iOS Simulator' build CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project XVisionBoardAI.xcodeproj -scheme XVisionBoardAI -destination 'platform=iOS Simulator,id=CB655374-67A9-4A9D-B49F-715C60B8BF4A' build CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project XVisionBoardAI.xcodeproj -scheme XVisionBoardAI -sdk iphonesimulator build CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO)",
+      "Bash(git commit *)"
+    ]
+  }
+}

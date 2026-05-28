@@ -216,6 +216,7 @@ class VisionBoardManager {
         } else {
             visionBoards[boardIndex].manifestationGoals[goalIndex].markAchieved()
         }
+        visionBoards[boardIndex].updatedAt = Date()
         saveVisionBoards()
     }
 

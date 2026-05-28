@@ -11,7 +11,7 @@ import SwiftUI
 
 // MARK: - ManifestationGoal Model
 
-struct ManifestationGoal: Codable, Identifiable, Hashable {
+struct ManifestationGoal: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     var title: String
     var isAchieved: Bool
@@ -21,7 +21,6 @@ struct ManifestationGoal: Codable, Identifiable, Hashable {
         self.id = UUID()
         self.title = title
         self.isAchieved = false
-        self.achievedAt = nil
     }
 
     mutating func markAchieved() {
@@ -33,6 +32,9 @@ struct ManifestationGoal: Codable, Identifiable, Hashable {
         isAchieved = false
         achievedAt = nil
     }
+
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
 }
 
 // MARK: - VisionBoard Model
