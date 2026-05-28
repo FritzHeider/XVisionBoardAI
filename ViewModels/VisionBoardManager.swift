@@ -259,24 +259,42 @@ class VisionBoardManager {
     }
     
     // MARK: - Data Persistence
-    
+
+    private static var boardsDirectory: URL {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let dir = docs.appendingPathComponent("VisionBoards", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
     private func saveVisionBoards() {
-        do {
-            let data = try JSONEncoder().encode(visionBoards)
-            userDefaults.set(data, forKey: visionBoardsKey)
-        } catch {
-            print("Failed to save vision boards: \(error)")
+        let dir = Self.boardsDirectory
+        for board in visionBoards {
+            let file = dir.appendingPathComponent("\(board.id.uuidString).json")
+            if let data = try? JSONEncoder().encode(board) {
+                try? data.write(to: file, options: .atomic)
+            }
+        }
+        // Remove files for deleted boards
+        let existingIDs = Set(visionBoards.map { $0.id.uuidString + ".json" })
+        if let files = try? FileManager.default.contentsOfDirectory(atPath: dir.path) {
+            for file in files where !existingIDs.contains(file) {
+                try? FileManager.default.removeItem(at: dir.appendingPathComponent(file))
+            }
         }
     }
-    
+
     private func loadVisionBoards() {
-        guard let data = userDefaults.data(forKey: visionBoardsKey) else { return }
-        
-        do {
-            visionBoards = try JSONDecoder().decode([VisionBoard].self, from: data)
-        } catch {
-            print("Failed to load vision boards: \(error)")
-        }
+        let dir = Self.boardsDirectory
+        guard let files = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { return }
+        visionBoards = files
+            .filter { $0.hasSuffix(".json") }
+            .compactMap { filename -> VisionBoard? in
+                let file = dir.appendingPathComponent(filename)
+                guard let data = try? Data(contentsOf: file) else { return nil }
+                return try? JSONDecoder().decode(VisionBoard.self, from: data)
+            }
+            .sorted { $0.createdAt < $1.createdAt }
     }
     
     // MARK: - Computed Properties
