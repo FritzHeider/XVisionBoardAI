@@ -86,13 +86,13 @@ struct CreateVisionBoardView: View {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .foregroundColor(.cosmicWhite)
+                    .foregroundStyle(Color.astralText)
                 }
                 
                 ToolbarItem(placement: .principal) {
                     Text(currentStep.title)
                         .font(.headline)
-                        .foregroundColor(.cosmicWhite)
+                        .foregroundStyle(Color.astralText)
                 }
             }
         }
@@ -137,13 +137,13 @@ struct CreateVisionBoardView: View {
             HStack {
                 Text("Step \(CreationStep.allCases.firstIndex(of: currentStep)! + 1) of \(CreationStep.allCases.count)")
                     .font(.caption)
-                    .foregroundColor(.cosmicWhite.opacity(0.7))
+                    .foregroundStyle(Color.astralText.opacity(0.7))
                 
                 Spacer()
                 
                 Text("\(Int(currentStep.progress * 100))%")
                     .font(.caption)
-                    .foregroundColor(.cosmicWhite.opacity(0.7))
+                    .foregroundStyle(Color.astralText.opacity(0.7))
             }
         }
         .padding()
@@ -178,7 +178,7 @@ struct CreateVisionBoardView: View {
         VStack(spacing: 24) {
             Image(systemName: "person.circle.fill")
                 .font(.system(size: 80))
-                .foregroundColor(.cosmicPurple)
+                .foregroundStyle(Color.astralViolet)
                 .pulsing()
             
             VStack(spacing: 16) {
@@ -192,9 +192,9 @@ struct CreateVisionBoardView: View {
             
             // Feature badges
             VStack(spacing: 12) {
-                FeatureBadge(icon: "brain.head.profile", text: "AI-Powered Personalization")
-                FeatureBadge(icon: "camera.fill", text: "Face Integration")
-                FeatureBadge(icon: "heart.fill", text: "Dream Visualization")
+                FeatureBadge(icon: "brain.head.profile", text: "AI-Powered Personalization", color: .astralViolet)
+                FeatureBadge(icon: "camera.fill", text: "Face Integration", color: .astralIndigo)
+                FeatureBadge(icon: "heart.fill", text: "Dream Visualization", color: .astralRose)
             }
             
             // Selfie preview or capture
@@ -213,7 +213,7 @@ struct CreateVisionBoardView: View {
                     Button("Retake Photo") {
                         showingCamera = true
                     }
-                    .foregroundColor(.cosmicPurple)
+                    .foregroundStyle(Color.astralViolet)
                 }
             } else {
                 VStack(spacing: 16) {
@@ -234,7 +234,7 @@ struct CreateVisionBoardView: View {
                 Text("💡 Tips for best results:")
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                    .foregroundColor(.cosmicGold)
+                    .foregroundStyle(Color.astralGold)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("• Look directly at the camera")
@@ -243,7 +243,7 @@ struct CreateVisionBoardView: View {
                     Text("• Smile naturally - you're manifesting your dreams!")
                 }
                 .font(.caption)
-                .foregroundColor(.cosmicWhite.opacity(0.8))
+                .foregroundStyle(Color.astralText.opacity(0.8))
             }
             .padding()
             .cosmicCard()
@@ -270,7 +270,7 @@ struct CreateVisionBoardView: View {
                     Text("Vision Description")
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundColor(.cosmicWhite)
+                        .foregroundStyle(Color.astralText)
                     
                     TextEditor(text: $description)
                         .frame(minHeight: 120)
@@ -283,7 +283,7 @@ struct CreateVisionBoardView: View {
                                         .stroke(Color.cosmicPurple.opacity(0.3), lineWidth: 1)
                                 )
                         )
-                        .foregroundColor(.cosmicWhite)
+                        .foregroundStyle(Color.astralText)
                 }
             }
             
@@ -292,7 +292,7 @@ struct CreateVisionBoardView: View {
                 Text("💡 Example descriptions:")
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                    .foregroundColor(.cosmicGold)
+                    .foregroundStyle(Color.astralGold)
                 
                 VStack(alignment: .leading, spacing: 8) {
                     ExamplePrompt(text: "I want to live in a beautiful modern home by the ocean, travel to exotic destinations, and run a successful business that helps people.")
@@ -395,12 +395,12 @@ struct CreateVisionBoardView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Your Goals:")
                         .font(.headline)
-                        .foregroundColor(.cosmicWhite)
+                        .foregroundStyle(Color.astralText)
                     
                     ForEach(manifestationGoals.indices, id: \.self) { index in
                         HStack {
                             Text("• \(manifestationGoals[index])")
-                                .foregroundColor(.cosmicWhite)
+                                .foregroundStyle(Color.astralText)
                             
                             Spacer()
                             
@@ -408,7 +408,7 @@ struct CreateVisionBoardView: View {
                                 manifestationGoals.remove(at: index)
                             }) {
                                 Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.red)
+                                    .foregroundStyle(.red)
                             }
                         }
                         .padding()
@@ -422,7 +422,7 @@ struct CreateVisionBoardView: View {
                 Text("💡 Suggested goals:")
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                    .foregroundColor(.cosmicGold)
+                    .foregroundStyle(Color.astralGold)
                 
                 LazyVGrid(columns: [
                     GridItem(.flexible()),
@@ -438,7 +438,7 @@ struct CreateVisionBoardView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
                         .background(Color.cosmicPurple.opacity(0.3))
-                        .foregroundColor(.cosmicWhite)
+                        .foregroundStyle(Color.astralText)
                         .clipShape(Capsule())
                     }
                 }
@@ -454,7 +454,7 @@ struct CreateVisionBoardView: View {
         VStack(spacing: 32) {
             Image(systemName: "brain.head.profile")
                 .font(.system(size: 80))
-                .foregroundColor(.cosmicPurple)
+                .foregroundStyle(Color.astralViolet)
                 .pulsing()
             
             VStack(spacing: 16) {
@@ -475,7 +475,7 @@ struct CreateVisionBoardView: View {
                 
                 Text("\(Int(visionBoardManager.generationProgress * 100))% Complete")
                     .font(.subheadline)
-                    .foregroundColor(.cosmicWhite)
+                    .foregroundStyle(Color.astralText)
             }
             .padding()
             .cosmicCard()
@@ -513,7 +513,7 @@ struct CreateVisionBoardView: View {
         VStack(spacing: 32) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 80))
-                .foregroundColor(.green)
+                .foregroundStyle(.green)
                 .pulsing()
             
             VStack(spacing: 16) {
@@ -530,7 +530,7 @@ struct CreateVisionBoardView: View {
                     Text(visionBoard.title)
                         .font(.title2)
                         .fontWeight(.bold)
-                        .foregroundColor(.cosmicWhite)
+                        .foregroundStyle(Color.astralText)
                     
                     // Preview of first few images
                     LazyVGrid(columns: [
@@ -572,7 +572,7 @@ struct CreateVisionBoardView: View {
                     resetForm()
                     currentStep = .selfie
                 }
-                .foregroundColor(.cosmicPurple)
+                .foregroundStyle(Color.astralViolet)
             }
         }
     }
@@ -585,7 +585,7 @@ struct CreateVisionBoardView: View {
                 Button("Previous") {
                     previousStep()
                 }
-                .foregroundColor(.cosmicWhite)
+                .foregroundStyle(Color.astralText)
             }
             
             Spacer()
@@ -712,7 +712,7 @@ struct ExamplePrompt: View {
     var body: some View {
         Text("“\(text)”")
             .font(.caption)
-            .foregroundColor(.cosmicWhite.opacity(0.8))
+            .foregroundStyle(Color.astralText.opacity(0.8))
             .italic()
             .padding(.leading, 8)
     }
@@ -728,24 +728,24 @@ struct LayoutOption: View {
             HStack(spacing: 16) {
                 Image(systemName: layout.systemImage)
                     .font(.title2)
-                    .foregroundColor(isSelected ? .cosmicGold : .cosmicWhite)
+                    .foregroundStyle(isSelected ? Color.astralGold : Color.astralText)
                     .frame(width: 30)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(layout.displayName)
                         .font(.headline)
-                        .foregroundColor(.cosmicWhite)
+                        .foregroundStyle(Color.astralText)
                     
                     Text(layout.description)
                         .font(.caption)
-                        .foregroundColor(.cosmicWhite.opacity(0.8))
+                        .foregroundStyle(Color.astralText.opacity(0.8))
                 }
                 
                 Spacer()
                 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.cosmicGold)
+                        .foregroundStyle(Color.astralGold)
                 }
             }
             .padding()
@@ -787,11 +787,11 @@ struct StyleOption: View {
                     Text(style.displayName)
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.cosmicWhite)
+                        .foregroundStyle(Color.astralText)
                     
                     Text(style.description)
                         .font(.caption)
-                        .foregroundColor(.cosmicWhite.opacity(0.8))
+                        .foregroundStyle(Color.astralText.opacity(0.8))
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
                 }
@@ -807,16 +807,16 @@ struct GenerationStep: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: isComplete ? "checkmark.circle.fill" : "circle")
-                .foregroundColor(isComplete ? .green : .gray)
+                .foregroundStyle(isComplete ? .green : .gray)
             
             Text(title)
-                .foregroundColor(.cosmicWhite)
+                .foregroundStyle(Color.astralText)
             
             Spacer()
             
             if isComplete {
                 Image(systemName: "checkmark")
-                    .foregroundColor(.green)
+                    .foregroundStyle(.green)
             }
         }
     }

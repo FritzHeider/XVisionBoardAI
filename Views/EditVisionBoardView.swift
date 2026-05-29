@@ -1,11 +1,3 @@
-//
-//  EditVisionBoardView.swift
-//  XVisionBoardAI
-//
-//  Created by AI Assistant
-//  Copyright © 2025 XVisionBoard AI. All rights reserved.
-//
-
 import SwiftUI
 
 struct EditVisionBoardView: View {
@@ -28,26 +20,27 @@ struct EditVisionBoardView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.cosmicBlack.ignoresSafeArea()
+                Color.astralBlack.ignoresSafeArea()
+
                 ScrollView {
-                    VStack(spacing: 24) {
+                    VStack(spacing: AstralTheme.Spacing.xl) {
                         titleSection
                         goalsSection
                         Spacer(minLength: 100)
                     }
-                    .padding()
+                    .padding(AstralTheme.Spacing.lg)
                 }
             }
             .navigationTitle("Edit Vision Board")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
-                        .foregroundColor(.cosmicWhite)
+                        .foregroundStyle(Color.astralTextMuted)
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { save() }
-                        .foregroundColor(.cosmicGold)
+                        .foregroundStyle(Color.astralGold)
                         .fontWeight(.semibold)
                 }
             }
@@ -55,58 +48,85 @@ struct EditVisionBoardView: View {
     }
 
     private var titleSection: some View {
-        VStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 8) {
+        VStack(spacing: AstralTheme.Spacing.md) {
+            VStack(alignment: .leading, spacing: AstralTheme.Spacing.xs) {
                 Text("Title")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(.cosmicWhite)
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .foregroundStyle(Color.astralTextMuted)
+                    .textCase(.uppercase)
+                    .kerning(0.5)
+
                 TextField("Vision board title", text: $title)
-                    .padding()
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.cosmicGray))
-                    .foregroundColor(.cosmicWhite)
+                    .padding(AstralTheme.Spacing.md)
+                    .background {
+                        RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
+                            .fill(Color.astralSurface)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
+                                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                            }
+                    }
+                    .foregroundStyle(Color.astralText)
+                    .tint(Color.astralViolet)
             }
-            VStack(alignment: .leading, spacing: 8) {
+
+            VStack(alignment: .leading, spacing: AstralTheme.Spacing.xs) {
                 Text("Description")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(.cosmicWhite)
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
+                    .foregroundStyle(Color.astralTextMuted)
+                    .textCase(.uppercase)
+                    .kerning(0.5)
+
                 TextEditor(text: $description)
                     .frame(minHeight: 100)
-                    .padding()
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.cosmicGray))
-                    .foregroundColor(.cosmicWhite)
+                    .padding(AstralTheme.Spacing.md)
+                    .background {
+                        RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
+                            .fill(Color.astralSurface)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
+                                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                            }
+                    }
+                    .foregroundStyle(Color.astralText)
+                    .tint(Color.astralViolet)
                     .scrollContentBackground(.hidden)
             }
         }
     }
 
     private var goalsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: AstralTheme.Spacing.md) {
             Text("Manifestation Goals")
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(.cosmicWhite)
+                .font(.system(.title2, design: .rounded, weight: .bold))
+                .foregroundStyle(Color.astralText)
 
-            // Add goal
-            HStack {
-                TextField("New goal...", text: $newGoalText)
-                    .padding()
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.cosmicGray))
-                    .foregroundColor(.cosmicWhite)
+            HStack(spacing: AstralTheme.Spacing.sm) {
+                TextField("New goal…", text: $newGoalText)
+                    .padding(AstralTheme.Spacing.md)
+                    .background {
+                        RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
+                            .fill(Color.astralSurface)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
+                                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                            }
+                    }
+                    .foregroundStyle(Color.astralText)
+                    .tint(Color.astralViolet)
+
                 Button("Add") {
                     let trimmed = newGoalText.trimmingCharacters(in: .whitespaces)
                     guard !trimmed.isEmpty else { return }
                     goals.append(ManifestationGoal(title: trimmed))
                     newGoalText = ""
                 }
-                .cosmicButton()
+                .astralButton(.primary, isEnabled: !newGoalText.trimmingCharacters(in: .whitespaces).isEmpty)
                 .disabled(newGoalText.trimmingCharacters(in: .whitespaces).isEmpty)
             }
 
-            // Goals list
             ForEach(goals.indices, id: \.self) { i in
-                HStack(spacing: 12) {
+                HStack(spacing: AstralTheme.Spacing.md) {
                     Button {
                         goals[i].isAchieved.toggle()
                         if goals[i].isAchieved {
@@ -116,22 +136,25 @@ struct EditVisionBoardView: View {
                         }
                     } label: {
                         Image(systemName: goals[i].isAchieved ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(goals[i].isAchieved ? .cosmicGold : .gray)
+                            .foregroundStyle(goals[i].isAchieved ? Color.astralGold : Color.astralTextDim)
                             .font(.title3)
                     }
+
                     Text(goals[i].title)
-                        .foregroundColor(.cosmicWhite)
-                        .strikethrough(goals[i].isAchieved, color: .cosmicGold)
+                        .foregroundStyle(Color.astralText)
+                        .strikethrough(goals[i].isAchieved, color: .astralGold)
+
                     Spacer()
+
                     Button {
                         goals.remove(at: i)
                     } label: {
                         Image(systemName: "trash")
-                            .foregroundColor(.red.opacity(0.7))
+                            .foregroundStyle(Color.astralError.opacity(0.7))
                     }
                 }
-                .padding()
-                .cosmicCard()
+                .padding(AstralTheme.Spacing.md)
+                .astralCard()
             }
         }
     }

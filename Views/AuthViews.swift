@@ -1,24 +1,20 @@
-//
-//  AuthViews.swift
-//  XVisionBoardAI
-//
-//  Created by AI Assistant
-//  Copyright © 2025 XVisionBoard AI. All rights reserved.
-//
-
 import SwiftUI
+
+// MARK: - SignUpView
 
 struct SignUpView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(UserManager.self) var userManager
-    
+
     @State private var email = ""
     @State private var username = ""
     @State private var password = ""
     @State private var confirmPassword = ""
     @State private var agreeToTerms = false
     @State private var showingError = false
-    
+    @State private var appeared = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     private var isFormValid: Bool {
         !email.isEmpty &&
         !username.isEmpty &&
@@ -26,112 +22,125 @@ struct SignUpView: View {
         password == confirmPassword &&
         agreeToTerms
     }
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.cosmicBlack.ignoresSafeArea()
-                
+                Color.astralBlack.ignoresSafeArea()
+
+                // Ambient glow
+                Ellipse()
+                    .fill(Color.astralViolet.opacity(0.15))
+                    .frame(width: 300, height: 300)
+                    .blur(radius: 80)
+                    .offset(x: 60, y: -200)
+                    .ignoresSafeArea()
+
                 ScrollView {
-                    VStack(spacing: 32) {
+                    VStack(spacing: AstralTheme.Spacing.xl) {
                         // Header
-                        VStack(spacing: 16) {
-                            Image(systemName: "eye.circle.fill")
-                                .font(.system(size: 60))
-                                .foregroundColor(.cosmicPurple)
-                            
-                            VStack(spacing: 8) {
-                                Text("Join XVisionBoard AI")
-                                    .manifestationTitle()
-                                
+                        VStack(spacing: AstralTheme.Spacing.md) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.auroraGradient)
+                                    .frame(width: 80, height: 80)
+                                    .opacity(0.18)
+                                    .blur(radius: 16)
+
+                                Circle()
+                                    .strokeBorder(Color.auroraGradient, lineWidth: 1.5)
+                                    .frame(width: 72, height: 72)
+
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 30, weight: .semibold))
+                                    .foregroundStyle(Color.auroraGradient)
+                            }
+                            .astralPulsing()
+
+                            VStack(spacing: AstralTheme.Spacing.xs) {
+                                Text("Join ManifestMe")
+                                    .font(.system(.title, design: .rounded, weight: .bold))
+                                    .foregroundStyle(Color.auroraGradient)
+
                                 Text("Start seeing yourself living your dreams")
-                                    .manifestationBody()
+                                    .font(.system(.subheadline, design: .rounded))
+                                    .foregroundStyle(Color.astralTextMuted)
                                     .multilineTextAlignment(.center)
                             }
                         }
-                        .padding(.top, 20)
-                        
+                        .padding(.top, AstralTheme.Spacing.lg)
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 20)
+                        .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.1), value: appeared)
+
                         // Form
-                        VStack(spacing: 20) {
-                            CustomTextField(
-                                title: "Email",
-                                text: $email,
-                                keyboardType: .emailAddress
-                            )
-                            
-                            CustomTextField(
-                                title: "Username",
-                                text: $username
-                            )
-                            
-                            CustomTextField(
-                                title: "Password",
-                                text: $password,
-                                isSecure: true
-                            )
-                            
-                            CustomTextField(
-                                title: "Confirm Password",
-                                text: $confirmPassword,
-                                isSecure: true
-                            )
-                            
-                            // Terms agreement
-                            HStack {
-                                Button(action: {
-                                    agreeToTerms.toggle()
-                                }) {
+                        VStack(spacing: AstralTheme.Spacing.md) {
+                            AstralTextField(title: "Email", text: $email, keyboardType: .emailAddress)
+                            AstralTextField(title: "Username", text: $username)
+                            AstralTextField(title: "Password", text: $password, isSecure: true)
+                            AstralTextField(title: "Confirm Password", text: $confirmPassword, isSecure: true)
+
+                            // Terms
+                            Button {
+                                agreeToTerms.toggle()
+                            } label: {
+                                HStack(spacing: AstralTheme.Spacing.sm) {
                                     Image(systemName: agreeToTerms ? "checkmark.square.fill" : "square")
-                                        .foregroundColor(agreeToTerms ? .cosmicPurple : .gray)
-                                }
-                                
-                                Text("I agree to the Terms of Service and Privacy Policy")
-                                    .font(.caption)
-                                    .foregroundColor(.cosmicWhite.opacity(0.8))
-                                
-                                Spacer()
-                            }
-                        }
-                        .padding(.horizontal)
-                        
-                        // Sign up button
-                        Button("Create Account") {
-                            Task {
-                                let success = await userManager.signUp(
-                                    email: email,
-                                    username: username,
-                                    password: password
-                                )
-                                if success {
-                                    dismiss()
-                                } else {
-                                    showingError = true
+                                        .foregroundStyle(agreeToTerms ? Color.astralViolet : Color.astralTextDim)
+                                        .font(.system(size: 18))
+
+                                    Text("I agree to the Terms of Service and Privacy Policy")
+                                        .font(.system(.caption, design: .rounded))
+                                        .foregroundStyle(Color.astralTextMuted)
+                                        .multilineTextAlignment(.leading)
+
+                                    Spacer()
                                 }
                             }
                         }
-                        .cosmicButton(isEnabled: isFormValid)
-                        .disabled(!isFormValid || userManager.isLoading)
-                        .padding(.horizontal)
-                        
-                        if userManager.isLoading {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .cosmicPurple))
+                        .padding(.horizontal, AstralTheme.Spacing.lg)
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 16)
+                        .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.2), value: appeared)
+
+                        // CTA
+                        VStack(spacing: AstralTheme.Spacing.sm) {
+                            Button("Create Account") {
+                                Task {
+                                    let success = await userManager.signUp(
+                                        email: email,
+                                        username: username,
+                                        password: password
+                                    )
+                                    if success { dismiss() } else { showingError = true }
+                                }
+                            }
+                            .astralButton(.primary, isEnabled: isFormValid)
+                            .frame(maxWidth: .infinity)
+                            .disabled(!isFormValid || userManager.isLoading)
+                            .padding(.horizontal, AstralTheme.Spacing.lg)
+
+                            if userManager.isLoading {
+                                ProgressView()
+                                    .tint(Color.astralViolet)
+                            }
                         }
-                        
+                        .opacity(appeared ? 1 : 0)
+                        .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.3), value: appeared)
+
                         Spacer(minLength: 40)
                     }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .foregroundColor(.cosmicWhite)
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundStyle(Color.astralTextMuted)
                 }
             }
         }
+        .onAppear { appeared = true }
         .alert("Sign Up Failed", isPresented: $showingError) {
             Button("OK") { }
         } message: {
@@ -140,100 +149,114 @@ struct SignUpView: View {
     }
 }
 
+// MARK: - SignInView
+
 struct SignInView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(UserManager.self) var userManager
-    
+
     @State private var email = ""
     @State private var password = ""
     @State private var showingError = false
-    
-    private var isFormValid: Bool {
-        !email.isEmpty && !password.isEmpty
-    }
-    
+    @State private var appeared = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var isFormValid: Bool { !email.isEmpty && !password.isEmpty }
+
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.cosmicBlack.ignoresSafeArea()
-                
-                VStack(spacing: 32) {
+                Color.astralBlack.ignoresSafeArea()
+
+                Ellipse()
+                    .fill(Color.astralIndigo.opacity(0.15))
+                    .frame(width: 280, height: 280)
+                    .blur(radius: 80)
+                    .offset(x: -60, y: -160)
+                    .ignoresSafeArea()
+
+                VStack(spacing: AstralTheme.Spacing.xl) {
                     Spacer()
-                    
+
                     // Header
-                    VStack(spacing: 16) {
-                        Image(systemName: "eye.circle.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(.cosmicPurple)
-                        
-                        VStack(spacing: 8) {
+                    VStack(spacing: AstralTheme.Spacing.md) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.auroraGradient)
+                                .frame(width: 80, height: 80)
+                                .opacity(0.18)
+                                .blur(radius: 16)
+
+                            Circle()
+                                .strokeBorder(Color.auroraGradient, lineWidth: 1.5)
+                                .frame(width: 72, height: 72)
+
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 30, weight: .semibold))
+                                .foregroundStyle(Color.auroraGradient)
+                        }
+                        .astralPulsing()
+
+                        VStack(spacing: AstralTheme.Spacing.xs) {
                             Text("Welcome Back")
-                                .manifestationTitle()
-                            
+                                .font(.system(.title, design: .rounded, weight: .bold))
+                                .foregroundStyle(Color.auroraGradient)
+
                             Text("Continue your manifestation journey")
-                                .manifestationBody()
+                                .font(.system(.subheadline, design: .rounded))
+                                .foregroundStyle(Color.astralTextMuted)
                         }
                     }
-                    
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 20)
+                    .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.1), value: appeared)
+
                     // Form
-                    VStack(spacing: 20) {
-                        CustomTextField(
-                            title: "Email",
-                            text: $email,
-                            keyboardType: .emailAddress
-                        )
-                        
-                        CustomTextField(
-                            title: "Password",
-                            text: $password,
-                            isSecure: true
-                        )
+                    VStack(spacing: AstralTheme.Spacing.md) {
+                        AstralTextField(title: "Email", text: $email, keyboardType: .emailAddress)
+                        AstralTextField(title: "Password", text: $password, isSecure: true)
                     }
-                    .padding(.horizontal)
-                    
-                    // Sign in button
-                    Button("Sign In") {
-                        Task {
-                            let success = await userManager.signIn(
-                                email: email,
-                                password: password
-                            )
-                            if success {
-                                dismiss()
-                            } else {
-                                showingError = true
+                    .padding(.horizontal, AstralTheme.Spacing.lg)
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 16)
+                    .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.2), value: appeared)
+
+                    // CTA
+                    VStack(spacing: AstralTheme.Spacing.sm) {
+                        Button("Sign In") {
+                            Task {
+                                let success = await userManager.signIn(email: email, password: password)
+                                if success { dismiss() } else { showingError = true }
                             }
                         }
+                        .astralButton(.primary, isEnabled: isFormValid)
+                        .frame(maxWidth: .infinity)
+                        .disabled(!isFormValid || userManager.isLoading)
+                        .padding(.horizontal, AstralTheme.Spacing.lg)
+
+                        if userManager.isLoading {
+                            ProgressView().tint(Color.astralViolet)
+                        }
+
+                        Button("Forgot Password?") { }
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(Color.astralViolet)
                     }
-                    .cosmicButton(isEnabled: isFormValid)
-                    .disabled(!isFormValid || userManager.isLoading)
-                    .padding(.horizontal)
-                    
-                    if userManager.isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .cosmicPurple))
-                    }
-                    
-                    // Forgot password
-                    Button("Forgot Password?") {
-                        // Handle forgot password
-                    }
-                    .foregroundColor(.cosmicPurple)
-                    .font(.subheadline)
-                    
+                    .opacity(appeared ? 1 : 0)
+                    .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.3), value: appeared)
+
                     Spacer()
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .foregroundColor(.cosmicWhite)
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundStyle(Color.astralTextMuted)
                 }
             }
         }
+        .onAppear { appeared = true }
         .alert("Sign In Failed", isPresented: $showingError) {
             Button("OK") { }
         } message: {
@@ -242,19 +265,22 @@ struct SignInView: View {
     }
 }
 
-struct CustomTextField: View {
+// MARK: - AstralTextField
+
+struct AstralTextField: View {
     let title: String
     @Binding var text: String
     var keyboardType: UIKeyboardType = .default
     var isSecure: Bool = false
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: AstralTheme.Spacing.xs) {
             Text(title)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.cosmicWhite)
-            
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+                .foregroundStyle(Color.astralTextMuted)
+                .textCase(.uppercase)
+                .kerning(0.5)
+
             Group {
                 if isSecure {
                     SecureField("", text: $text)
@@ -265,27 +291,31 @@ struct CustomTextField: View {
             .keyboardType(keyboardType)
             .autocapitalization(.none)
             .disableAutocorrection(true)
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.cosmicGray)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.cosmicPurple.opacity(0.3), lineWidth: 1)
-                    )
-            )
-            .foregroundColor(.cosmicWhite)
+            .padding(AstralTheme.Spacing.md)
+            .background {
+                RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
+                    .fill(Color.astralSurface)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
+                            .strokeBorder(
+                                text.isEmpty ? Color.astralSurface2 : Color.astralViolet.opacity(0.5),
+                                lineWidth: 1
+                            )
+                    }
+            }
+            .foregroundStyle(Color.astralText)
+            .tint(Color.astralViolet)
         }
     }
 }
 
+// Backward compat alias
+typealias CustomTextField = AstralTextField
+
 #Preview("Sign Up") {
-    SignUpView()
-        .environment(UserManager())
+    SignUpView().environment(UserManager())
 }
 
 #Preview("Sign In") {
-    SignInView()
-        .environment(UserManager())
+    SignInView().environment(UserManager())
 }
-

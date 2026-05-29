@@ -106,7 +106,7 @@ var body: some View {
                 
                 Text(cameraManager.faceQuality.description)
                     .font(.headline)
-                    .foregroundColor(cameraManager.faceQuality.color)
+                    .foregroundStyle(cameraManager.faceQuality.color)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .background(
@@ -124,7 +124,7 @@ var body: some View {
         VStack(spacing: 24) {
             Image(systemName: "camera.fill")
                 .font(.system(size: 80))
-                .foregroundColor(.cosmicPurple)
+                .foregroundStyle(Color.astralViolet)
                 .pulsing()
             
             VStack(spacing: 16) {
@@ -157,7 +157,7 @@ var body: some View {
             Button("Cancel") {
                 isPresented = false
             }
-            .foregroundColor(.cosmicWhite)
+            .foregroundStyle(Color.astralText)
             .padding()
             
             Spacer()
@@ -166,7 +166,7 @@ var body: some View {
                 Button("Photos") {
                     showingImagePicker = true
                 }
-                .foregroundColor(.cosmicWhite)
+                .foregroundStyle(Color.astralText)
                 .padding()
             }
         }
@@ -182,14 +182,14 @@ var body: some View {
                         Label("Good lighting", systemImage: "sun.max.fill")
                     }
                     .font(.caption)
-                    .foregroundColor(.cosmicWhite.opacity(0.8))
+                    .foregroundStyle(Color.astralText.opacity(0.8))
                     
                     HStack(spacing: 16) {
                         Label("Center your face", systemImage: "target")
                         Label("Smile naturally", systemImage: "face.smiling.fill")
                     }
                     .font(.caption)
-                    .foregroundColor(.cosmicWhite.opacity(0.8))
+                    .foregroundStyle(Color.astralText.opacity(0.8))
                 }
                 .padding(.bottom, 8)
             }

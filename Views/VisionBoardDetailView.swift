@@ -60,13 +60,13 @@ struct VisionBoardDetailView: View {
                     Button("Close") {
                         dismiss()
                     }
-                    .foregroundColor(.cosmicWhite)
+                    .foregroundStyle(Color.astralText)
                 }
                 
                 ToolbarItem(placement: .principal) {
                     Text(visionBoard.title)
                         .font(.headline)
-                        .foregroundColor(.cosmicWhite)
+                        .foregroundStyle(Color.astralText)
                         .lineLimit(1)
                 }
                 
@@ -94,7 +94,7 @@ struct VisionBoardDetailView: View {
                         }
                     } label: {
                         Image(systemName: "ellipsis")
-                            .foregroundColor(.cosmicWhite)
+                            .foregroundStyle(Color.astralText)
                     }
                 }
             }
@@ -201,7 +201,7 @@ struct VisionBoardDetailView: View {
                 Text("Your Personalized Vision")
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundColor(.cosmicWhite)
+                    .foregroundStyle(Color.astralText)
                 
                 if visionBoard.isPersonalized {
                     PersonalizedBadge()
@@ -240,7 +240,7 @@ struct VisionBoardDetailView: View {
                 Text("Your Affirmations")
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundColor(.cosmicWhite)
+                    .foregroundStyle(Color.astralText)
                 
                 Spacer()
 
@@ -248,7 +248,7 @@ struct VisionBoardDetailView: View {
                     speechManager.speak(visionBoard.affirmations[currentAffirmationIndex])
                 }
                 .font(.caption)
-                .foregroundColor(.cosmicPurple)
+                .foregroundStyle(Color.astralViolet)
             }
             
             if !visionBoard.affirmations.isEmpty {
@@ -263,7 +263,7 @@ struct VisionBoardDetailView: View {
 
                         Text(visionBoard.affirmations[currentAffirmationIndex])
                             .font(.system(.title3, design: .rounded, weight: .semibold))
-                            .foregroundColor(.cosmicWhite)
+                            .foregroundStyle(Color.astralText)
                             .multilineTextAlignment(.center)
                             .transition(.opacity.combined(with: .scale(scale: 0.97)))
                             .id(currentAffirmationIndex)
@@ -294,7 +294,7 @@ struct VisionBoardDetailView: View {
 
                                 Text(visionBoard.affirmations[index])
                                     .font(.system(.subheadline, design: .rounded))
-                                    .foregroundColor(.cosmicWhite.opacity(0.88))
+                                    .foregroundStyle(Color.astralText.opacity(0.88))
 
                                 Spacer()
                             }
@@ -315,7 +315,7 @@ struct VisionBoardDetailView: View {
                 Text("Manifestation Goals")
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundColor(.cosmicWhite)
+                    .foregroundStyle(Color.astralText)
                 
                 Spacer()
             }
@@ -337,7 +337,7 @@ struct VisionBoardDetailView: View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Manifestation Actions")
                 .font(.system(.title3, design: .rounded, weight: .bold))
-                .foregroundColor(.cosmicWhite)
+                .foregroundStyle(Color.astralText)
 
             VStack(spacing: 0) {
                 actionRow(icon: "bell.badge.fill", iconColor: .cosmicPurple,
@@ -380,23 +380,23 @@ struct VisionBoardDetailView: View {
                         .frame(width: 40, height: 40)
                     Image(systemName: icon)
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(iconColor)
+                        .foregroundStyle(iconColor)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                        .foregroundColor(.cosmicWhite)
+                        .foregroundStyle(Color.astralText)
                     Text(description)
                         .font(.system(.caption, design: .rounded))
-                        .foregroundColor(.cosmicWhite.opacity(0.55))
+                        .foregroundStyle(Color.astralText.opacity(0.55))
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.cosmicWhite.opacity(0.3))
+                    .foregroundStyle(Color.astralText.opacity(0.3))
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
@@ -490,11 +490,11 @@ struct InfoBadge: View {
         HStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.caption)
-                .foregroundColor(.cosmicGold)
+                .foregroundStyle(Color.astralGold)
             
             Text(text)
                 .font(.caption)
-                .foregroundColor(.cosmicWhite.opacity(0.8))
+                .foregroundStyle(Color.astralText.opacity(0.8))
         }
     }
 }
@@ -508,12 +508,12 @@ struct StyleInfoCard: View {
         VStack(spacing: 4) {
             Text(title)
                 .font(.caption)
-                .foregroundColor(.cosmicWhite.opacity(0.7))
+                .foregroundStyle(Color.astralText.opacity(0.7))
             
             Text(value)
                 .font(.caption)
                 .fontWeight(.semibold)
-                .foregroundColor(color)
+                .foregroundStyle(color)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
@@ -583,12 +583,12 @@ struct GoalCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Image(systemName: "target")
-                .foregroundColor(.cosmicGold)
+                .foregroundStyle(Color.astralGold)
             
             Text(goal)
                 .font(.subheadline)
                 .fontWeight(.medium)
-                .foregroundColor(.cosmicWhite)
+                .foregroundStyle(Color.astralText)
                 .multilineTextAlignment(.leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -611,25 +611,25 @@ struct ActionButton: View {
             HStack(spacing: 12) {
                 Image(systemName: icon)
                     .font(.title3)
-                    .foregroundColor(.cosmicPurple)
+                    .foregroundStyle(Color.astralViolet)
                     .frame(width: 24)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.cosmicWhite)
+                        .foregroundStyle(Color.astralText)
                     
                     Text(description)
                         .font(.caption)
-                        .foregroundColor(.cosmicWhite.opacity(0.7))
+                        .foregroundStyle(Color.astralText.opacity(0.7))
                 }
                 
                 Spacer()
                 
                 Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundColor(.cosmicWhite.opacity(0.5))
+                    .foregroundStyle(Color.astralText.opacity(0.5))
             }
             .padding()
             .background(
@@ -672,7 +672,7 @@ struct FullScreenImageView: View {
                     Button("Done") {
                         onDismiss()
                     }
-                    .foregroundColor(.white)
+                    .foregroundStyle(.white)
                     .padding()
                 }
                 
@@ -684,7 +684,7 @@ struct FullScreenImageView: View {
                         
                         Text("This is YOU living your dreams!")
                             .font(.subheadline)
-                            .foregroundColor(.white)
+                            .foregroundStyle(.white)
                             .padding(.horizontal)
                             .padding(.vertical, 8)
                             .background(

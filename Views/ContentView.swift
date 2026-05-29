@@ -1,17 +1,17 @@
-//
-//  ContentView.swift
-//  XVisionBoardAI
-//
-//  Created by AI Assistant
-//  Copyright © 2025 XVisionBoard AI. All rights reserved.
-//
-
 import SwiftUI
+
+// MARK: - App Tabs
+
+enum AppTab: Hashable {
+    case home, create, gallery, profile
+}
+
+// MARK: - Root Router
 
 struct ContentView: View {
     @Environment(UserManager.self) var userManager
     @Environment(StoreManager.self) var storeManager
-    @State private var selectedTab = 0
+    @State private var selectedTab: AppTab = .home
     @State private var showOnboarding = true
 
     var body: some View {
@@ -24,54 +24,30 @@ struct ContentView: View {
                 WelcomeView()
             }
         }
-        .onAppear {
-            setupAppearance()
-        }
-    }
-    
-    private func setupAppearance() {
-        // Configure app-wide appearance
-        UITabBar.appearance().backgroundColor = UIColor.black
-        UINavigationBar.appearance().backgroundColor = UIColor.black
     }
 }
 
+// MARK: - Main Tab View
+
 struct MainTabView: View {
-    @Binding var selectedTab: Int
-    @Environment(UserManager.self) var userManager
-    
+    @Binding var selectedTab: AppTab
+
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeView()
-                .tabItem {
-                    Image(systemName: "house.fill")
-                    Text("Home")
-                }
-                .tag(0)
-            
-            CreateVisionBoardView()
-                .tabItem {
-                    Image(systemName: "camera.fill")
-                    Text("Create")
-                }
-                .tag(1)
-            
-            VisionBoardGalleryView()
-                .tabItem {
-                    Image(systemName: "photo.stack.fill")
-                    Text("Gallery")
-                }
-                .tag(2)
-            
-            ProfileView()
-                .tabItem {
-                    Image(systemName: "person.fill")
-                    Text("Profile")
-                }
-                .tag(3)
+            Tab("Home", systemImage: "house.fill", value: AppTab.home) {
+                HomeView()
+            }
+            Tab("Create", systemImage: "plus.circle.fill", value: AppTab.create) {
+                CreateVisionBoardView()
+            }
+            Tab("Gallery", systemImage: "photo.stack.fill", value: AppTab.gallery) {
+                VisionBoardGalleryView()
+            }
+            Tab("Profile", systemImage: "person.fill", value: AppTab.profile) {
+                ProfileView()
+            }
         }
-        .accentColor(Color.cosmicPurple)
-        .background(Color.cosmicBlack)
+        .tint(.astralViolet)
     }
 }
 
@@ -81,4 +57,3 @@ struct MainTabView: View {
         .environment(StoreManager())
         .environment(VisionBoardManager())
 }
-

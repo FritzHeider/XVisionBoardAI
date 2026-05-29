@@ -1,11 +1,3 @@
-//
-//  HomeView.swift
-//  XVisionBoardAI
-//
-//  Created by AI Assistant
-//  Copyright © 2025 XVisionBoard AI. All rights reserved.
-//
-
 import SwiftUI
 
 struct HomeView: View {
@@ -19,66 +11,62 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.cosmicBlack.ignoresSafeArea()
+                Color.astralBlack.ignoresSafeArea()
 
-                // Background radial glow
-                RadialGradient(
-                    colors: [Color.cosmicPurple.opacity(0.12), Color.clear],
-                    center: .top,
-                    startRadius: 0,
-                    endRadius: 400
-                )
+                // Ambient glow
+                ZStack {
+                    Ellipse()
+                        .fill(Color.astralViolet.opacity(0.13))
+                        .frame(width: 340, height: 340)
+                        .blur(radius: 90)
+                        .offset(x: 80, y: -160)
+
+                    Ellipse()
+                        .fill(Color.astralIndigo.opacity(0.09))
+                        .frame(width: 280, height: 280)
+                        .blur(radius: 80)
+                        .offset(x: -100, y: 100)
+                }
                 .ignoresSafeArea()
 
                 ScrollView {
-                    VStack(spacing: 28) {
+                    VStack(spacing: AstralTheme.Spacing.xl) {
                         headerSection
                         statsSection
-                        createVisionBoardSection
+                        createSection
                         if !visionBoardManager.recentVisionBoards.isEmpty {
-                            recentVisionBoardsSection
+                            recentSection
                         }
-                        manifestationTipsSection
+                        dailyPracticeSection
                         Spacer(minLength: 100)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
+                    .padding(.horizontal, AstralTheme.Spacing.lg)
+                    .padding(.top, AstralTheme.Spacing.sm)
                 }
             }
             .navigationBarHidden(true)
         }
-        .sheet(isPresented: $showingCreateView) {
-            CreateVisionBoardView()
-        }
-        .sheet(isPresented: $showingUpgradeView) {
-            SubscriptionView()
-        }
+        .sheet(isPresented: $showingCreateView) { CreateVisionBoardView() }
+        .sheet(isPresented: $showingUpgradeView) { SubscriptionView() }
     }
 
     // MARK: - Header
 
     private var headerSection: some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
+        HStack(alignment: .center, spacing: AstralTheme.Spacing.md) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(timeGreeting)
                     .font(.system(.subheadline, design: .rounded, weight: .medium))
-                    .foregroundColor(.cosmicWhite.opacity(0.55))
+                    .foregroundStyle(Color.astralTextMuted)
 
                 Text(userManager.currentUser?.username ?? "Dreamer")
                     .font(.system(.title, design: .rounded, weight: .bold))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.cosmicWhite, .cosmicPurple.opacity(0.9)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundStyle(Color.auroraGradient)
 
                 subscriptionBadge
             }
 
             Spacer()
-
             avatarView
         }
     }
@@ -97,7 +85,7 @@ struct HomeView: View {
     private var avatarView: some View {
         ZStack {
             Circle()
-                .stroke(Color.cosmicGradient, lineWidth: 2.5)
+                .strokeBorder(Color.auroraGradient, lineWidth: 2.5)
                 .frame(width: 56, height: 56)
 
             if let profileImage = userManager.currentUser?.profileImage {
@@ -108,38 +96,36 @@ struct HomeView: View {
                     .clipShape(Circle())
             } else {
                 Circle()
-                    .fill(Color.cosmicPurple.opacity(0.2))
+                    .fill(Color.astralViolet.opacity(0.2))
                     .frame(width: 50, height: 50)
-                    .overlay(
+                    .overlay {
                         Image(systemName: "person.fill")
                             .font(.system(size: 22, weight: .medium))
-                            .foregroundColor(.cosmicPurple)
-                    )
+                            .foregroundStyle(Color.astralViolet)
+                    }
             }
         }
-        .shadow(color: .cosmicPurple.opacity(0.4), radius: 8, x: 0, y: 4)
+        .shadow(color: .astralViolet.opacity(0.4), radius: 10, x: 0, y: 4)
     }
 
     private var subscriptionBadge: some View {
         HStack(spacing: 6) {
             Image(systemName: storeManager.hasActiveSubscription ? "crown.fill" : "sparkle")
-                .font(.caption)
-                .foregroundColor(storeManager.hasActiveSubscription ? .cosmicGold : .cosmicWhite.opacity(0.5))
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(storeManager.hasActiveSubscription ? Color.astralGold : Color.astralTextMuted)
 
             Text(storeManager.subscriptionDisplayName)
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundColor(storeManager.hasActiveSubscription ? .cosmicGold : .cosmicWhite.opacity(0.6))
+                .foregroundStyle(storeManager.hasActiveSubscription ? Color.astralGold : Color.astralTextMuted)
 
             if !storeManager.hasActiveSubscription {
-                Button("Upgrade") {
-                    showingUpgradeView = true
-                }
-                .font(.system(size: 11, weight: .bold, design: .rounded))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 3)
-                .background(Color.cosmicGold)
-                .foregroundColor(.black)
-                .clipShape(Capsule())
+                Button("Upgrade") { showingUpgradeView = true }
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 3)
+                    .background(Color.astralGold)
+                    .foregroundStyle(Color.black)
+                    .clipShape(Capsule())
             }
         }
     }
@@ -147,76 +133,63 @@ struct HomeView: View {
     // MARK: - Stats
 
     private var statsSection: some View {
-        HStack(spacing: 12) {
-            StatCard(
-                title: "Boards",
-                value: "\(visionBoardManager.totalVisionBoards)",
-                icon: "photo.stack.fill",
-                color: .cosmicPurple
-            )
-
-            StatCard(
-                title: "Total Views",
-                value: "\(visionBoardManager.totalViews)",
-                icon: "eye.fill",
-                color: .cosmicBlue
-            )
-
+        HStack(spacing: AstralTheme.Spacing.sm) {
+            StatCard(title: "Boards", value: "\(visionBoardManager.totalVisionBoards)",
+                     icon: "photo.stack.fill", color: .astralViolet)
+            StatCard(title: "Total Views", value: "\(visionBoardManager.totalViews)",
+                     icon: "eye.fill", color: .astralIndigo)
             StatCard(
                 title: "Remaining",
                 value: storeManager.maxVisionBoards() == -1
                     ? "∞"
                     : "\(max(0, storeManager.maxVisionBoards() - visionBoardManager.totalVisionBoards))",
                 icon: "plus.circle.fill",
-                color: .cosmicGold
+                color: .astralGold
             )
         }
     }
 
     // MARK: - Create Section
 
-    private var createVisionBoardSection: some View {
-        VStack(spacing: 20) {
-            VStack(spacing: 8) {
+    private var createSection: some View {
+        VStack(spacing: AstralTheme.Spacing.lg) {
+            VStack(spacing: AstralTheme.Spacing.xs) {
                 Text("Create Personalized\nVision Board")
                     .font(.system(.title2, design: .rounded, weight: .bold))
-                    .foregroundColor(.cosmicWhite)
+                    .foregroundStyle(Color.astralText)
                     .multilineTextAlignment(.center)
 
                 Text("A selfie + your goals → AI places you living your dreams")
                     .font(.system(.subheadline, design: .rounded))
-                    .foregroundColor(.cosmicWhite.opacity(0.65))
+                    .foregroundStyle(Color.astralTextMuted)
                     .multilineTextAlignment(.center)
             }
-            .padding(.top, 4)
 
-            VStack(spacing: 14) {
-                benefitRow(icon: "heart.fill", color: .cosmicPink,
+            VStack(spacing: AstralTheme.Spacing.md) {
+                benefitRow(icon: "heart.fill", color: .astralRose,
                            title: "Emotional Connection",
                            detail: "Seeing yourself makes dreams feel achievable")
-                benefitRow(icon: "brain.head.profile", color: .cosmicPurple,
+                benefitRow(icon: "brain.head.profile", color: .astralViolet,
                            title: "Subconscious Programming",
                            detail: "Your brain recognizes you in success scenarios")
-                benefitRow(icon: "bolt.fill", color: .cosmicGold,
+                benefitRow(icon: "bolt.fill", color: .astralGold,
                            title: "Faster Results",
                            detail: "Studies show 3× acceleration in manifestation")
             }
-            .padding(18)
-            .cosmicGlowCard(color: .cosmicPurple)
+            .padding(AstralTheme.Spacing.lg)
+            .astralGlass(tint: .astralViolet)
 
+            // CTA with glow halo
             ZStack {
-                // Glow halo behind button
                 Ellipse()
                     .fill(
                         RadialGradient(
-                            colors: [Color.cosmicPurple.opacity(0.45), Color.clear],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: 80
+                            colors: [Color.astralViolet.opacity(0.40), Color.clear],
+                            center: .center, startRadius: 0, endRadius: 80
                         )
                     )
                     .frame(width: 260, height: 60)
-                    .blur(radius: 18)
+                    .blur(radius: 20)
 
                 Button("Start with Your Selfie") {
                     if storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards) {
@@ -225,30 +198,30 @@ struct HomeView: View {
                         showingUpgradeView = true
                     }
                 }
-                .cosmicButton()
+                .astralButton(.primary)
                 .frame(maxWidth: .infinity)
             }
         }
     }
 
     private func benefitRow(icon: String, color: Color, title: String, detail: String) -> some View {
-        HStack(spacing: 14) {
+        HStack(spacing: AstralTheme.Spacing.md) {
             ZStack {
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: AstralTheme.Radius.sm)
                     .fill(color.opacity(0.18))
                     .frame(width: 36, height: 36)
                 Image(systemName: icon)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(color)
+                    .foregroundStyle(color)
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                    .foregroundColor(.cosmicWhite)
+                    .foregroundStyle(Color.astralText)
                 Text(detail)
                     .font(.system(.caption, design: .rounded))
-                    .foregroundColor(.cosmicWhite.opacity(0.65))
+                    .foregroundStyle(Color.astralTextMuted)
             }
 
             Spacer()
@@ -257,28 +230,24 @@ struct HomeView: View {
 
     // MARK: - Recent Vision Boards
 
-    private var recentVisionBoardsSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
+    private var recentSection: some View {
+        VStack(alignment: .leading, spacing: AstralTheme.Spacing.md) {
             HStack {
                 Text("Recent Boards")
                     .font(.system(.title3, design: .rounded, weight: .bold))
-                    .foregroundColor(.cosmicWhite)
+                    .foregroundStyle(Color.astralText)
 
                 Spacer()
 
-                NavigationLink("See All") {
-                    VisionBoardGalleryView()
-                }
-                .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                .foregroundStyle(
-                    LinearGradient(colors: [.cosmicPurple, .cosmicBlue], startPoint: .leading, endPoint: .trailing)
-                )
+                NavigationLink("See All") { VisionBoardGalleryView() }
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(Color.auroraGradient)
             }
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 14) {
-                    ForEach(visionBoardManager.recentVisionBoards) { visionBoard in
-                        VisionBoardCard(visionBoard: visionBoard)
+                HStack(spacing: AstralTheme.Spacing.md) {
+                    ForEach(visionBoardManager.recentVisionBoards) { board in
+                        VisionBoardCard(visionBoard: board)
                             .frame(width: 180)
                     }
                 }
@@ -287,63 +256,32 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Tips Section
+    // MARK: - Daily Practice
 
-    private var manifestationTipsSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
+    private var dailyPracticeSection: some View {
+        VStack(alignment: .leading, spacing: AstralTheme.Spacing.md) {
             Text("Daily Practice")
                 .font(.system(.title3, design: .rounded, weight: .bold))
-                .foregroundColor(.cosmicWhite)
+                .foregroundStyle(Color.astralText)
 
-            VStack(spacing: 14) {
-                benefitRow(icon: "clock.fill", color: .cosmicBlue,
+            VStack(spacing: AstralTheme.Spacing.md) {
+                benefitRow(icon: "clock.fill", color: .astralIndigo,
                            title: "Daily Visualization",
                            detail: "Spend 5–10 min each morning viewing your boards")
-                benefitRow(icon: "heart.text.square.fill", color: .cosmicPink,
+                benefitRow(icon: "heart.text.square.fill", color: .astralRose,
                            title: "Feel the Emotions",
                            detail: "Experience joy and excitement of achieving your goals")
-                benefitRow(icon: "target", color: .cosmicPurple,
+                benefitRow(icon: "target", color: .astralViolet,
                            title: "Take Inspired Action",
                            detail: "Let your vision boards guide your daily decisions")
             }
-            .padding(18)
-            .cosmicCard()
+            .padding(AstralTheme.Spacing.lg)
+            .astralCard()
         }
     }
 }
 
-// MARK: - Supporting Views
-
-struct IconRow: View {
-    let icon: String
-    let title: String
-    let description: String
-    let iconColor: Color
-
-    var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(iconColor.opacity(0.18))
-                    .frame(width: 36, height: 36)
-                Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(iconColor)
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                    .foregroundColor(.cosmicWhite)
-                Text(description)
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundColor(.cosmicWhite.opacity(0.65))
-            }
-
-            Spacer()
-        }
-    }
-}
+// MARK: - VisionBoardCard
 
 struct VisionBoardCard: View {
     let visionBoard: VisionBoard
@@ -351,7 +289,6 @@ struct VisionBoardCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Preview image
             ZStack(alignment: .bottomLeading) {
                 if let firstImage = visionBoard.images.first?.image {
                     Image(uiImage: firstImage)
@@ -363,64 +300,92 @@ struct VisionBoardCard: View {
                     Rectangle()
                         .fill(
                             LinearGradient(
-                                colors: [Color.cosmicPurple.opacity(0.4), Color.cosmicBlue.opacity(0.3)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                                colors: [Color.astralViolet.opacity(0.4), Color.astralIndigo.opacity(0.3)],
+                                startPoint: .topLeading, endPoint: .bottomTrailing
                             )
                         )
                         .frame(height: 130)
-                        .overlay(
+                        .overlay {
                             Image(systemName: "photo.fill")
                                 .font(.title2)
-                                .foregroundColor(.cosmicWhite.opacity(0.35))
-                        )
+                                .foregroundStyle(Color.astralTextDim)
+                        }
                 }
 
-                // Gradient scrim
+                // Scrim
                 LinearGradient(
                     colors: [Color.black.opacity(0.6), Color.clear],
-                    startPoint: .bottom,
-                    endPoint: .top
+                    startPoint: .bottom, endPoint: .top
                 )
                 .frame(height: 60)
 
                 if visionBoard.isFavorite {
                     Image(systemName: "heart.fill")
                         .font(.caption)
-                        .foregroundColor(.cosmicPink)
+                        .foregroundStyle(Color.astralRose)
                         .padding(8)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: AstralTheme.Radius.md, style: .continuous))
 
-            // Info
             VStack(alignment: .leading, spacing: 4) {
                 Text(visionBoard.title)
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                    .foregroundColor(.cosmicWhite)
+                    .foregroundStyle(Color.astralText)
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
                     Image(systemName: "eye.fill")
                         .font(.system(size: 10))
-                        .foregroundColor(.cosmicBlue.opacity(0.8))
+                        .foregroundStyle(Color.astralIndigo.opacity(0.8))
                     Text("\(visionBoard.viewCount)")
                         .font(.system(size: 11, design: .rounded))
-                        .foregroundColor(.cosmicWhite.opacity(0.55))
+                        .foregroundStyle(Color.astralTextMuted)
                     Spacer()
                     Text(visionBoard.formattedCreatedDate)
                         .font(.system(size: 11, design: .rounded))
-                        .foregroundColor(.cosmicWhite.opacity(0.45))
+                        .foregroundStyle(Color.astralTextDim)
                 }
             }
             .padding(.horizontal, 4)
-            .padding(.top, 10)
+            .padding(.top, AstralTheme.Spacing.sm)
             .padding(.bottom, 4)
         }
-        .padding(10)
-        .cosmicCard()
-        .onTapGesture {
-            visionBoardManager.incrementViewCount(visionBoard)
+        .padding(AstralTheme.Spacing.sm)
+        .astralCard()
+        .onTapGesture { visionBoardManager.incrementViewCount(visionBoard) }
+    }
+}
+
+// MARK: - IconRow (shared utility)
+
+struct IconRow: View {
+    let icon: String
+    let title: String
+    let description: String
+    let iconColor: Color
+
+    var body: some View {
+        HStack(spacing: AstralTheme.Spacing.md) {
+            ZStack {
+                RoundedRectangle(cornerRadius: AstralTheme.Radius.sm)
+                    .fill(iconColor.opacity(0.18))
+                    .frame(width: 36, height: 36)
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(iconColor)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(Color.astralText)
+                Text(description)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Color.astralTextMuted)
+            }
+
+            Spacer()
         }
     }
 }

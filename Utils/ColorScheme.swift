@@ -1,212 +1,303 @@
-//
-//  CosmicTheme.swift
-//  XVisionBoardAI
-//
-//  Created by AI Assistant
-//  Copyright © 2025 XVisionBoard AI. All rights reserved.
-//
-
 import SwiftUI
 
-// MARK: - Cosmic Color Palette
+// MARK: - Astral Color Palette
 
 extension Color {
-    static let cosmicPurple = Color(red: 0.4, green: 0.3, blue: 0.8)
-    static let cosmicBlue   = Color(red: 0.2, green: 0.4, blue: 0.9)
-    static let cosmicPink   = Color(red: 0.8, green: 0.3, blue: 0.6)
-    static let cosmicGold   = Color(red: 1.0, green: 0.8, blue: 0.2)
-    static let cosmicBlack  = Color(red: 0.05, green: 0.05, blue: 0.1)
-    static let cosmicGray   = Color(red: 0.15, green: 0.15, blue: 0.2)
-    static let cosmicWhite  = Color(red: 0.95, green: 0.95, blue: 1.0)
-    
-    static let cosmicGradient = LinearGradient(
-        colors: [.cosmicPurple, .cosmicBlue, .cosmicPink],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-    
-    static let goldGradient = LinearGradient(
-        colors: [.cosmicGold, Color.orange],
-        startPoint: .leading,
-        endPoint: .trailing
-    )
-    
-    static let manifestationPrimary     = cosmicPurple
-    static let manifestationSecondary   = cosmicPink
-    static let manifestationAccent      = cosmicGold
-    static let manifestationBackground  = cosmicBlack
-    static let manifestationSurface     = cosmicGray
+    // Backgrounds — deep navy-black space
+    static let astralBlack    = Color(red: 0.024, green: 0.024, blue: 0.071)   // #060612
+    static let astralSurface  = Color(red: 0.051, green: 0.051, blue: 0.125)   // #0D0D20
+    static let astralSurface2 = Color(red: 0.075, green: 0.075, blue: 0.188)   // #131330
 
-    // MARK: - Adaptive (light/dark)
-    static let adaptiveBackground = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark
-            ? UIColor(red: 0.05, green: 0.05, blue: 0.1, alpha: 1)
-            : .white
-    })
-    static let adaptiveSurface = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark
-            ? UIColor(red: 0.15, green: 0.15, blue: 0.2, alpha: 1)
-            : UIColor(red: 0.9, green: 0.9, blue: 0.9, alpha: 1)
-    })
-    static let adaptiveText = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark
-            ? UIColor(red: 0.95, green: 0.95, blue: 1.0, alpha: 1)
-            : .black
-    })
-    static let adaptiveCTA = Color(UIColor.systemBlue)
+    // Brand
+    static let astralViolet = Color(red: 0.655, green: 0.545, blue: 0.980)     // #A78BFA
+    static let astralRose   = Color(red: 0.957, green: 0.443, blue: 0.714)     // #F472B6
+    static let astralGold   = Color(red: 0.984, green: 0.690, blue: 0.251)     // #FBB040
+    static let astralIndigo = Color(red: 0.506, green: 0.549, blue: 0.973)     // #818CF8
+    static let astralMint   = Color(red: 0.204, green: 0.827, blue: 0.600)     // #34D399
+
+    // Text
+    static let astralText        = Color(red: 0.941, green: 0.941, blue: 1.000) // #F0F0FF
+    static let astralTextMuted   = Color(red: 0.565, green: 0.565, blue: 0.722) // #9090B8
+    static let astralTextDim     = Color(red: 0.314, green: 0.314, blue: 0.471) // #505078
+
+    // Semantic
+    static let astralError   = Color(red: 0.973, green: 0.529, blue: 0.529)    // #F87171
+    static let astralSuccess = Color.astralMint
+
+    // Backward-compat aliases — existing views keep compiling
+    static let cosmicPurple  = astralViolet
+    static let cosmicBlue    = astralIndigo
+    static let cosmicPink    = astralRose
+    static let cosmicGold    = astralGold
+    static let cosmicBlack   = astralBlack
+    static let cosmicGray    = astralSurface
+    static let cosmicWhite   = astralText
+    static let cosmicGradient = auroraGradient
+    static let goldGradient  = LinearGradient(
+        colors: [.astralGold, Color(red: 1.0, green: 0.85, blue: 0.50)],
+        startPoint: .leading, endPoint: .trailing
+    )
+    static let manifestationPrimary    = astralViolet
+    static let manifestationSecondary  = astralRose
+    static let manifestationAccent     = astralGold
+    static let manifestationBackground = astralBlack
+    static let manifestationSurface    = astralSurface
+    static let adaptiveCTA = astralViolet
+
+    // Gradients
+    static let auroraGradient = LinearGradient(
+        colors: [.astralViolet, .astralIndigo, .astralRose],
+        startPoint: .topLeading, endPoint: .bottomTrailing
+    )
+
+    static let auroraHeroGradient = LinearGradient(
+        colors: [
+            Color(red: 0.10, green: 0.06, blue: 0.22),
+            Color(red: 0.05, green: 0.05, blue: 0.16),
+            Color.astralBlack
+        ],
+        startPoint: .top, endPoint: .bottom
+    )
 }
 
-// MARK: - Custom View Modifiers
+// MARK: - Spacing & Radius Tokens
 
-struct CosmicCardModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Color(red: 0.11, green: 0.11, blue: 0.17))
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.cosmicPurple.opacity(0.10),
-                                    Color.cosmicBlue.opacity(0.06),
-                                    Color.cosmicPink.opacity(0.04)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.cosmicGradient, lineWidth: 1)
-                }
-            )
-            .shadow(color: Color.cosmicPurple.opacity(0.25), radius: 8, x: 0, y: 4)
-            .shadow(color: Color.black.opacity(0.4), radius: 20, x: 0, y: 10)
+enum AstralTheme {
+    enum Spacing {
+        static let xs:  CGFloat = 4
+        static let sm:  CGFloat = 8
+        static let md:  CGFloat = 16
+        static let lg:  CGFloat = 24
+        static let xl:  CGFloat = 32
+        static let xxl: CGFloat = 48
+    }
+
+    enum Radius {
+        static let sm:   CGFloat = 10
+        static let md:   CGFloat = 14
+        static let lg:   CGFloat = 20
+        static let xl:   CGFloat = 26
+        static let full: CGFloat = 999
+    }
+
+    enum Motion {
+        static let micro  = Animation.spring(response: 0.2, dampingFraction: 0.7)
+        static let quick  = Animation.spring(response: 0.3, dampingFraction: 0.8)
+        static let smooth = Animation.spring(response: 0.5, dampingFraction: 0.85)
+        static let breathe = Animation.easeInOut(duration: 1.8)
     }
 }
 
-struct CosmicGlowCardModifier: ViewModifier {
-    var glowColor: Color = .cosmicPurple
+// MARK: - Glass Card
+
+struct AstralGlassModifier: ViewModifier {
+    var tint: Color = .astralViolet
+    var radius: CGFloat = AstralTheme.Radius.xl
 
     func body(content: Content) -> some View {
         content
-            .background(
+            .background {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(Color(red: 0.10, green: 0.10, blue: 0.16))
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(
+                    RoundedRectangle(cornerRadius: radius)
+                        .fill(.ultraThinMaterial)
+                    RoundedRectangle(cornerRadius: radius)
+                        .fill(tint.opacity(0.07))
+                    RoundedRectangle(cornerRadius: radius)
+                        .strokeBorder(
                             LinearGradient(
-                                colors: [glowColor.opacity(0.18), Color.cosmicBlue.opacity(0.10)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                    RoundedRectangle(cornerRadius: 24)
-                        .stroke(
-                            LinearGradient(
-                                colors: [glowColor.opacity(0.8), Color.cosmicBlue.opacity(0.5), Color.cosmicPink.opacity(0.3)],
+                                colors: [tint.opacity(0.55), Color.white.opacity(0.08), tint.opacity(0.18)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
-                            lineWidth: 1.5
+                            lineWidth: 1
                         )
                 }
-            )
-            .shadow(color: glowColor.opacity(0.45), radius: 16, x: 0, y: 6)
-            .shadow(color: Color.black.opacity(0.5), radius: 24, x: 0, y: 12)
+            }
+            .shadow(color: tint.opacity(0.22), radius: 18, x: 0, y: 8)
+            .shadow(color: .black.opacity(0.50), radius: 32, x: 0, y: 16)
     }
 }
 
-struct CosmicButtonModifier: ViewModifier {
-    let isEnabled: Bool
-    @State private var isPressed = false
+// MARK: - Solid Card
 
-    init(isEnabled: Bool = true) {
+struct AstralCardModifier: ViewModifier {
+    var radius: CGFloat = AstralTheme.Radius.lg
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                RoundedRectangle(cornerRadius: radius)
+                    .fill(Color.astralSurface)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: radius)
+                            .strokeBorder(Color.white.opacity(0.07), lineWidth: 1)
+                    }
+            }
+            .shadow(color: .black.opacity(0.40), radius: 16, x: 0, y: 8)
+    }
+}
+
+// MARK: - Button
+
+struct AstralButtonModifier: ViewModifier {
+    enum ButtonStyle { case primary, gold, secondary, ghost }
+
+    let style: ButtonStyle
+    let isEnabled: Bool
+    @State private var pressed = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    init(style: ButtonStyle = .primary, isEnabled: Bool = true) {
+        self.style = style
         self.isEnabled = isEnabled
     }
 
+    private var fill: AnyShapeStyle {
+        guard isEnabled else {
+            return AnyShapeStyle(Color.astralSurface)
+        }
+        switch style {
+        case .primary:
+            return AnyShapeStyle(LinearGradient(
+                colors: [.astralViolet, .astralIndigo],
+                startPoint: .leading, endPoint: .trailing
+            ))
+        case .gold:
+            return AnyShapeStyle(LinearGradient(
+                colors: [.astralGold, Color(red: 1.0, green: 0.82, blue: 0.40)],
+                startPoint: .leading, endPoint: .trailing
+            ))
+        case .secondary:
+            return AnyShapeStyle(Color.astralSurface2)
+        case .ghost:
+            return AnyShapeStyle(Color.clear)
+        }
+    }
+
+    private var glowColor: Color {
+        guard isEnabled else { return .clear }
+        switch style {
+        case .primary: return .astralViolet
+        case .gold:    return .astralGold
+        default:       return .clear
+        }
+    }
+
     func body(content: Content) -> some View {
         content
-            .foregroundColor(.white)
-            .font(.headline)
-            .padding(.horizontal, 28)
-            .padding(.vertical, 14)
-            .background(
-                RoundedRectangle(cornerRadius: 28)
-                    .fill(
-                        isEnabled
-                        ? LinearGradient(
-                            colors: [.cosmicPurple, .cosmicBlue, .cosmicPink.opacity(0.7)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                        : LinearGradient(
-                            colors: [Color.gray.opacity(0.5), Color.gray.opacity(0.5)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-            )
-            .shadow(color: isEnabled ? Color.cosmicPurple.opacity(0.5) : .clear, radius: 12, x: 0, y: 6)
-            .scaleEffect(isEnabled ? (isPressed ? 0.97 : 1.0) : 0.95)
-            .opacity(isEnabled ? 1.0 : 0.5)
-            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isPressed)
-            .animation(.easeInOut(duration: 0.2), value: isEnabled)
+            .foregroundStyle(isEnabled ? Color.astralText : Color.astralTextDim)
+            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+            .padding(.horizontal, AstralTheme.Spacing.xl)
+            .padding(.vertical, AstralTheme.Spacing.md)
+            .background {
+                Capsule().fill(fill)
+                    .overlay {
+                        if style == .ghost || style == .secondary {
+                            Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
+                        }
+                    }
+            }
+            .shadow(color: glowColor.opacity(0.40), radius: 14, x: 0, y: 6)
+            .scaleEffect(isEnabled ? (pressed ? 0.97 : 1.0) : 0.95)
+            .opacity(isEnabled ? 1.0 : 0.45)
+            .animation(reduceMotion ? .none : AstralTheme.Motion.micro, value: pressed)
     }
 }
 
-struct PulsingModifier: ViewModifier {
-    @State private var isPulsing = false
+// MARK: - Pulsing
+
+struct AstralPulsingModifier: ViewModifier {
+    @State private var active = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
-            .scaleEffect(isPulsing ? 1.04 : 1.0)
-            .opacity(isPulsing ? 0.85 : 1.0)
+            .scaleEffect(active ? 1.05 : 1.0)
+            .opacity(active ? 0.85 : 1.0)
             .animation(
-                .easeInOut(duration: 1.8)
-                    .repeatForever(autoreverses: true),
-                value: isPulsing
+                reduceMotion ? .none : AstralTheme.Motion.breathe.repeatForever(autoreverses: true),
+                value: active
             )
-            .onAppear { isPulsing = true }
+            .onAppear { if !reduceMotion { active = true } }
+    }
+}
+
+// MARK: - Shimmer (loading skeleton)
+
+struct AstralShimmerModifier: ViewModifier {
+    @State private var phase: CGFloat = -1
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content.overlay {
+            if !reduceMotion {
+                GeometryReader { geo in
+                    LinearGradient(
+                        colors: [.clear, Color.white.opacity(0.08), .clear],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .offset(x: phase * geo.size.width * 2)
+                    .animation(
+                        .linear(duration: 1.4).repeatForever(autoreverses: false),
+                        value: phase
+                    )
+                    .onAppear { phase = 1 }
+                }
+                .clipShape(.rect(cornerRadius: AstralTheme.Radius.md))
+            }
+        }
     }
 }
 
 // MARK: - View Extensions
 
 extension View {
-    func cosmicCard() -> some View {
-        modifier(CosmicCardModifier())
+    func astralGlass(tint: Color = .astralViolet, radius: CGFloat = AstralTheme.Radius.xl) -> some View {
+        modifier(AstralGlassModifier(tint: tint, radius: radius))
     }
 
-    func cosmicGlowCard(color: Color = .cosmicPurple) -> some View {
-        modifier(CosmicGlowCardModifier(glowColor: color))
+    func astralCard(radius: CGFloat = AstralTheme.Radius.lg) -> some View {
+        modifier(AstralCardModifier(radius: radius))
     }
 
-    func cosmicButton(isEnabled: Bool = true) -> some View {
-        modifier(CosmicButtonModifier(isEnabled: isEnabled))
+    func astralButton(_ style: AstralButtonModifier.ButtonStyle = .primary, isEnabled: Bool = true) -> some View {
+        modifier(AstralButtonModifier(style: style, isEnabled: isEnabled))
     }
 
-    func pulsing() -> some View {
-        modifier(PulsingModifier())
+    func astralPulsing() -> some View {
+        modifier(AstralPulsingModifier())
     }
 
+    func astralShimmer() -> some View {
+        modifier(AstralShimmerModifier())
+    }
+
+    // Backward-compat aliases
+    func cosmicCard() -> some View              { astralCard() }
+    func cosmicGlowCard(color: Color = .astralViolet) -> some View { astralGlass(tint: color) }
+    func cosmicButton(isEnabled: Bool = true) -> some View { astralButton(.primary, isEnabled: isEnabled) }
+    func pulsing() -> some View                 { astralPulsing() }
+}
+
+// MARK: - Typography
+
+extension View {
     func manifestationTitle() -> some View {
         self
             .font(.system(.largeTitle, design: .rounded, weight: .bold))
-            .foregroundStyle(Color.cosmicGradient)
+            .foregroundStyle(Color.auroraGradient)
     }
 
     func manifestationSubtitle() -> some View {
         self
             .font(.system(.title2, design: .rounded, weight: .semibold))
-            .foregroundColor(.cosmicWhite)
+            .foregroundStyle(Color.astralText)
     }
 
     func manifestationBody() -> some View {
         self
             .font(.system(.body, design: .rounded))
-            .foregroundColor(.cosmicWhite.opacity(0.82))
+            .foregroundStyle(Color.astralTextMuted)
     }
 }

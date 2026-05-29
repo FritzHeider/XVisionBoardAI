@@ -1,50 +1,35 @@
-//
-//  VisionBoardGalleryView.swift
-//  XVisionBoardAI
-//
-//  Created by AI Assistant
-//  Copyright © 2025 XVisionBoard AI. All rights reserved.
-//
-
 import SwiftUI
 
 struct VisionBoardGalleryView: View {
     @Environment(VisionBoardManager.self) var visionBoardManager
     @Environment(UserManager.self) var userManager
-    
+
     @State private var searchText = ""
     @State private var selectedFilter: FilterOption = .all
     @State private var showingCreateView = false
     @State private var selectedVisionBoard: VisionBoard?
-    
+
     enum FilterOption: String, CaseIterable {
         case all = "All"
         case favorites = "Favorites"
         case recent = "Recent"
-        
+
         var systemImage: String {
             switch self {
-            case .all: return "photo.stack"
-            case .favorites: return "heart.fill"
-            case .recent: return "clock.fill"
+            case .all: "photo.stack"
+            case .favorites: "heart.fill"
+            case .recent: "clock.fill"
             }
         }
     }
-    
+
     var filteredVisionBoards: [VisionBoard] {
         var boards = visionBoardManager.visionBoards
-        
-        // Apply filter
         switch selectedFilter {
-        case .all:
-            break
-        case .favorites:
-            boards = boards.filter { $0.isFavorite }
-        case .recent:
-            boards = boards.sorted { $0.createdAt > $1.createdAt }.prefix(10).map { $0 }
+        case .all: break
+        case .favorites: boards = boards.filter { $0.isFavorite }
+        case .recent: boards = boards.sorted { $0.createdAt > $1.createdAt }.prefix(10).map { $0 }
         }
-        
-        // Apply search
         if !searchText.isEmpty {
             boards = boards.filter { board in
                 board.title.localizedCaseInsensitiveContains(searchText) ||
@@ -52,23 +37,20 @@ struct VisionBoardGalleryView: View {
                 board.manifestationGoals.contains { $0.title.localizedCaseInsensitiveContains(searchText) }
             }
         }
-        
         return boards
     }
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.cosmicBlack.ignoresSafeArea()
-                
+                Color.astralBlack.ignoresSafeArea()
+
                 VStack(spacing: 0) {
-                    // Search and filters
                     searchAndFiltersSection
-                    
+
                     if filteredVisionBoards.isEmpty {
                         emptyStateView
                     } else {
-                        // Vision boards grid
                         visionBoardsGrid
                     }
                 }
@@ -76,189 +58,162 @@ struct VisionBoardGalleryView: View {
             .navigationTitle("My Vision Boards")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        showingCreateView = true
-                    }) {
-                        Image(systemName: "plus")
-                            .foregroundColor(.cosmicPurple)
-                    }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Add", systemImage: "plus") { showingCreateView = true }
+                        .foregroundStyle(Color.astralViolet)
                 }
             }
         }
-        .sheet(isPresented: $showingCreateView) {
-            CreateVisionBoardView()
-        }
-        .sheet(item: $selectedVisionBoard) { visionBoard in
-            VisionBoardDetailView(visionBoard: visionBoard)
-        }
+        .sheet(isPresented: $showingCreateView) { CreateVisionBoardView() }
+        .sheet(item: $selectedVisionBoard) { VisionBoardDetailView(visionBoard: $0) }
     }
-    
-    // MARK: - Search and Filters Section
-    
+
+    // MARK: - Search + Filters
+
     private var searchAndFiltersSection: some View {
-        VStack(spacing: 16) {
-            // Search bar
+        VStack(spacing: AstralTheme.Spacing.md) {
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.cosmicWhite.opacity(0.7))
-                
-                TextField("Search vision boards...", text: $searchText)
-                    .foregroundColor(.cosmicWhite)
-                
+                    .foregroundStyle(Color.astralTextMuted)
+
+                TextField("Search vision boards…", text: $searchText)
+                    .foregroundStyle(Color.astralText)
+                    .tint(Color.astralViolet)
+
                 if !searchText.isEmpty {
-                    Button("Clear") {
-                        searchText = ""
-                    }
-                    .foregroundColor(.cosmicPurple)
-                    .font(.caption)
+                    Button("Clear") { searchText = "" }
+                        .foregroundStyle(Color.astralViolet)
+                        .font(.system(.caption, design: .rounded))
                 }
             }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.cosmicGray)
-            )
-            
-            // Filter options
-            HStack(spacing: 12) {
+            .padding(AstralTheme.Spacing.md)
+            .background {
+                RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
+                    .fill(Color.astralSurface)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
+                            .strokeBorder(Color.white.opacity(0.07), lineWidth: 1)
+                    }
+            }
+
+            HStack(spacing: AstralTheme.Spacing.sm) {
                 ForEach(FilterOption.allCases, id: \.self) { filter in
-                    FilterButton(
-                        filter: filter,
-                        isSelected: selectedFilter == filter
-                    ) {
-                        selectedFilter = filter
+                    FilterButton(filter: filter, isSelected: selectedFilter == filter) {
+                        withAnimation(AstralTheme.Motion.quick) { selectedFilter = filter }
                     }
                 }
-                
                 Spacer()
             }
         }
-        .padding()
-        .background(Color.cosmicBlack)
+        .padding(AstralTheme.Spacing.md)
+        .background(Color.astralBlack)
     }
-    
-    // MARK: - Vision Boards Grid
-    
+
+    // MARK: - Grid
+
     private var visionBoardsGrid: some View {
         ScrollView {
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 16) {
-                ForEach(filteredVisionBoards) { visionBoard in
-                    VisionBoardGridItem(visionBoard: visionBoard) {
-                        selectedVisionBoard = visionBoard
-                        visionBoardManager.incrementViewCount(visionBoard)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())],
+                      spacing: AstralTheme.Spacing.md) {
+                ForEach(filteredVisionBoards) { board in
+                    VisionBoardGridItem(visionBoard: board) {
+                        selectedVisionBoard = board
+                        visionBoardManager.incrementViewCount(board)
                     }
                 }
             }
-            .padding()
+            .padding(AstralTheme.Spacing.md)
         }
     }
-    
-    // MARK: - Empty State View
-    
+
+    // MARK: - Empty State
+
     private var emptyStateView: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: AstralTheme.Spacing.lg) {
             Spacer()
-            
+
             Image(systemName: selectedFilter == .all ? "photo.stack" : selectedFilter.systemImage)
-                .font(.system(size: 60))
-                .foregroundColor(.cosmicPurple.opacity(0.6))
-            
-            VStack(spacing: 12) {
+                .font(.system(size: 56))
+                .foregroundStyle(Color.astralViolet.opacity(0.5))
+
+            VStack(spacing: AstralTheme.Spacing.sm) {
                 Text(emptyStateTitle)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.cosmicWhite)
-                
+                    .font(.system(.title2, design: .rounded, weight: .bold))
+                    .foregroundStyle(Color.astralText)
+
                 Text(emptyStateMessage)
-                    .font(.body)
-                    .foregroundColor(.cosmicWhite.opacity(0.7))
+                    .font(.system(.body, design: .rounded))
+                    .foregroundStyle(Color.astralTextMuted)
                     .multilineTextAlignment(.center)
             }
-            
+
             if selectedFilter == .all && searchText.isEmpty {
-                Button("Create Your First Vision Board") {
-                    showingCreateView = true
-                }
-                .cosmicButton()
+                Button("Create Your First Vision Board") { showingCreateView = true }
+                    .astralButton(.primary)
             }
-            
+
             Spacer()
         }
-        .padding()
+        .padding(AstralTheme.Spacing.xl)
     }
-    
+
     private var emptyStateTitle: String {
-        if !searchText.isEmpty {
-            return "No Results Found"
-        }
-        
-        switch selectedFilter {
-        case .all:
-            return "No Vision Boards Yet"
-        case .favorites:
-            return "No Favorites Yet"
-        case .recent:
-            return "No Recent Boards"
+        if !searchText.isEmpty { return "No Results Found" }
+        return switch selectedFilter {
+        case .all: "No Vision Boards Yet"
+        case .favorites: "No Favorites Yet"
+        case .recent: "No Recent Boards"
         }
     }
-    
+
     private var emptyStateMessage: String {
-        if !searchText.isEmpty {
-            return "Try adjusting your search terms or browse all vision boards."
-        }
-        
-        switch selectedFilter {
-        case .all:
-            return "Start your manifestation journey by creating your first personalized vision board."
-        case .favorites:
-            return "Mark vision boards as favorites by tapping the heart icon."
-        case .recent:
-            return "Your recently created vision boards will appear here."
+        if !searchText.isEmpty { return "Try adjusting your search terms or browse all vision boards." }
+        return switch selectedFilter {
+        case .all: "Start your manifestation journey by creating your first personalized vision board."
+        case .favorites: "Mark vision boards as favorites by tapping the heart icon."
+        case .recent: "Your recently created vision boards will appear here."
         }
     }
 }
 
-// MARK: - Supporting Views
+// MARK: - FilterButton
 
 struct FilterButton: View {
     let filter: VisionBoardGalleryView.FilterOption
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 6) {
+            HStack(spacing: 5) {
                 Image(systemName: filter.systemImage)
-                    .font(.caption)
-                
+                    .font(.system(size: 11, weight: .semibold))
                 Text(filter.rawValue)
-                    .font(.caption)
-                    .fontWeight(.medium)
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
             }
-            .foregroundColor(isSelected ? .black : .cosmicWhite)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(isSelected ? Color.cosmicGold : Color.cosmicGray)
-            )
+            .foregroundStyle(isSelected ? Color.black : Color.astralText)
+            .padding(.horizontal, AstralTheme.Spacing.md)
+            .padding(.vertical, 7)
+            .background {
+                Capsule()
+                    .fill(isSelected
+                          ? AnyShapeStyle(Color.auroraGradient)
+                          : AnyShapeStyle(Color.astralSurface))
+            }
         }
     }
 }
+
+// MARK: - VisionBoardGridItem
 
 struct VisionBoardGridItem: View {
     let visionBoard: VisionBoard
     let action: () -> Void
     @Environment(VisionBoardManager.self) var visionBoardManager
-    
+
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Preview image
+            VStack(alignment: .leading, spacing: AstralTheme.Spacing.sm) {
                 ZStack {
                     if let firstImage = visionBoard.images.first?.image {
                         Image(uiImage: firstImage)
@@ -267,82 +222,77 @@ struct VisionBoardGridItem: View {
                             .frame(height: 140)
                             .clipped()
                     } else {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.cosmicGray)
-                            .frame(height: 140)
-                            .overlay(
-                                VStack(spacing: 8) {
-                                    Image(systemName: "photo.fill")
-                                        .font(.title)
-                                        .foregroundColor(.cosmicWhite.opacity(0.5))
-                                    
-                                    Text("\(visionBoard.layout.imageCount) Images")
-                                        .font(.caption)
-                                        .foregroundColor(.cosmicWhite.opacity(0.7))
-                                }
+                        RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.astralViolet.opacity(0.3), Color.astralIndigo.opacity(0.2)],
+                                    startPoint: .topLeading, endPoint: .bottomTrailing
+                                )
                             )
+                            .frame(height: 140)
+                            .overlay {
+                                VStack(spacing: 6) {
+                                    Image(systemName: "photo.fill")
+                                        .font(.title2)
+                                        .foregroundStyle(Color.astralTextMuted)
+                                    Text("\(visionBoard.layout.imageCount) Images")
+                                        .font(.system(.caption, design: .rounded))
+                                        .foregroundStyle(Color.astralTextMuted)
+                                }
+                            }
                     }
-                    
+
                     // Overlay badges
                     VStack {
                         HStack {
-                            if visionBoard.isPersonalized {
-                                PersonalizedBadge()
-                            }
-                            
+                            if visionBoard.isPersonalized { PersonalizedBadge() }
                             Spacer()
-                            
                             FavoriteButton(visionBoard: visionBoard)
                         }
-                        
                         Spacer()
-                        
                         HStack {
                             StyleBadge(style: visionBoard.style)
-                            
                             Spacer()
-                            
                             ViewCountBadge(count: visionBoard.viewCount)
                         }
                     }
-                    .padding(8)
+                    .padding(AstralTheme.Spacing.sm)
                 }
-                .cornerRadius(12)
-                
-                // Title and info
-                VStack(alignment: .leading, spacing: 4) {
+                .clipShape(RoundedRectangle(cornerRadius: AstralTheme.Radius.md, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 3) {
                     Text(visionBoard.title)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.cosmicWhite)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(Color.astralText)
                         .lineLimit(2)
-                    
+
                     Text(visionBoard.formattedCreatedDate)
-                        .font(.caption)
-                        .foregroundColor(.cosmicWhite.opacity(0.7))
-                    
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(Color.astralTextMuted)
+
                     if !visionBoard.manifestationGoals.isEmpty {
                         Text(visionBoard.manifestationGoals.prefix(2).map(\.title).joined(separator: ", "))
-                            .font(.caption)
-                            .foregroundColor(.cosmicPurple)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(Color.astralViolet)
                             .lineLimit(1)
                     }
                 }
             }
         }
-        .cosmicCard()
+        .astralCard()
     }
 }
+
+// MARK: - Small Badge Views
 
 struct PersonalizedBadge: View {
     var body: some View {
         Text("YOU")
-            .font(.caption2)
-            .fontWeight(.bold)
-            .foregroundColor(.black)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(Color.cosmicGold)
+            .font(.system(size: 10, weight: .bold, design: .rounded))
+            .foregroundStyle(Color.black)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(Color.astralGold)
             .clipShape(Capsule())
     }
 }
@@ -350,58 +300,50 @@ struct PersonalizedBadge: View {
 struct FavoriteButton: View {
     let visionBoard: VisionBoard
     @Environment(VisionBoardManager.self) var visionBoardManager
-    
+
     var body: some View {
-        Button(action: {
+        Button {
             visionBoardManager.toggleFavorite(visionBoard)
-        }) {
+        } label: {
             Image(systemName: visionBoard.isFavorite ? "heart.fill" : "heart")
-                .foregroundColor(visionBoard.isFavorite ? .cosmicPink : .cosmicWhite)
+                .foregroundStyle(visionBoard.isFavorite ? Color.astralRose : Color.astralText)
                 .font(.caption)
                 .padding(6)
-                .background(
-                    Circle()
-                        .fill(Color.black.opacity(0.6))
-                )
+                .background(Circle().fill(Color.black.opacity(0.55)))
         }
     }
 }
 
 struct StyleBadge: View {
     let style: VisionBoardStyle
-    
+
     var body: some View {
         Text(style.displayName)
-            .font(.caption2)
-            .fontWeight(.medium)
-            .foregroundColor(.cosmicWhite)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(style.primaryColor.opacity(0.8))
-            )
+            .font(.system(size: 10, weight: .semibold, design: .rounded))
+            .foregroundStyle(Color.astralText)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(style.primaryColor.opacity(0.75))
+            }
     }
 }
 
 struct ViewCountBadge: View {
     let count: Int
-    
+
     var body: some View {
-        HStack(spacing: 2) {
-            Image(systemName: "eye.fill")
-                .font(.caption2)
-            
-            Text("\(count)")
-                .font(.caption2)
+        HStack(spacing: 3) {
+            Image(systemName: "eye.fill").font(.system(size: 9))
+            Text("\(count)").font(.system(size: 10, design: .rounded))
         }
-        .foregroundColor(.cosmicWhite)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 2)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.black.opacity(0.6))
-        )
+        .foregroundStyle(Color.astralText)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .background {
+            RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.55))
+        }
     }
 }
 
@@ -410,4 +352,3 @@ struct ViewCountBadge: View {
         .environment(VisionBoardManager())
         .environment(UserManager())
 }
-

@@ -50,139 +50,138 @@ private struct FallbackPaywallView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.cosmicBlack.ignoresSafeArea()
+                Color.astralBlack.ignoresSafeArea()
 
-                RadialGradient(
-                    colors: [Color.cosmicPurple.opacity(0.15), Color.clear],
-                    center: .top,
-                    startRadius: 0,
-                    endRadius: 400
-                )
-                .ignoresSafeArea()
+                Ellipse()
+                    .fill(Color.astralViolet.opacity(0.15))
+                    .frame(width: 340, height: 340)
+                    .blur(radius: 90)
+                    .offset(x: 60, y: -200)
+                    .ignoresSafeArea()
 
                 ScrollView {
-                    VStack(spacing: 32) {
+                    VStack(spacing: AstralTheme.Spacing.xl) {
                         // Header
-                        VStack(spacing: 16) {
+                        VStack(spacing: AstralTheme.Spacing.md) {
                             ZStack {
                                 Circle()
-                                    .fill(Color.cosmicGold.opacity(0.15))
+                                    .fill(Color.astralGold.opacity(0.15))
                                     .frame(width: 100, height: 100)
+                                    .blur(radius: 16)
+                                Circle()
+                                    .strokeBorder(Color.astralGold.opacity(0.4), lineWidth: 1.5)
+                                    .frame(width: 88, height: 88)
                                 Image(systemName: "crown.fill")
-                                    .font(.system(size: 48, weight: .semibold))
+                                    .font(.system(size: 44, weight: .semibold))
                                     .foregroundStyle(
                                         LinearGradient(
-                                            colors: [.cosmicGold, .orange],
-                                            startPoint: .top,
-                                            endPoint: .bottom
+                                            colors: [.astralGold, .orange],
+                                            startPoint: .top, endPoint: .bottom
                                         )
                                     )
                             }
-                            .pulsing()
+                            .astralPulsing()
 
-                            Text("Unlock XVisionBoard AI Pro")
+                            Text("Unlock ManifestMe Pro")
                                 .font(.system(.title, design: .rounded, weight: .bold))
-                                .foregroundColor(.cosmicWhite)
+                                .foregroundStyle(Color.astralText)
                                 .multilineTextAlignment(.center)
 
                             Text("Create unlimited personalized vision boards and accelerate your manifestation journey.")
                                 .font(.system(.body, design: .rounded))
-                                .foregroundColor(.cosmicWhite.opacity(0.7))
+                                .foregroundStyle(Color.astralTextMuted)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 8)
                         }
-                        .padding(.top, 8)
+                        .padding(.top, AstralTheme.Spacing.sm)
 
                         // Free trial badge
                         HStack(spacing: 6) {
                             Image(systemName: "gift.fill")
                                 .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(.cosmicGold)
+                                .foregroundStyle(Color.astralGold)
                             Text("3-Day Free Trial — then $49.99/year")
                                 .font(.system(size: 13, weight: .semibold, design: .rounded))
-                                .foregroundColor(.cosmicGold)
+                                .foregroundStyle(Color.astralGold)
                         }
                         .padding(.horizontal, 18)
                         .padding(.vertical, 10)
-                        .background(
+                        .background {
                             Capsule()
-                                .fill(Color.cosmicGold.opacity(0.12))
-                                .overlay(Capsule().stroke(Color.cosmicGold.opacity(0.35), lineWidth: 1))
-                        )
+                                .fill(Color.astralGold.opacity(0.12))
+                                .overlay { Capsule().strokeBorder(Color.astralGold.opacity(0.35), lineWidth: 1) }
+                        }
 
                         // Feature highlights
-                        VStack(spacing: 14) {
-                            featureRow("Unlimited Vision Boards",      icon: "infinity",             color: .cosmicPurple)
-                            featureRow("HD Export & Wallpaper",        icon: "photo.fill",           color: .cosmicBlue)
-                            featureRow("AI-Generated Affirmations",    icon: "sparkles",             color: .cosmicGold)
-                            featureRow("Offline Image Caching",        icon: "icloud.and.arrow.down",color: .cosmicPink)
-                            featureRow("Daily Reminder Notifications", icon: "bell.badge.fill",      color: .cosmicPurple)
-                            featureRow("Priority Support",             icon: "headphones",           color: .cosmicBlue)
+                        VStack(spacing: AstralTheme.Spacing.md) {
+                            featureRow("Unlimited Vision Boards",      icon: "infinity",              color: .astralViolet)
+                            featureRow("HD Export & Wallpaper",        icon: "photo.fill",            color: .astralIndigo)
+                            featureRow("AI-Generated Affirmations",    icon: "sparkles",              color: .astralGold)
+                            featureRow("Offline Image Caching",        icon: "icloud.and.arrow.down", color: .astralRose)
+                            featureRow("Daily Reminder Notifications", icon: "bell.badge.fill",       color: .astralViolet)
+                            featureRow("Priority Support",             icon: "headphones",            color: .astralIndigo)
                         }
-                        .padding(20)
-                        .cosmicGlowCard(color: .cosmicPurple)
+                        .padding(AstralTheme.Spacing.lg)
+                        .astralGlass(tint: .astralViolet)
 
                         // Loading/error state
                         if storeManager.isLoading {
                             ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .cosmicPurple))
+                                .tint(Color.astralViolet)
                                 .scaleEffect(1.4)
                         } else if storeManager.currentOffering == nil {
-                            VStack(spacing: 12) {
+                            VStack(spacing: AstralTheme.Spacing.sm) {
                                 Text("Loading subscription options…")
                                     .font(.system(.subheadline, design: .rounded))
-                                    .foregroundColor(.cosmicWhite.opacity(0.6))
+                                    .foregroundStyle(Color.astralTextMuted)
 
                                 Button("Retry") {
                                     Task { await storeManager.fetchCurrentOffering() }
                                 }
                                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                                .foregroundColor(.cosmicPurple)
+                                .foregroundStyle(Color.astralViolet)
                             }
                         }
 
-                        // Restore
                         Button("Restore Purchases") {
                             Task { await storeManager.restorePurchases() }
                         }
                         .font(.system(.subheadline, design: .rounded))
-                        .foregroundColor(.cosmicWhite.opacity(0.5))
+                        .foregroundStyle(Color.astralTextMuted)
 
                         Spacer(minLength: 60)
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, AstralTheme.Spacing.xl)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
-                        .foregroundColor(.cosmicWhite)
+                        .foregroundStyle(Color.astralTextMuted)
                 }
             }
         }
-        .task {
-            await storeManager.fetchCurrentOffering()
-        }
+        .task { await storeManager.fetchCurrentOffering() }
     }
 
     private func featureRow(_ title: String, icon: String, color: Color) -> some View {
-        HStack(spacing: 14) {
+        HStack(spacing: AstralTheme.Spacing.md) {
             ZStack {
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: AstralTheme.Radius.sm)
                     .fill(color.opacity(0.18))
                     .frame(width: 36, height: 36)
                 Image(systemName: icon)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(color)
+                    .foregroundStyle(color)
             }
             Text(title)
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                .foregroundColor(.cosmicWhite)
+                .foregroundStyle(Color.astralText)
             Spacer()
             Image(systemName: "checkmark")
                 .font(.system(size: 13, weight: .bold))
-                .foregroundColor(.green.opacity(0.8))
+                .foregroundStyle(Color.astralSuccess)
         }
     }
 }

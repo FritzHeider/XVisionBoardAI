@@ -1,11 +1,3 @@
-//
-//  SharedCards.swift
-//  XVisionBoardAI
-//
-//  Created by AI Assistant
-//  Copyright © 2025 XVisionBoard AI. All rights reserved.
-//
-
 import SwiftUI
 
 struct StatCard: View {
@@ -15,7 +7,7 @@ struct StatCard: View {
     let color: Color
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: AstralTheme.Spacing.sm) {
             ZStack {
                 Circle()
                     .fill(color.opacity(0.18))
@@ -33,16 +25,16 @@ struct StatCard: View {
 
             Text(value)
                 .font(.system(.title2, design: .rounded, weight: .bold))
-                .foregroundColor(.cosmicWhite)
+                .foregroundStyle(Color.astralText)
 
             Text(title)
                 .font(.system(size: 11, weight: .medium, design: .rounded))
-                .foregroundColor(.cosmicWhite.opacity(0.6))
+                .foregroundStyle(Color.astralTextMuted)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .padding(.horizontal, 8)
-        .cosmicCard()
+        .padding(.vertical, AstralTheme.Spacing.md)
+        .padding(.horizontal, AstralTheme.Spacing.sm)
+        .astralCard()
     }
 }
