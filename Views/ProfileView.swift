@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import RevenueCatUI
 
 struct ProfileView: View {
     @Environment(UserManager.self) var userManager
@@ -14,6 +15,7 @@ struct ProfileView: View {
     @Environment(VisionBoardManager.self) var visionBoardManager
 
     @State private var showingSubscriptionView = false
+    @State private var showingCustomerCenter = false
     @State private var showingSignOutAlert = false
     @State private var showingDeleteAccountAlert = false
 
@@ -42,7 +44,12 @@ struct ProfileView: View {
             SubscriptionView()
         }
         .alert("Sign Out", isPresented: $showingSignOutAlert) {
-            Button("Sign Out", role: .destructive) { userManager.signOut() }
+            Button("Sign Out", role: .destructive) {
+                Task {
+                    await storeManager.logout() // reset RC to anonymous user
+                    userManager.signOut()
+                }
+            }
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("Are you sure you want to sign out?")
@@ -54,6 +61,9 @@ struct ProfileView: View {
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("This will permanently delete your account and all vision boards. This action cannot be undone.")
+        }
+        .sheet(isPresented: $showingCustomerCenter) {
+            CustomerCenterView()
         }
     }
 
@@ -204,10 +214,20 @@ struct ProfileView: View {
                         Spacer()
                     }
 
-                    Button("Manage Subscription") {
-                        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
-                            UIApplication.shared.open(url)
+                    // Active subscription detail badge
+                    if let productID = storeManager.activeProductID {
+                        HStack(spacing: 6) {
+                            Image(systemName: "calendar")
+                                .font(.caption)
+                                .foregroundColor(.cosmicWhite.opacity(0.5))
+                            Text(productID.capitalized + " plan")
+                                .font(.system(size: 12, design: .rounded))
+                                .foregroundColor(.cosmicWhite.opacity(0.5))
                         }
+                    }
+
+                    Button("Manage Subscription") {
+                        showingCustomerCenter = true
                     }
                     .cosmicButton()
                     .frame(maxWidth: .infinity)
@@ -265,9 +285,14 @@ struct ProfileView: View {
 
     private var supportSection: some View {
         profileListSection(title: "Support") {
+            SettingsRow(icon: "person.crop.circle.badge.questionmark", iconColor: .cosmicPurple,
+                        title: "Customer Center",
+                        subtitle: "Manage billing, cancellations & refunds") {
+                showingCustomerCenter = true
+            }
             SettingsRow(icon: "questionmark.circle.fill", iconColor: .cosmicBlue,
                         title: "Help Center", subtitle: "Get answers to common questions") { }
-            SettingsRow(icon: "envelope.fill", iconColor: .cosmicPurple,
+            SettingsRow(icon: "envelope.fill", iconColor: .cosmicPink,
                         title: "Contact Support", subtitle: "Get help from our support team") { }
             SettingsRow(icon: "star.fill", iconColor: .cosmicGold,
                         title: "Rate the App", subtitle: "Share your experience on the App Store") { }

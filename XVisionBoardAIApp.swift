@@ -7,14 +7,19 @@
 //
 
 import SwiftUI
-import StoreKit
+import RevenueCat
 
 @main
 struct XVisionBoardAIApp: App {
     @State private var storeManager = StoreManager()
     @State private var userManager = UserManager()
     @State private var visionBoardManager = VisionBoardManager()
-    
+
+    init() {
+        // Configure RevenueCat before any Purchases.shared access.
+        StoreManager.configure()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -25,21 +30,18 @@ struct XVisionBoardAIApp: App {
                     #if DEBUG && targetEnvironment(simulator)
                     configureDebugEnvironment()
                     #endif
-                    // Initialize app services
-                    Task {
-                        await storeManager.loadProducts()
+                }
+                // Sync RevenueCat user identity whenever the logged-in user changes.
+                .task(id: userManager.currentUser?.id) {
+                    if let user = userManager.currentUser {
+                        await storeManager.login(userID: user.id.uuidString)
                     }
                 }
+                // Keep CustomerInfo fresh after the app returns to foreground.
                 .task {
-                    // Handle App Store transactions
-                    for await result in Transaction.updates {
-                        if case .verified(let transaction) = result {
-                            await storeManager.updatePurchasedProducts()
-                            await transaction.finish()
-                        }
-                    }
+                    await storeManager.refreshCustomerInfo()
+                    await storeManager.fetchCurrentOffering()
                 }
         }
     }
 }
-

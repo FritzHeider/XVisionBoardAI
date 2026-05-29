@@ -7,204 +7,163 @@
 //
 
 import Foundation
-import StoreKit
 import SwiftUI
+import RevenueCat
+
+// MARK: - StoreManager
 
 @MainActor
 @Observable
 class StoreManager {
-    var products: [Product] = []
-    var purchasedProducts: Set<String> = []
+
+    // MARK: - Published State
+
+    var customerInfo: CustomerInfo?
+    var currentOffering: Offering?
     var isLoading = false
     var errorMessage: String?
-    
-    private let productIdentifiers: Set<String> = [
-        "com.xvisionboardai.pro.monthly",
-        "com.xvisionboardai.pro.yearly",
-        "com.xvisionboardai.premium.monthly",
-        "com.xvisionboardai.premium.yearly",
-        "com.xvisionboardai.credits.small",
-        "com.xvisionboardai.credits.medium",
-        "com.xvisionboardai.credits.large"
-    ]
-    
+
+    // MARK: - Constants
+
+    /// The RevenueCat entitlement identifier configured in the dashboard.
+    static let entitlementID = "XVisionBoardAI Pro"
+
+    private static let apiKey = "test_ZNYMNLTjVtfJsExhmOrSUGpTalH"
+
+    // MARK: - SDK Configuration (call once at app launch, before init)
+
+    static func configure() {
+        Purchases.configure(withAPIKey: apiKey)
+#if DEBUG
+        Purchases.logLevel = .debug
+#else
+        Purchases.logLevel = .error
+#endif
+    }
+
+    // MARK: - Init
+
     init() {
         Task {
-            await loadProducts()
-            await updatePurchasedProducts()
+            await refreshCustomerInfo()
+            await fetchCurrentOffering()
         }
     }
-    
-    // MARK: - Product Loading
-    
-    func loadProducts() async {
-        isLoading = true
-        errorMessage = nil
-        
+
+    // MARK: - Customer Info
+
+    /// Fetches the latest CustomerInfo from RevenueCat.
+    func refreshCustomerInfo() async {
         do {
-            let storeProducts = try await Product.products(for: productIdentifiers)
-            products = storeProducts.sorted { $0.price < $1.price }
+            customerInfo = try await Purchases.shared.customerInfo()
         } catch {
-            errorMessage = "Failed to load products: \(error.localizedDescription)"
-            print("Failed to load products: \(error)")
+            print("[RevenueCat] refreshCustomerInfo: \(error.localizedDescription)")
         }
-        
-        isLoading = false
     }
-    
-    // MARK: - Purchase Handling
-    
-    func purchase(_ product: Product) async -> Bool {
+
+    /// Fetches the current Offering from RevenueCat (used by PaywallView and manual UIs).
+    func fetchCurrentOffering() async {
+        do {
+            let offerings = try await Purchases.shared.offerings()
+            currentOffering = offerings.current
+        } catch {
+            print("[RevenueCat] fetchCurrentOffering: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - Entitlement Status
+
+    /// `true` when the user has an active "XVisionBoardAI Pro" entitlement.
+    var hasActiveSubscription: Bool {
+        customerInfo?.entitlements[Self.entitlementID]?.isActive == true
+    }
+
+    /// The active `EntitlementInfo` for "XVisionBoardAI Pro", or `nil` if inactive.
+    var activeEntitlement: EntitlementInfo? {
+        customerInfo?.entitlements[Self.entitlementID]
+    }
+
+    /// The product identifier of the active subscription (e.g. "yearly"), or `nil`.
+    var activeProductID: String? {
+        customerInfo?.activeSubscriptions.first
+    }
+
+    /// Maps the entitlement to our internal `SubscriptionType` for display purposes.
+    var currentSubscription: SubscriptionType {
+        hasActiveSubscription ? .pro : .free
+    }
+
+    var subscriptionDisplayName: String { currentSubscription.displayName }
+    var isProUser: Bool { hasActiveSubscription }
+    var isPremiumUser: Bool { hasActiveSubscription }
+
+    // MARK: - Purchasing
+
+    /// Purchases a RevenueCat `Package` (obtained from `currentOffering`).
+    /// Returns `true` on successful purchase, `false` on cancellation or error.
+    func purchase(package: Package) async -> Bool {
         isLoading = true
         errorMessage = nil
-        
         do {
-            let result = try await product.purchase()
-            
-            switch result {
-            case .success(let verification):
-                switch verification {
-                case .verified(let transaction):
-                    await updatePurchasedProducts()
-                    await transaction.finish()
-                    isLoading = false
-                    return true
-                case .unverified:
-                    errorMessage = "Purchase could not be verified"
-                    isLoading = false
-                    return false
-                }
-            case .userCancelled:
-                isLoading = false
-                return false
-            case .pending:
-                errorMessage = "Purchase is pending approval"
-                isLoading = false
-                return false
-            @unknown default:
-                errorMessage = "Unknown purchase result"
-                isLoading = false
-                return false
+            let result = try await Purchases.shared.purchase(package: package)
+            customerInfo = result.customerInfo
+            isLoading = false
+            return !result.userCancelled
+        } catch {
+            // Don't surface cancellation as an error
+            let isCancel = (error as NSError).domain == "RevenueCat.ErrorCode" &&
+                           (error as NSError).code == 1 // purchaseCancelledError
+            if !isCancel {
+                errorMessage = error.localizedDescription
             }
-        } catch {
-            errorMessage = "Purchase failed: \(error.localizedDescription)"
             isLoading = false
             return false
         }
     }
-    
-    // MARK: - Subscription Management
-    
-    func updatePurchasedProducts() async {
-        var newPurchasedProducts: Set<String> = []
-        
-        for await result in Transaction.currentEntitlements {
-            if case .verified(let transaction) = result {
-                newPurchasedProducts.insert(transaction.productID)
-            }
-        }
-        
-        purchasedProducts = newPurchasedProducts
-    }
-    
+
+    /// Restores previous purchases.
     func restorePurchases() async {
         isLoading = true
         errorMessage = nil
-        
         do {
-            try await AppStore.sync()
-            await updatePurchasedProducts()
+            customerInfo = try await Purchases.shared.restorePurchases()
         } catch {
-            errorMessage = "Failed to restore purchases: \(error.localizedDescription)"
+            errorMessage = "Restore failed: \(error.localizedDescription)"
         }
-        
         isLoading = false
     }
-    
-    // MARK: - Subscription Status
-    
-    var currentSubscription: SubscriptionType {
-        if purchasedProducts.contains("com.xvisionboardai.premium.monthly") ||
-           purchasedProducts.contains("com.xvisionboardai.premium.yearly") {
-            return .premium
-        } else if purchasedProducts.contains("com.xvisionboardai.pro.monthly") ||
-                  purchasedProducts.contains("com.xvisionboardai.pro.yearly") {
-            return .pro
-        } else {
-            return .free
+
+    // MARK: - User Identity
+
+    /// Associates RevenueCat with a specific app user. Call after login.
+    func login(userID: String) async {
+        do {
+            let (info, _) = try await Purchases.shared.logIn(userID)
+            customerInfo = info
+        } catch {
+            print("[RevenueCat] logIn error: \(error.localizedDescription)")
         }
     }
-    
-    var hasActiveSubscription: Bool {
-        currentSubscription != .free
-    }
-    
-    // MARK: - Product Helpers
-    
-    func product(for identifier: String) -> Product? {
-        products.first { $0.id == identifier }
-    }
-    
-    var subscriptionProducts: [Product] {
-        products.filter { product in
-            product.id.contains("monthly") || product.id.contains("yearly")
+
+    /// Resets RevenueCat to an anonymous ID. Call on sign-out.
+    func logout() async {
+        do {
+            customerInfo = try await Purchases.shared.logOut()
+        } catch {
+            print("[RevenueCat] logOut error: \(error.localizedDescription)")
         }
     }
-    
-    var creditProducts: [Product] {
-        products.filter { product in
-            product.id.contains("credits")
-        }
-    }
-    
-    // MARK: - Pricing Display
-    
-    func formattedPrice(for product: Product) -> String {
-        product.displayPrice
-    }
-    
-    func monthlyPrice(for product: Product) -> String {
-        if product.id.contains("yearly") {
-            let yearlyPrice = product.price
-            let monthlyEquivalent = yearlyPrice / 12
-            return NumberFormatter.currency.string(from: monthlyEquivalent as NSNumber) ?? "$0.00"
-        }
-        return product.displayPrice
-    }
-    
-    // MARK: - Feature Access
+
+    // MARK: - Feature Gating
 
     func canCreateVisionBoard(currentCount: Int) -> Bool {
-        switch currentSubscription {
-        case .free: return currentCount < 1
-        case .pro: return currentCount < 50
-        case .premium: return true
-        }
+        hasActiveSubscription || currentCount < 1
     }
 
-    func canExportHD() -> Bool { currentSubscription != .free }
-    func canUseAdvancedAI() -> Bool { currentSubscription == .premium }
+    func canExportHD() -> Bool { hasActiveSubscription }
+    func canUseAdvancedAI() -> Bool { hasActiveSubscription }
 
     func maxVisionBoards() -> Int {
-        switch currentSubscription {
-        case .free: return 1
-        case .pro: return 50
-        case .premium: return -1
-        }
+        hasActiveSubscription ? -1 : 1
     }
-
-    var subscriptionDisplayName: String { currentSubscription.displayName }
-    var isProUser: Bool { currentSubscription == .pro || currentSubscription == .premium }
-    var isPremiumUser: Bool { currentSubscription == .premium }
 }
-
-// MARK: - Extensions
-
-extension NumberFormatter {
-    static let currency: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        return formatter
-    }()
-}
-
