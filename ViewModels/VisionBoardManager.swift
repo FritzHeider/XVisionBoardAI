@@ -133,7 +133,8 @@ class VisionBoardManager {
     private func generatePersonalizedImages(for visionBoard: VisionBoard, userImage: UIImage) async throws -> [VisionBoardImage] {
         var images: [VisionBoardImage] = []
         let imageCount = visionBoard.layout.imageCount
-        let userImageData = userImage.jpegData(compressionQuality: 0.8)
+        // Resize selfie to 512px max — keeps base64 payload small
+        let referenceData = userImage.resized(maxDimension: 512).jpegData(compressionQuality: 0.75)
 
         let prompts = generateImagePrompts(
             description: visionBoard.description,
@@ -143,83 +144,106 @@ class VisionBoardManager {
         )
 
         for (index, prompt) in prompts.enumerated() {
-            generationProgress = 0.4 + (0.5 * Double(index) / Double(imageCount))
+            generationProgress = 0.4 + (0.55 * Double(index) / Double(imageCount))
 
-            var image = VisionBoardImage(
-                prompt: prompt,
-                position: index,
-                isPersonalized: true
-            )
+            var image = VisionBoardImage(prompt: prompt, position: index, isPersonalized: referenceData != nil)
 
-            let generatedURL = try? await ImageGenerationService.generateImage(
-                prompt: prompt,
-                referenceImageData: userImageData,
-                style: visionBoard.style.displayName
-            )
-            image.imageURL = generatedURL ?? "https://picsum.photos/400/400?random=\(index+Int.random(in: 0..<1000))"
+            do {
+                let url = try await FalAIService.generateImage(
+                    prompt: prompt,
+                    referenceImageData: referenceData,
+                    imageSize: .forLayout(visionBoard.layout)
+                )
+                image.imageURL = url
 
-            // Download and cache the image locally
-            if let urlString = image.imageURL,
-               let url = URL(string: urlString),
-               let (imgData, _) = try? await URLSession.shared.data(from: url),
-               UIImage(data: imgData) != nil {
-                image.imageData = imgData
+                // Download and cache locally
+                if let imageURL = URL(string: url),
+                   let (imgData, _) = try? await URLSession.shared.data(from: imageURL),
+                   UIImage(data: imgData) != nil {
+                    image.imageData = imgData
+                }
+            } catch FalAIError.missingAPIKey {
+                // No API key — use placeholder (dev/demo mode)
+                image.imageURL = "https://picsum.photos/1024/1024?random=\(index + Int.random(in: 0..<9999))"
+                if let url = URL(string: image.imageURL!),
+                   let (imgData, _) = try? await URLSession.shared.data(from: url) {
+                    image.imageData = imgData
+                }
             }
 
             images.append(image)
         }
-
         return images
     }
-    
+
     private func generateImagePrompts(
         description: String,
         goals: [String],
         style: VisionBoardStyle,
         count: Int
     ) -> [String] {
-        
-        let stylePrefix = getStylePrefix(for: style)
-        let basePrompts = [
-            "\(stylePrefix) person achieving their dreams",
-            "\(stylePrefix) successful lifestyle scene",
-            "\(stylePrefix) person in their ideal environment",
-            "\(stylePrefix) manifestation of abundance",
-            "\(stylePrefix) person living their best life",
-            "\(stylePrefix) achievement and celebration scene",
-            "\(stylePrefix) person in their dream location",
-            "\(stylePrefix) success and prosperity visualization",
-            "\(stylePrefix) person embodying their goals"
-        ]
-        
-        var prompts: [String] = []
-        
-        // Add goal-specific prompts
-        for goal in goals.prefix(count / 2) {
-            prompts.append("\(stylePrefix) person successfully \(goal.lowercased())")
+        let styleMeta = styleMeta(for: style)
+
+        // Rich, aspirational prompts for each goal
+        var prompts: [String] = goals.prefix(max(1, count / 2)).map { goal in
+            "\(styleMeta.prefix) \(goal), ultra-detailed, photorealistic, 8k, \(styleMeta.suffix)"
         }
-        
-        // Fill remaining with base prompts
-        let remaining = count - prompts.count
-        prompts.append(contentsOf: basePrompts.prefix(remaining))
-        
+
+        // Fill remaining slots with lifestyle scenes keyed to the description
+        let topic = description.isEmpty ? "living their dream life" : description.lowercased()
+        let fillers: [String] = [
+            "\(styleMeta.prefix) successful person \(topic), \(styleMeta.suffix)",
+            "\(styleMeta.prefix) abundance and luxury lifestyle, \(styleMeta.suffix)",
+            "\(styleMeta.prefix) person radiating confidence and joy, \(styleMeta.suffix)",
+            "\(styleMeta.prefix) dream home interior with beautiful design, \(styleMeta.suffix)",
+            "\(styleMeta.prefix) person celebrating achievement, crowd cheering, \(styleMeta.suffix)",
+            "\(styleMeta.prefix) dream travel destination at golden hour, \(styleMeta.suffix)",
+            "\(styleMeta.prefix) successful entrepreneur working from paradise, \(styleMeta.suffix)",
+            "\(styleMeta.prefix) person surrounded by abundance and prosperity, \(styleMeta.suffix)",
+            "\(styleMeta.prefix) peak fitness and health, vibrant energy, \(styleMeta.suffix)"
+        ]
+
+        prompts.append(contentsOf: fillers.prefix(count - prompts.count))
         return Array(prompts.prefix(count))
     }
-    
-    private func getStylePrefix(for style: VisionBoardStyle) -> String {
+
+    private struct StyleMeta {
+        let prefix: String
+        let suffix: String
+    }
+
+    private func styleMeta(for style: VisionBoardStyle) -> StyleMeta {
         switch style {
         case .cinematic:
-            return "Cinematic, dramatic lighting,"
+            return StyleMeta(
+                prefix: "Cinematic film still, dramatic volumetric lighting, shallow depth of field,",
+                suffix: "movie quality, professional color grading, anamorphic lens flare"
+            )
         case .luxurious:
-            return "Luxurious, high-end, elegant,"
+            return StyleMeta(
+                prefix: "Luxury editorial photo, high-end fashion photography,",
+                suffix: "Vogue magazine style, opulent surroundings, premium quality"
+            )
         case .minimalist:
-            return "Minimalist, clean, simple,"
+            return StyleMeta(
+                prefix: "Clean minimalist photography, neutral tones, zen aesthetic,",
+                suffix: "intentional composition, negative space, tranquil mood"
+            )
         case .natural:
-            return "Natural, organic, earth-toned,"
+            return StyleMeta(
+                prefix: "Natural light photography, golden hour, organic textures,",
+                suffix: "earthy palette, serene nature backdrop, authentic lifestyle"
+            )
         case .futuristic:
-            return "Futuristic, modern, tech-inspired,"
+            return StyleMeta(
+                prefix: "Futuristic concept art, neon-lit cyberpunk aesthetic, holographic UI,",
+                suffix: "ultra-modern tech environment, dynamic composition"
+            )
         case .artistic:
-            return "Artistic, creative, abstract,"
+            return StyleMeta(
+                prefix: "Fine art photography with painterly color grading, dreamy bokeh,",
+                suffix: "artistic composition, surreal atmosphere, vibrant colours"
+            )
         }
     }
     

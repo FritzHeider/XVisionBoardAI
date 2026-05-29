@@ -31,6 +31,7 @@
 		143 /* Views/Components/SharedCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142 /* Views/Components/SharedCards.swift */; };
 		145 /* Services/ClaudeAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144 /* Services/ClaudeAPIService.swift */; };
 		147 /* Services/ImageGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146 /* Services/ImageGenerationService.swift */; };
+		153 /* Services/FalAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 152 /* Services/FalAIService.swift */; };
 		149 /* Views/EditVisionBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148 /* Views/EditVisionBoardView.swift */; };
 		151 /* Views/OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150 /* Views/OnboardingView.swift */; };
 		9E86F9132FC97C5600510CC9 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 9E86F9112FC97C5600510CC9 /* RevenueCat */; };
@@ -63,6 +64,7 @@
 		142 /* Views/Components/SharedCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Components/SharedCards.swift; sourceTree = "<group>"; };
 		144 /* Services/ClaudeAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeAPIService.swift; sourceTree = "<group>"; };
 		146 /* Services/ImageGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ImageGenerationService.swift; sourceTree = "<group>"; };
+		152 /* Services/FalAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/FalAIService.swift; sourceTree = "<group>"; };
 		148 /* Views/EditVisionBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/EditVisionBoardView.swift; sourceTree = "<group>"; };
 		150 /* Views/OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/OnboardingView.swift; sourceTree = "<group>"; };
 		7 /* XVisionBoardAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = XVisionBoardAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -112,6 +114,7 @@
 				142 /* Views/Components/SharedCards.swift */,
 				144 /* Services/ClaudeAPIService.swift */,
 				146 /* Services/ImageGenerationService.swift */,
+				152 /* Services/FalAIService.swift */,
 				148 /* Views/EditVisionBoardView.swift */,
 				150 /* Views/OnboardingView.swift */,
 			);
@@ -208,6 +211,7 @@
 				143 /* Views/Components/SharedCards.swift in Sources */,
 				145 /* Services/ClaudeAPIService.swift in Sources */,
 				147 /* Services/ImageGenerationService.swift in Sources */,
+				153 /* Services/FalAIService.swift in Sources */,
 				149 /* Views/EditVisionBoardView.swift in Sources */,
 				151 /* Views/OnboardingView.swift in Sources */,
 			);
