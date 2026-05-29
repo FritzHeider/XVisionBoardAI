@@ -50,7 +50,7 @@ class VisionBoardManager {
                 layout: layout,
                 style: style
             )
-            visionBoard.manifestationGoals = manifestationGoals
+            visionBoard.manifestationGoals = manifestationGoals.map { ManifestationGoal(title: $0) }
             currentGeneratingBoard = visionBoard
 
             generationProgress = 0.2
@@ -61,7 +61,7 @@ class VisionBoardManager {
             )
 
             generationProgress = 0.4
-            visionBoard.images = try await generatePersonalizedImages(for: visionBoard)
+            visionBoard.images = try await generatePersonalizedImages(for: visionBoard, userImage: userImage)
 
             generationProgress = 1.0
             visionBoards.append(visionBoard)
@@ -86,70 +86,89 @@ class VisionBoardManager {
         goals: [String],
         style: VisionBoardStyle
     ) async throws -> [String] {
+        do {
+            return try await ClaudeAPIService.generateAffirmations(
+                description: description,
+                goals: goals,
+                style: style.displayName
+            )
+        } catch ClaudeAPIError.missingAPIKey {
+            // Fall through to template affirmations when no key configured
+        } catch {
+            // Log but fall through to templates on any API error
+            print("Claude API error: \(error)")
+        }
+        return templateAffirmations(goals: goals, style: style)
+    }
 
-        try await Task.sleep(nanoseconds: 2_000_000_000)
-        
-        let baseAffirmations = [
+    private func templateAffirmations(goals: [String], style: VisionBoardStyle) -> [String] {
+        var affirmations: [String] = []
+        for goal in goals.prefix(3) {
+            affirmations.append("I am successfully achieving my goal of \(goal.lowercased())")
+        }
+        switch style {
+        case .luxurious:
+            affirmations.append("I live in luxury and abundance flows to me effortlessly")
+        case .natural:
+            affirmations.append("I am in harmony with nature and my authentic self")
+        case .futuristic:
+            affirmations.append("I embrace innovation and create my future with technology")
+        case .artistic:
+            affirmations.append("My creativity flows freely and inspires others")
+        case .minimalist:
+            affirmations.append("I find peace and clarity in simplicity and focus")
+        case .cinematic:
+            affirmations.append("My life unfolds like an inspiring movie with perfect timing")
+        }
+        let base = [
             "I am living my dream life with confidence and joy",
             "Every day brings me closer to my manifestation goals",
             "I attract abundance and success in all areas of my life",
             "My vision is becoming my reality through focused intention",
             "I am worthy of all the success and happiness I desire"
         ]
-        
-        // Customize based on goals and style
-        var customAffirmations: [String] = []
-        
-        for goal in goals.prefix(3) {
-            customAffirmations.append("I am successfully achieving my goal of \(goal.lowercased())")
-        }
-        
-        switch style {
-        case .luxurious:
-            customAffirmations.append("I live in luxury and abundance flows to me effortlessly")
-        case .natural:
-            customAffirmations.append("I am in harmony with nature and my authentic self")
-        case .futuristic:
-            customAffirmations.append("I embrace innovation and create my future with technology")
-        case .artistic:
-            customAffirmations.append("My creativity flows freely and inspires others")
-        case .minimalist:
-            customAffirmations.append("I find peace and clarity in simplicity and focus")
-        case .cinematic:
-            customAffirmations.append("My life unfolds like an inspiring movie with perfect timing")
-        }
-        
-        return (customAffirmations + baseAffirmations).prefix(5).map { $0 }
+        return Array((affirmations + base).prefix(5))
     }
     
-    private func generatePersonalizedImages(for visionBoard: VisionBoard) async throws -> [VisionBoardImage] {
+    private func generatePersonalizedImages(for visionBoard: VisionBoard, userImage: UIImage) async throws -> [VisionBoardImage] {
         var images: [VisionBoardImage] = []
         let imageCount = visionBoard.layout.imageCount
+        let userImageData = userImage.jpegData(compressionQuality: 0.8)
 
         let prompts = generateImagePrompts(
             description: visionBoard.description,
-            goals: visionBoard.manifestationGoals,
+            goals: visionBoard.manifestationGoals.map(\.title),
             style: visionBoard.style,
             count: imageCount
         )
 
         for (index, prompt) in prompts.enumerated() {
             generationProgress = 0.4 + (0.5 * Double(index) / Double(imageCount))
-            try await Task.sleep(nanoseconds: 1_000_000_000)
-            
+
             var image = VisionBoardImage(
                 prompt: prompt,
                 position: index,
                 isPersonalized: true
             )
-            
-            // In a real app, this would call an AI image generation API
-            // For now, we'll use placeholder data
-            image.imageURL = "https://picsum.photos/400/400?random=\(index)"
-            
+
+            let generatedURL = try? await ImageGenerationService.generateImage(
+                prompt: prompt,
+                referenceImageData: userImageData,
+                style: visionBoard.style.displayName
+            )
+            image.imageURL = generatedURL ?? "https://picsum.photos/400/400?random=\(index+Int.random(in: 0..<1000))"
+
+            // Download and cache the image locally
+            if let urlString = image.imageURL,
+               let url = URL(string: urlString),
+               let (imgData, _) = try? await URLSession.shared.data(from: url),
+               UIImage(data: imgData) != nil {
+                image.imageData = imgData
+            }
+
             images.append(image)
         }
-        
+
         return images
     }
     
@@ -206,6 +225,20 @@ class VisionBoardManager {
     
     // MARK: - Vision Board Management
     
+    func toggleGoalAchieved(_ goal: ManifestationGoal, in boardID: UUID) {
+        guard let boardIndex = visionBoards.firstIndex(where: { $0.id == boardID }),
+              let goalIndex = visionBoards[boardIndex].manifestationGoals.firstIndex(where: { $0.id == goal.id }) else {
+            return
+        }
+        if visionBoards[boardIndex].manifestationGoals[goalIndex].isAchieved {
+            visionBoards[boardIndex].manifestationGoals[goalIndex].unmarkAchieved()
+        } else {
+            visionBoards[boardIndex].manifestationGoals[goalIndex].markAchieved()
+        }
+        visionBoards[boardIndex].updatedAt = Date()
+        saveVisionBoards()
+    }
+
     func deleteVisionBoard(_ visionBoard: VisionBoard) {
         ImageStore.delete(visionBoard.userImageFilename)
         visionBoards.removeAll { $0.id == visionBoard.id }
@@ -234,24 +267,42 @@ class VisionBoardManager {
     }
     
     // MARK: - Data Persistence
-    
+
+    private static var boardsDirectory: URL {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let dir = docs.appendingPathComponent("VisionBoards", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
     private func saveVisionBoards() {
-        do {
-            let data = try JSONEncoder().encode(visionBoards)
-            userDefaults.set(data, forKey: visionBoardsKey)
-        } catch {
-            print("Failed to save vision boards: \(error)")
+        let dir = Self.boardsDirectory
+        for board in visionBoards {
+            let file = dir.appendingPathComponent("\(board.id.uuidString).json")
+            if let data = try? JSONEncoder().encode(board) {
+                try? data.write(to: file, options: .atomic)
+            }
+        }
+        // Remove files for deleted boards
+        let existingIDs = Set(visionBoards.map { $0.id.uuidString + ".json" })
+        if let files = try? FileManager.default.contentsOfDirectory(atPath: dir.path) {
+            for file in files where !existingIDs.contains(file) {
+                try? FileManager.default.removeItem(at: dir.appendingPathComponent(file))
+            }
         }
     }
-    
+
     private func loadVisionBoards() {
-        guard let data = userDefaults.data(forKey: visionBoardsKey) else { return }
-        
-        do {
-            visionBoards = try JSONDecoder().decode([VisionBoard].self, from: data)
-        } catch {
-            print("Failed to load vision boards: \(error)")
-        }
+        let dir = Self.boardsDirectory
+        guard let files = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { return }
+        visionBoards = files
+            .filter { $0.hasSuffix(".json") }
+            .compactMap { filename -> VisionBoard? in
+                let file = dir.appendingPathComponent(filename)
+                guard let data = try? Data(contentsOf: file) else { return nil }
+                return try? JSONDecoder().decode(VisionBoard.self, from: data)
+            }
+            .sorted { $0.createdAt < $1.createdAt }
     }
     
     // MARK: - Computed Properties

@@ -62,66 +62,114 @@ struct CosmicCardModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.cosmicGray)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.cosmicGradient, lineWidth: 1)
-                    )
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color(red: 0.11, green: 0.11, blue: 0.17))
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.cosmicPurple.opacity(0.10),
+                                    Color.cosmicBlue.opacity(0.06),
+                                    Color.cosmicPink.opacity(0.04)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.cosmicGradient, lineWidth: 1)
+                }
             )
-            .shadow(color: Color.cosmicPurple.opacity(0.3), radius: 10, x: 0, y: 5)
+            .shadow(color: Color.cosmicPurple.opacity(0.25), radius: 8, x: 0, y: 4)
+            .shadow(color: Color.black.opacity(0.4), radius: 20, x: 0, y: 10)
+    }
+}
+
+struct CosmicGlowCardModifier: ViewModifier {
+    var glowColor: Color = .cosmicPurple
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(Color(red: 0.10, green: 0.10, blue: 0.16))
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(
+                            LinearGradient(
+                                colors: [glowColor.opacity(0.18), Color.cosmicBlue.opacity(0.10)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    RoundedRectangle(cornerRadius: 24)
+                        .stroke(
+                            LinearGradient(
+                                colors: [glowColor.opacity(0.8), Color.cosmicBlue.opacity(0.5), Color.cosmicPink.opacity(0.3)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1.5
+                        )
+                }
+            )
+            .shadow(color: glowColor.opacity(0.45), radius: 16, x: 0, y: 6)
+            .shadow(color: Color.black.opacity(0.5), radius: 24, x: 0, y: 12)
     }
 }
 
 struct CosmicButtonModifier: ViewModifier {
     let isEnabled: Bool
-    
+    @State private var isPressed = false
+
     init(isEnabled: Bool = true) {
         self.isEnabled = isEnabled
     }
-    
+
     func body(content: Content) -> some View {
         content
             .foregroundColor(.white)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
+            .font(.headline)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 14)
             .background(
-                RoundedRectangle(cornerRadius: 25)
+                RoundedRectangle(cornerRadius: 28)
                     .fill(
                         isEnabled
                         ? LinearGradient(
-                            colors: [.cosmicPurple, .cosmicBlue],
+                            colors: [.cosmicPurple, .cosmicBlue, .cosmicPink.opacity(0.7)],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                         : LinearGradient(
-                            colors: [.gray, .gray],
+                            colors: [Color.gray.opacity(0.5), Color.gray.opacity(0.5)],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                     )
             )
-            .scaleEffect(isEnabled ? 1.0 : 0.95)
-            .opacity(isEnabled ? 1.0 : 0.6)
+            .shadow(color: isEnabled ? Color.cosmicPurple.opacity(0.5) : .clear, radius: 12, x: 0, y: 6)
+            .scaleEffect(isEnabled ? (isPressed ? 0.97 : 1.0) : 0.95)
+            .opacity(isEnabled ? 1.0 : 0.5)
+            .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isPressed)
             .animation(.easeInOut(duration: 0.2), value: isEnabled)
     }
 }
 
 struct PulsingModifier: ViewModifier {
     @State private var isPulsing = false
-    
+
     func body(content: Content) -> some View {
         content
-            .scaleEffect(isPulsing ? 1.05 : 1.0)
-            .opacity(isPulsing ? 0.8 : 1.0)
+            .scaleEffect(isPulsing ? 1.04 : 1.0)
+            .opacity(isPulsing ? 0.85 : 1.0)
             .animation(
-                .easeInOut(duration: 1.5)
+                .easeInOut(duration: 1.8)
                     .repeatForever(autoreverses: true),
                 value: isPulsing
             )
-            .onAppear {
-                isPulsing = true
-            }
+            .onAppear { isPulsing = true }
     }
 }
 
@@ -131,32 +179,34 @@ extension View {
     func cosmicCard() -> some View {
         modifier(CosmicCardModifier())
     }
-    
+
+    func cosmicGlowCard(color: Color = .cosmicPurple) -> some View {
+        modifier(CosmicGlowCardModifier(glowColor: color))
+    }
+
     func cosmicButton(isEnabled: Bool = true) -> some View {
         modifier(CosmicButtonModifier(isEnabled: isEnabled))
     }
-    
+
     func pulsing() -> some View {
         modifier(PulsingModifier())
     }
-    
+
     func manifestationTitle() -> some View {
         self
-            .font(.largeTitle)
-            .fontWeight(.bold)
+            .font(.system(.largeTitle, design: .rounded, weight: .bold))
             .foregroundStyle(Color.cosmicGradient)
     }
-    
+
     func manifestationSubtitle() -> some View {
         self
-            .font(.title2)
-            .fontWeight(.semibold)
+            .font(.system(.title2, design: .rounded, weight: .semibold))
             .foregroundColor(.cosmicWhite)
     }
-    
+
     func manifestationBody() -> some View {
         self
-            .font(.body)
-            .foregroundColor(.cosmicWhite.opacity(0.8))
+            .font(.system(.body, design: .rounded))
+            .foregroundColor(.cosmicWhite.opacity(0.82))
     }
 }

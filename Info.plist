@@ -35,5 +35,9 @@
 	</dict>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
+	<key>ANTHROPIC_API_KEY</key>
+	<string>$(ANTHROPIC_API_KEY)</string>
+	<key>REPLICATE_API_TOKEN</key>
+	<string>$(REPLICATE_API_TOKEN)</string>
 </dict>
 </plist>

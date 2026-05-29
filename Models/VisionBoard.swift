@@ -9,6 +9,34 @@
 import Foundation
 import SwiftUI
 
+// MARK: - ManifestationGoal Model
+
+struct ManifestationGoal: Codable, Identifiable, Hashable, Equatable {
+    let id: UUID
+    var title: String
+    var isAchieved: Bool
+    var achievedAt: Date?
+
+    init(title: String) {
+        self.id = UUID()
+        self.title = title
+        self.isAchieved = false
+    }
+
+    mutating func markAchieved() {
+        isAchieved = true
+        achievedAt = Date()
+    }
+
+    mutating func unmarkAchieved() {
+        isAchieved = false
+        achievedAt = nil
+    }
+
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
+}
+
 // MARK: - VisionBoard Model
 
 struct VisionBoard: Codable, Identifiable {
@@ -23,7 +51,7 @@ struct VisionBoard: Codable, Identifiable {
     var createdAt: Date
     var updatedAt: Date
     var isPersonalized: Bool
-    var manifestationGoals: [String]
+    var manifestationGoals: [ManifestationGoal]
     var viewCount: Int
     var isFavorite: Bool
 
@@ -48,6 +76,40 @@ struct VisionBoard: Codable, Identifiable {
         self.manifestationGoals = []
         self.viewCount = 0
         self.isFavorite = false
+    }
+
+    // MARK: - Codable (backward-compatible decoder)
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, description, userImageFilename, layout, style
+        case images, affirmations, createdAt, updatedAt, isPersonalized
+        case manifestationGoals, viewCount, isFavorite
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        description = try container.decode(String.self, forKey: .description)
+        userImageFilename = try container.decode(String.self, forKey: .userImageFilename)
+        layout = try container.decode(VisionBoardLayout.self, forKey: .layout)
+        style = try container.decode(VisionBoardStyle.self, forKey: .style)
+        images = try container.decode([VisionBoardImage].self, forKey: .images)
+        affirmations = try container.decode([String].self, forKey: .affirmations)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        isPersonalized = try container.decode(Bool.self, forKey: .isPersonalized)
+        viewCount = try container.decode(Int.self, forKey: .viewCount)
+        isFavorite = try container.decode(Bool.self, forKey: .isFavorite)
+
+        // Backward-compatible decoding: try [ManifestationGoal] first, then fall back to [String]
+        if let goals = try? container.decode([ManifestationGoal].self, forKey: .manifestationGoals) {
+            manifestationGoals = goals
+        } else if let strings = try? container.decode([String].self, forKey: .manifestationGoals) {
+            manifestationGoals = strings.map { ManifestationGoal(title: $0) }
+        } else {
+            manifestationGoals = []
+        }
     }
 
     var userImage: UIImage? {
@@ -95,9 +157,9 @@ extension VisionBoard {
                 "I am capable, confident, and creative."
             ]
             $0.manifestationGoals = [
-                "Launch my startup",
-                "Travel the world",
-                "Build passive income streams"
+                ManifestationGoal(title: "Launch my startup"),
+                ManifestationGoal(title: "Travel the world"),
+                ManifestationGoal(title: "Build passive income streams")
             ]
             $0.isFavorite = true
             $0.viewCount = 42

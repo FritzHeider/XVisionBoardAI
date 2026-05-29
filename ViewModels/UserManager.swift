@@ -53,7 +53,23 @@ class UserManager {
     func signUp(email: String, username: String, password: String) async -> Bool {
         isLoading = true
         errorMessage = nil
-        
+
+        guard email.isValidEmail else {
+            errorMessage = "Please enter a valid email address"
+            isLoading = false
+            return false
+        }
+        guard password.isValidPassword else {
+            errorMessage = "Password must be at least 6 characters"
+            isLoading = false
+            return false
+        }
+        guard !username.trimmingCharacters(in: .whitespaces).isEmpty else {
+            errorMessage = "Username cannot be empty"
+            isLoading = false
+            return false
+        }
+
         // Simulate API call
         try? await Task.sleep(nanoseconds: 1_000_000_000)
         
@@ -74,7 +90,18 @@ class UserManager {
     func signIn(email: String, password: String) async -> Bool {
         isLoading = true
         errorMessage = nil
-        
+
+        guard email.isValidEmail else {
+            errorMessage = "Please enter a valid email address"
+            isLoading = false
+            return false
+        }
+        guard password.isValidPassword else {
+            errorMessage = "Password must be at least 6 characters"
+            isLoading = false
+            return false
+        }
+
         // Simulate API call
         try? await Task.sleep(nanoseconds: 1_000_000_000)
         
