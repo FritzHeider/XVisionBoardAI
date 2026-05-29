@@ -93,6 +93,23 @@ private struct FallbackPaywallView: View {
                         }
                         .padding(.top, 8)
 
+                        // Free trial badge
+                        HStack(spacing: 6) {
+                            Image(systemName: "gift.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.cosmicGold)
+                            Text("3-Day Free Trial — then $49.99/year")
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .foregroundColor(.cosmicGold)
+                        }
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 10)
+                        .background(
+                            Capsule()
+                                .fill(Color.cosmicGold.opacity(0.12))
+                                .overlay(Capsule().stroke(Color.cosmicGold.opacity(0.35), lineWidth: 1))
+                        )
+
                         // Feature highlights
                         VStack(spacing: 14) {
                             featureRow("Unlimited Vision Boards",      icon: "infinity",             color: .cosmicPurple)
