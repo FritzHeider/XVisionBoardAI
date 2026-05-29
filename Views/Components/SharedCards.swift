@@ -15,22 +15,34 @@ struct StatCard: View {
     let color: Color
 
     var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(color)
+        VStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.18))
+                    .frame(width: 44, height: 44)
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [color, color.opacity(0.7)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
 
             Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.system(.title2, design: .rounded, weight: .bold))
                 .foregroundColor(.cosmicWhite)
 
             Text(title)
-                .font(.caption)
-                .foregroundColor(.cosmicWhite.opacity(0.7))
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundColor(.cosmicWhite.opacity(0.6))
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding()
+        .padding(.vertical, 16)
+        .padding(.horizontal, 8)
         .cosmicCard()
     }
 }

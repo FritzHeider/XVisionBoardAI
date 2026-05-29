@@ -252,52 +252,55 @@ struct VisionBoardDetailView: View {
             }
             
             if !visionBoard.affirmations.isEmpty {
-                VStack(spacing: 12) {
-                    // Current affirmation
-                    Text(visionBoard.affirmations[currentAffirmationIndex])
-                        .font(.title3)
-                        .fontWeight(.medium)
-                        .foregroundColor(.cosmicWhite)
-                        .multilineTextAlignment(.center)
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [.cosmicPurple.opacity(0.3), .cosmicBlue.opacity(0.3)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                        )
-                        .animation(.easeInOut(duration: 0.5), value: currentAffirmationIndex)
-                    
-                    // Affirmation indicators
-                    HStack(spacing: 8) {
+                VStack(spacing: 16) {
+                    // Current affirmation hero card
+                    VStack(spacing: 12) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(
+                                LinearGradient(colors: [.cosmicGold, .cosmicPurple], startPoint: .leading, endPoint: .trailing)
+                            )
+
+                        Text(visionBoard.affirmations[currentAffirmationIndex])
+                            .font(.system(.title3, design: .rounded, weight: .semibold))
+                            .foregroundColor(.cosmicWhite)
+                            .multilineTextAlignment(.center)
+                            .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                            .id(currentAffirmationIndex)
+                    }
+                    .padding(24)
+                    .frame(maxWidth: .infinity)
+                    .cosmicGlowCard(color: .cosmicPurple)
+                    .animation(.easeInOut(duration: 0.4), value: currentAffirmationIndex)
+
+                    // Page dots
+                    HStack(spacing: 6) {
                         ForEach(0..<visionBoard.affirmations.count, id: \.self) { index in
-                            Circle()
-                                .fill(currentAffirmationIndex == index ? Color.cosmicGold : Color.gray)
-                                .frame(width: 8, height: 8)
-                                .animation(.easeInOut, value: currentAffirmationIndex)
+                            Capsule()
+                                .fill(currentAffirmationIndex == index ? Color.cosmicGold : Color.cosmicWhite.opacity(0.25))
+                                .frame(width: currentAffirmationIndex == index ? 20 : 6, height: 6)
+                                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentAffirmationIndex)
                         }
                     }
-                    
+
                     // All affirmations list
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 10) {
                         ForEach(visionBoard.affirmations.indices, id: \.self) { index in
-                            HStack {
-                                Text("•")
-                                    .foregroundColor(.cosmicGold)
-                                
+                            HStack(alignment: .top, spacing: 10) {
+                                Circle()
+                                    .fill(Color.cosmicGold.opacity(0.7))
+                                    .frame(width: 6, height: 6)
+                                    .padding(.top, 6)
+
                                 Text(visionBoard.affirmations[index])
-                                    .font(.subheadline)
-                                    .foregroundColor(.cosmicWhite.opacity(0.9))
-                                
+                                    .font(.system(.subheadline, design: .rounded))
+                                    .foregroundColor(.cosmicWhite.opacity(0.88))
+
                                 Spacer()
                             }
                         }
                     }
-                    .padding()
+                    .padding(18)
                     .cosmicCard()
                 }
             }
@@ -329,53 +332,80 @@ struct VisionBoardDetailView: View {
     }
     
     // MARK: - Actions Section
-    
+
     private var actionsSection: some View {
-        VStack(spacing: 16) {
+        VStack(alignment: .leading, spacing: 14) {
             Text("Manifestation Actions")
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.system(.title3, design: .rounded, weight: .bold))
                 .foregroundColor(.cosmicWhite)
-            
-            VStack(spacing: 12) {
-                ActionButton(
-                    icon: "heart.text.square.fill",
-                    title: "Daily Visualization",
-                    description: "Spend 5-10 minutes visualizing these images"
-                ) {
+
+            VStack(spacing: 0) {
+                actionRow(icon: "bell.badge.fill", iconColor: .cosmicPurple,
+                          title: "Daily Reminder",
+                          description: "Get a daily nudge to visualize") {
                     scheduleDailyReminder()
                 }
-                
-                ActionButton(
-                    icon: "square.and.arrow.up",
-                    title: "Share Your Vision",
-                    description: "Share with friends for accountability"
-                ) {
+
+                actionRow(icon: "square.and.arrow.up.fill", iconColor: .cosmicBlue,
+                          title: "Share Your Vision",
+                          description: "Share with friends for accountability") {
                     if let img = renderBoardImage() {
                         shareImage = img
                         showingImageShare = true
                     }
                 }
-                
-                ActionButton(
-                    icon: "photo",
-                    title: "Set as Wallpaper",
-                    description: "Keep your vision visible daily"
-                ) {
+
+                actionRow(icon: "photo.fill", iconColor: .cosmicPink,
+                          title: "Set as Wallpaper",
+                          description: "Keep your vision visible daily") {
                     if let img = renderBoardImage() {
                         UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
                     }
                 }
-                
-                ActionButton(
-                    icon: "printer.fill",
-                    title: "Print Vision Board",
-                    description: "Create a physical copy to display"
-                ) {
-                    // Print vision board
-                }
+
+                actionRow(icon: "printer.fill", iconColor: .cosmicGold,
+                          title: "Print Vision Board",
+                          description: "Create a physical copy to display") { }
             }
             .cosmicCard()
+        }
+    }
+
+    private func actionRow(icon: String, iconColor: Color, title: String, description: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(iconColor.opacity(0.18))
+                        .frame(width: 40, height: 40)
+                    Image(systemName: icon)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(iconColor)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundColor(.cosmicWhite)
+                    Text(description)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundColor(.cosmicWhite.opacity(0.55))
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.cosmicWhite.opacity(0.3))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+        }
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Color.cosmicWhite.opacity(0.06))
+                .frame(height: 0.5)
+                .padding(.leading, 70)
         }
     }
     
