@@ -26,6 +26,33 @@ Visualize Wealth & Abundance
 law,of,attraction,money,loa,mindset,affirmations,gratitude,journal,goals,dream,collage,photo,visual
 ```
 
+## App Store Metadata (Spanish — Mexico) — indexes for US users
+
+> Apple indexes ES-MX localizations for US App Store search, giving an effective +260 chars
+> of keyword reach (30 title + 30 subtitle + 100 keywords + 100 description keywords).
+> All fields below use English keywords — zero duplication with the US metadata above.
+
+### ES-MX Title (27/30 chars)
+```
+Vision Board: Manifestation
+```
+
+### ES-MX Subtitle (30/30 chars)
+```
+Daily Motivation & Inspiration
+```
+
+### ES-MX Keyword Field (100/100 chars)
+```
+positive,meditation,success,creator,maker,wallpaper,spiritual,wellness,intention,attract,habit,focus
+```
+
+**Fresh terms added vs US metadata:**
+vision board, manifestation, daily, motivation, inspiration, positive, meditation, success,
+creator, maker, wallpaper, spiritual, wellness, intention, attract, habit, focus
+
+---
+
 ### Promotional Text (update seasonally, not keyword-indexed)
 ```
 ✨ New Year, New Vision — Create your 2026 manifestation board free today.
