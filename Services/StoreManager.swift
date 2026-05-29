@@ -28,7 +28,7 @@ class StoreManager {
     /// The RevenueCat entitlement identifier configured in the dashboard.
     static let entitlementID = "XVisionBoardAI Pro"
 
-    private static let apiKey = "test_ZNYMNLTjVtfJsExhmOrSUGpTalH"
+    private static let apiKey = "appl_mJajGcFwBUCbnMHNmzkWYhdRDcR"
 
     // MARK: - SDK Configuration (call once at app launch, before init)
 
