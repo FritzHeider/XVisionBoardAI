@@ -29,10 +29,12 @@
 		138 /* Services/TokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139 /* Services/TokenStore.swift */; };
 		141 /* Utils/ImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140 /* Utils/ImageStore.swift */; };
 		143 /* Views/Components/SharedCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142 /* Views/Components/SharedCards.swift */; };
-		B21BEFA02E43409E00EDBF92 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */; };
 		145 /* Services/ClaudeAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144 /* Services/ClaudeAPIService.swift */; };
 		147 /* Services/ImageGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146 /* Services/ImageGenerationService.swift */; };
 		149 /* Views/EditVisionBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148 /* Views/EditVisionBoardView.swift */; };
+		B21BEFA02E43409E00EDBF92 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */; };
+		9E86F9132FC97C5600510CC9 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 9E86F9112FC97C5600510CC9 /* RevenueCat */; };
+		9E86F9142FC97C5600510CC9 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 9E86F9122FC97C5600510CC9 /* RevenueCatUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -110,18 +112,35 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		9E86F9152FC97C5600510CC9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9E86F9132FC97C5600510CC9 /* RevenueCat in Frameworks */,
+				9E86F9142FC97C5600510CC9 /* RevenueCatUI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXNativeTarget section */
 		5 /* XVisionBoardAI */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2 /* Build configuration list for PBXNativeTarget "XVisionBoardAI" */;
 			buildPhases = (
 				6 /* Sources */,
+				9E86F9152FC97C5600510CC9 /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = XVisionBoardAI;
+			packageProductDependencies = (
+				9E86F9112FC97C5600510CC9 /* RevenueCat */,
+				9E86F9122FC97C5600510CC9 /* RevenueCatUI */,
+			);
 			productName = XVisionBoardAI;
 			productReference = 7 /* XVisionBoardAI.app */;
 			productType = "com.apple.product-type.application";
@@ -144,6 +163,9 @@
 				Base,
 			);
 			mainGroup = 3;
+			packageReferences = (
+				9E86F9102FC97C5600510CC9 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+			);
 			productRefGroup = 4 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -292,6 +314,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9E86F9112FC97C5600510CC9 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9E86F9102FC97C5600510CC9 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
+		9E86F9122FC97C5600510CC9 /* RevenueCatUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9E86F9102FC97C5600510CC9 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCatUI;
+		};
+/* End XCSwiftPackageProductDependency section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		9E86F9102FC97C5600510CC9 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.75.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 1 /* Project object */;
 }

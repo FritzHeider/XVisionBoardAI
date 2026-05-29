@@ -124,7 +124,6 @@ class CameraManager: NSObject, ObservableObject {
         // Add photo output
         if session.canAddOutput(photoOutput) {
             session.addOutput(photoOutput)
-            photoOutput.isHighResolutionCaptureEnabled = true
         }
         
         // Add video output for face detection
@@ -166,18 +165,24 @@ class CameraManager: NSObject, ObservableObject {
     
     func capturePhoto() {
         guard !isCapturing else { return }
-        
+        guard session.isRunning else {
+            errorMessage = "Camera session is not active yet"
+            return
+        }
+        guard let connection = photoOutput.connection(with: .video), connection.isEnabled, connection.isActive else {
+            errorMessage = "Camera is not ready"
+            return
+        }
+
         isCapturing = true
         errorMessage = nil
-        
+
         let settings = AVCapturePhotoSettings()
-        settings.isHighResolutionPhotoEnabled = true
-        
-        // Enable flash if needed
+
         if photoOutput.supportedFlashModes.contains(.auto) {
             settings.flashMode = .auto
         }
-        
+
         photoOutput.capturePhoto(with: settings, delegate: self)
     }
     
