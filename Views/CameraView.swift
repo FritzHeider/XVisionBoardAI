@@ -57,13 +57,13 @@ var body: some View {
                 isPresented = false
             }
         }
-        .onChange(of: cameraManager.capturedImage) { newImage in
+        .onChange(of: cameraManager.capturedImage) { _, newImage in
             if let image = newImage {
                 capturedImage = image
                 isPresented = false
             }
         }
-        .onChange(of: cameraManager.errorMessage) { errorMessage in
+        .onChange(of: cameraManager.errorMessage) { _, errorMessage in
             if errorMessage != nil {
                 showingPermissionAlert = true
             }
@@ -228,7 +228,7 @@ struct CameraPreview: UIViewRepresentable {
     let session: AVCaptureSession
     
     func makeUIView(context: Context) -> UIView {
-        let view = UIView(frame: UIScreen.main.bounds)
+        let view = UIView()
         
         let previewLayer = AVCaptureVideoPreviewLayer(session: session)
         previewLayer.frame = view.frame

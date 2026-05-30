@@ -28,7 +28,7 @@ struct VisionBoardDetailView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.cosmicBlack.ignoresSafeArea()
+                Color.astralBlack.ignoresSafeArea()
                 
                 ScrollView {
                     VStack(spacing: 24) {
@@ -245,6 +245,7 @@ struct VisionBoardDetailView: View {
                 Spacer()
 
                 Button("Read Aloud") {
+                    guard !visionBoard.affirmations.isEmpty else { return }
                     speechManager.speak(visionBoard.affirmations[currentAffirmationIndex])
                 }
                 .font(.caption)
@@ -453,12 +454,13 @@ struct VisionBoardDetailView: View {
         .frame(width: 400)
         .background(Color.cosmicBlack)
         let renderer = ImageRenderer(content: gridView)
-        renderer.scale = UIScreen.main.scale
+        renderer.scale = UITraitCollection.current.displayScale
         return renderer.uiImage
     }
 
     private func scheduleDailyReminder() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
+        Task {
+            let granted = (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])) ?? false
             guard granted else { return }
             let content = UNMutableNotificationContent()
             content.title = "Time to Visualize 🌟"
@@ -475,7 +477,7 @@ struct VisionBoardDetailView: View {
                 content: content,
                 trigger: trigger
             )
-            UNUserNotificationCenter.current().add(request)
+            try? await UNUserNotificationCenter.current().add(request)
         }
     }
 }
@@ -597,46 +599,6 @@ struct GoalCard: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.cosmicGray)
         )
-    }
-}
-
-struct ActionButton: View {
-    let icon: String
-    let title: String
-    let description: String
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.title3)
-                    .foregroundStyle(Color.astralViolet)
-                    .frame(width: 24)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(Color.astralText)
-                    
-                    Text(description)
-                        .font(.caption)
-                        .foregroundStyle(Color.astralText.opacity(0.7))
-                }
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(Color.astralText.opacity(0.5))
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.cosmicGray.opacity(0.5))
-            )
-        }
     }
 }
 

@@ -62,7 +62,7 @@ struct CreateVisionBoardView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.cosmicBlack.ignoresSafeArea()
+                Color.astralBlack.ignoresSafeArea()
                 
                 VStack(spacing: 0) {
                     // Progress bar
@@ -274,13 +274,14 @@ struct CreateVisionBoardView: View {
                     
                     TextEditor(text: $description)
                         .frame(minHeight: 120)
+                        .scrollContentBackground(.hidden)
                         .padding()
                         .background(
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.cosmicGray)
+                                .fill(Color.astralSurface)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.cosmicPurple.opacity(0.3), lineWidth: 1)
+                                        .stroke(Color.astralViolet.opacity(0.3), lineWidth: 1)
                                 )
                         )
                         .foregroundStyle(Color.astralText)
@@ -513,7 +514,7 @@ struct CreateVisionBoardView: View {
         VStack(spacing: 32) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 80))
-                .foregroundStyle(.green)
+                .foregroundStyle(Color.astralSuccess)
                 .pulsing()
             
             VStack(spacing: 16) {
@@ -687,6 +688,7 @@ struct CreateVisionBoardView: View {
                 currentStep = .complete
             } else {
                 generationError = visionBoardManager.errorMessage ?? "Generation failed. Please try again."
+                visionBoardManager.generationProgress = 0.0
                 currentStep = .goals
             }
         }
@@ -807,16 +809,16 @@ struct GenerationStep: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: isComplete ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(isComplete ? .green : .gray)
-            
+                .foregroundStyle(isComplete ? Color.astralSuccess : Color.astralTextDim)
+
             Text(title)
                 .foregroundStyle(Color.astralText)
-            
+
             Spacer()
-            
+
             if isComplete {
                 Image(systemName: "checkmark")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Color.astralSuccess)
             }
         }
     }

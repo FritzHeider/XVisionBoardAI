@@ -248,7 +248,7 @@ class CameraManager: NSObject, ObservableObject {
 
 // MARK: - AVCapturePhotoCaptureDelegate
 
-extension CameraManager: AVCapturePhotoCaptureDelegate {
+extension CameraManager: @preconcurrency AVCapturePhotoCaptureDelegate {
     func photoOutput(
         _ output: AVCapturePhotoOutput,
         didFinishProcessingPhoto photo: AVCapturePhoto,
@@ -283,7 +283,7 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
 
 // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
 
-extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
+extension CameraManager: @preconcurrency AVCaptureVideoDataOutputSampleBufferDelegate {
     func captureOutput(
         _ output: AVCaptureOutput,
         didOutput sampleBuffer: CMSampleBuffer,

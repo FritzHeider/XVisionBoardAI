@@ -44,7 +44,7 @@ struct HomeView: View {
                     .padding(.top, AstralTheme.Spacing.sm)
                 }
             }
-            .navigationBarHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
         }
         .sheet(isPresented: $showingCreateView) { CreateVisionBoardView() }
         .sheet(isPresented: $showingUpgradeView) { SubscriptionView() }
@@ -286,6 +286,7 @@ struct HomeView: View {
 struct VisionBoardCard: View {
     let visionBoard: VisionBoard
     @Environment(VisionBoardManager.self) var visionBoardManager
+    @State private var showingDetail = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -353,7 +354,13 @@ struct VisionBoardCard: View {
         }
         .padding(AstralTheme.Spacing.sm)
         .astralCard()
-        .onTapGesture { visionBoardManager.incrementViewCount(visionBoard) }
+        .onTapGesture {
+            visionBoardManager.incrementViewCount(visionBoard)
+            showingDetail = true
+        }
+        .sheet(isPresented: $showingDetail) {
+            VisionBoardDetailView(visionBoard: visionBoard)
+        }
     }
 }
 

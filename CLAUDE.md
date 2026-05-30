@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Run
 
-This is an Xcode project targeting iOS 17+. There is no separate build script — use Xcode (15+) or `xcodebuild` from the command line:
+This is an Xcode project targeting iOS 26+. There is no separate build script — use Xcode 26+ or `xcodebuild` from the command line:
 
 ```bash
 # Build for simulator
-xcodebuild -project XVisionBoardAI.xcodeproj -scheme XVisionBoardAI -destination 'platform=iOS Simulator,name=iPhone 15' build
+xcodebuild -project XVisionBoardAI.xcodeproj -scheme XVisionBoardAI -destination 'platform=iOS Simulator,name=iPhone 17' build
 
 # Run tests (no test targets currently exist)
-xcodebuild test -project XVisionBoardAI.xcodeproj -scheme XVisionBoardAI -destination 'platform=iOS Simulator,name=iPhone 15'
+xcodebuild test -project XVisionBoardAI.xcodeproj -scheme XVisionBoardAI -destination 'platform=iOS Simulator,name=iPhone 17'
 ```
 
 To enable auto-login in debug builds, set the environment variable `DEBUG_AUTO_LOGIN=1` in the Xcode scheme (Edit Scheme → Run → Arguments → Environment Variables). This bypasses auth and uses `InMemoryTokenStore` instead of Keychain.

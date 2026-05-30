@@ -16,6 +16,8 @@
 	<string>Used to take selfies for your vision board</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Used to pick images for your vision board</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Used to save your vision board as a wallpaper</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

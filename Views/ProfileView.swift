@@ -238,13 +238,17 @@ struct ProfileView: View {
     private var settingsSection: some View {
         profileListSection("Settings") {
             SettingsRow(icon: "bell.fill", iconColor: .astralViolet,
-                        title: "Notifications", subtitle: "Manage your notification preferences") { }
+                        title: "Notifications", subtitle: "Manage your notification preferences",
+                        isEnabled: false) { }
             SettingsRow(icon: "photo.fill", iconColor: .astralIndigo,
-                        title: "Photo Quality", subtitle: "Choose image generation quality") { }
+                        title: "Photo Quality", subtitle: "Choose image generation quality",
+                        isEnabled: false) { }
             SettingsRow(icon: "speaker.wave.2.fill", iconColor: .astralRose,
-                        title: "Audio Settings", subtitle: "Configure affirmation audio") { }
+                        title: "Audio Settings", subtitle: "Configure affirmation audio",
+                        isEnabled: false) { }
             SettingsRow(icon: "lock.fill", iconColor: .astralTextMuted,
-                        title: "Privacy", subtitle: "Manage your privacy settings") { }
+                        title: "Privacy", subtitle: "Manage your privacy settings",
+                        isEnabled: false) { }
         }
     }
 
@@ -258,13 +262,17 @@ struct ProfileView: View {
                 showingCustomerCenter = true
             }
             SettingsRow(icon: "questionmark.circle.fill", iconColor: .astralIndigo,
-                        title: "Help Center", subtitle: "Get answers to common questions") { }
+                        title: "Help Center", subtitle: "Get answers to common questions",
+                        isEnabled: false) { }
             SettingsRow(icon: "envelope.fill", iconColor: .astralRose,
-                        title: "Contact Support", subtitle: "Get help from our support team") { }
+                        title: "Contact Support", subtitle: "Get help from our support team",
+                        isEnabled: false) { }
             SettingsRow(icon: "star.fill", iconColor: .astralGold,
-                        title: "Rate the App", subtitle: "Share your experience on the App Store") { }
+                        title: "Rate the App", subtitle: "Share your experience on the App Store",
+                        isEnabled: false) { }
             SettingsRow(icon: "square.and.arrow.up.fill", iconColor: .astralIndigo,
-                        title: "Share App", subtitle: "Tell your friends about ManifestMe") { }
+                        title: "Share App", subtitle: "Tell your friends about ManifestMe",
+                        isEnabled: false) { }
         }
     }
 
@@ -321,6 +329,7 @@ struct SettingsRow: View {
     var iconColor: Color = .astralViolet
     let title: String
     let subtitle: String
+    var isEnabled: Bool = true
     let action: () -> Void
 
     var body: some View {
@@ -338,7 +347,7 @@ struct SettingsRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                        .foregroundStyle(Color.astralText)
+                        .foregroundStyle(isEnabled ? Color.astralText : Color.astralTextDim)
                     Text(subtitle)
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(Color.astralTextMuted)
@@ -346,13 +355,23 @@ struct SettingsRow: View {
 
                 Spacer()
 
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color.astralTextDim)
+                if isEnabled {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.astralTextDim)
+                } else {
+                    Text("Coming soon")
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundStyle(Color.astralTextDim)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(Color.astralSurface2))
+                }
             }
             .padding(.horizontal, AstralTheme.Spacing.md)
             .padding(.vertical, AstralTheme.Spacing.md)
         }
+        .disabled(!isEnabled)
         .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(Color.white.opacity(0.06))
