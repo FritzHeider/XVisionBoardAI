@@ -45,6 +45,7 @@ struct HomeView: View {
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
+        .onAppear { userManager.recordDailyVisit() }
         }
         .sheet(isPresented: $showingCreateView) { CreateVisionBoardView() }
         .sheet(isPresented: $showingUpgradeView) { SubscriptionView() }
@@ -136,8 +137,9 @@ struct HomeView: View {
         HStack(spacing: AstralTheme.Spacing.sm) {
             StatCard(title: "Boards", value: "\(visionBoardManager.totalVisionBoards)",
                      icon: "photo.stack.fill", color: .astralViolet)
-            StatCard(title: "Total Views", value: "\(visionBoardManager.totalViews)",
-                     icon: "eye.fill", color: .astralIndigo)
+            StatCard(title: "Day Streak",
+                     value: "\(userManager.currentStreak)",
+                     icon: "flame.fill", color: .astralRose)
             StatCard(
                 title: "Remaining",
                 value: storeManager.maxVisionBoards() == -1

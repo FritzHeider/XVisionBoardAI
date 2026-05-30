@@ -19,6 +19,8 @@ class UserManager {
     var hasCompletedOnboarding = false
     var isLoading = false
     var errorMessage: String?
+    var currentStreak: Int = 0
+    var lastStreakDate: Date?
 
     private(set) var authToken: String?
 
@@ -46,6 +48,8 @@ class UserManager {
         isLoggedIn = UserDefaults.standard.bool(forKey: "isLoggedIn")
         loadUserData()
         hasCompletedOnboarding = userDefaults.bool(forKey: onboardingKey)
+        currentStreak = userDefaults.integer(forKey: "currentStreak")
+        lastStreakDate = userDefaults.object(forKey: "lastStreakDate") as? Date
     }
     
     // MARK: - User Authentication
@@ -223,5 +227,30 @@ class UserManager {
     }
     
     var visionBoardCount: Int { currentUser?.visionBoardCount ?? 0 }
+
+    // MARK: - Streak
+
+    func recordDailyVisit() {
+        let today = Calendar.current.startOfDay(for: Date())
+        if let last = lastStreakDate {
+            let lastDay = Calendar.current.startOfDay(for: last)
+            let days = Calendar.current.dateComponents([.day], from: lastDay, to: today).day ?? 0
+            if days == 1 {
+                currentStreak += 1
+            } else if days > 1 {
+                currentStreak = 1
+            }
+            if days >= 1 {
+                lastStreakDate = Date()
+                userDefaults.set(currentStreak, forKey: "currentStreak")
+                userDefaults.set(lastStreakDate, forKey: "lastStreakDate")
+            }
+        } else {
+            currentStreak = 1
+            lastStreakDate = Date()
+            userDefaults.set(currentStreak, forKey: "currentStreak")
+            userDefaults.set(lastStreakDate, forKey: "lastStreakDate")
+        }
+    }
 }
 

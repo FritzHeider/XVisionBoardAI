@@ -10,6 +10,13 @@ struct ProfileView: View {
     @State private var showingCustomerCenter = false
     @State private var showingSignOutAlert = false
     @State private var showingDeleteAccountAlert = false
+    @State private var showingNotificationSettings = false
+    @State private var reminderTime: Date = {
+        let stored = UserDefaults.standard.object(forKey: "reminderTime") as? Date
+        if let stored { return stored }
+        var c = DateComponents(); c.hour = 8; c.minute = 0
+        return Calendar.current.date(from: c) ?? Date()
+    }()
 
     var body: some View {
         NavigationStack {
@@ -41,6 +48,7 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showingSubscriptionView) { SubscriptionView() }
         .sheet(isPresented: $showingCustomerCenter) { CustomerCenterView() }
+        .sheet(isPresented: $showingNotificationSettings) { notificationSettingsSheet }
         .alert("Sign Out", isPresented: $showingSignOutAlert) {
             Button("Sign Out", role: .destructive) {
                 Task {
@@ -238,8 +246,9 @@ struct ProfileView: View {
     private var settingsSection: some View {
         profileListSection("Settings") {
             SettingsRow(icon: "bell.fill", iconColor: .astralViolet,
-                        title: "Notifications", subtitle: "Manage your notification preferences",
-                        isEnabled: false) { }
+                        title: "Notifications", subtitle: "Daily reminder at \(formattedReminderTime)") {
+                showingNotificationSettings = true
+            }
             SettingsRow(icon: "photo.fill", iconColor: .astralIndigo,
                         title: "Photo Quality", subtitle: "Choose image generation quality",
                         isEnabled: false) { }
@@ -305,6 +314,60 @@ struct ProfileView: View {
     }
 
     // MARK: - Helpers
+
+    private var formattedReminderTime: String {
+        let f = DateFormatter()
+        f.timeStyle = .short
+        return f.string(from: reminderTime)
+    }
+
+    private var notificationSettingsSheet: some View {
+        NavigationStack {
+            ZStack {
+                Color.astralBlack.ignoresSafeArea()
+                VStack(spacing: AstralTheme.Spacing.xl) {
+                    VStack(spacing: AstralTheme.Spacing.sm) {
+                        Image(systemName: "bell.badge.fill")
+                            .font(.system(size: 44))
+                            .foregroundStyle(Color.auroraGradient)
+                        Text("Daily Reminder")
+                            .font(.system(.title2, design: .rounded, weight: .bold))
+                            .foregroundStyle(Color.astralText)
+                        Text("We'll remind you to visualize your boards and stay aligned with your goals.")
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(Color.astralTextMuted)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.top, AstralTheme.Spacing.xl)
+
+                    DatePicker("Reminder Time", selection: $reminderTime, displayedComponents: .hourAndMinute)
+                        .datePickerStyle(.wheel)
+                        .labelsHidden()
+                        .colorScheme(.dark)
+                        .padding(AstralTheme.Spacing.lg)
+                        .astralCard()
+                        .padding(.horizontal, AstralTheme.Spacing.lg)
+
+                    Button("Save Reminder") {
+                        UserDefaults.standard.set(reminderTime, forKey: "reminderTime")
+                        showingNotificationSettings = false
+                    }
+                    .astralButton(.primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, AstralTheme.Spacing.lg)
+
+                    Spacer()
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showingNotificationSettings = false }
+                        .foregroundStyle(Color.astralTextMuted)
+                }
+            }
+        }
+    }
 
     private func sectionHeader(_ title: String) -> some View {
         Text(title)

@@ -642,16 +642,17 @@ struct CreateVisionBoardView: View {
     
     private func nextStep() {
         switch currentStep {
-        case .selfie: currentStep = .details
+        case .selfie:
+            if storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards) {
+                currentStep = .details
+            } else {
+                showingUpgrade = true
+            }
         case .details: currentStep = .layout
         case .layout: currentStep = .style
         case .style: currentStep = .goals
         case .goals:
-            if storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards) {
-                generateVisionBoard()
-            } else {
-                showingUpgrade = true
-            }
+            generateVisionBoard()
         case .generate: break
         case .complete: dismiss()
         }

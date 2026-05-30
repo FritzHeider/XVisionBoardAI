@@ -25,6 +25,10 @@ struct VisionBoardDetailView: View {
     @State private var currentAffirmationIndex = 0
     @State private var affirmationTask: Task<Void, Never>?
     
+    private var currentBoard: VisionBoard {
+        visionBoardManager.visionBoards.first { $0.id == visionBoard.id } ?? visionBoard
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -103,7 +107,7 @@ struct VisionBoardDetailView: View {
             EditVisionBoardView(visionBoard: visionBoard)
         }
         .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(items: [createShareableContent()])
+            ShareSheet(items: shareableItems())
         }
         .sheet(isPresented: $showingImageShare) {
             if let img = shareImage {
@@ -317,16 +321,28 @@ struct VisionBoardDetailView: View {
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundStyle(Color.astralText)
-                
+
                 Spacer()
+
+                let achieved = currentBoard.manifestationGoals.filter { $0.isAchieved }.count
+                let total = currentBoard.manifestationGoals.count
+                if total > 0 {
+                    Text("\(achieved)/\(total)")
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(Color.astralGold)
+                }
             }
-            
+
             LazyVGrid(columns: [
                 GridItem(.flexible()),
                 GridItem(.flexible())
             ], spacing: 12) {
-                ForEach(visionBoard.manifestationGoals) { goal in
-                    GoalCard(goal: goal.title)
+                ForEach(currentBoard.manifestationGoals) { goal in
+                    Button {
+                        visionBoardManager.toggleGoalAchieved(goal, in: visionBoard.id)
+                    } label: {
+                        GoalCard(goal: goal.title, isAchieved: goal.isAchieved)
+                    }
                 }
             }
         }
@@ -430,6 +446,14 @@ struct VisionBoardDetailView: View {
         affirmationTask = nil
     }
     
+    @MainActor
+    private func shareableItems() -> [Any] {
+        var items: [Any] = []
+        if let img = renderBoardImage() { items.append(img) }
+        items.append(createShareableContent())
+        return items
+    }
+
     private func createShareableContent() -> String {
         var content = "Check out my personalized vision board: \(visionBoard.title)\n\n"
         content += "\(visionBoard.description)\n\n"
@@ -581,24 +605,45 @@ struct VisionBoardImageView: View {
 
 struct GoalCard: View {
     let goal: String
-    
+    var isAchieved: Bool = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: "target")
-                .foregroundStyle(Color.astralGold)
-            
+            HStack {
+                Image(systemName: isAchieved ? "checkmark.circle.fill" : "target")
+                    .foregroundStyle(isAchieved ? Color.astralSuccess : Color.astralGold)
+                Spacer()
+                if isAchieved {
+                    Text("Done")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.black)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(Color.astralSuccess))
+                }
+            }
+
             Text(goal)
                 .font(.subheadline)
                 .fontWeight(.medium)
-                .foregroundStyle(Color.astralText)
+                .foregroundStyle(isAchieved ? Color.astralTextMuted : Color.astralText)
                 .multilineTextAlignment(.leading)
+                .strikethrough(isAchieved, color: .astralTextMuted)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(
+        .background {
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.cosmicGray)
-        )
+                .fill(isAchieved ? Color.astralSuccess.opacity(0.10) : Color.astralSurface)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(
+                            isAchieved ? Color.astralSuccess.opacity(0.4) : Color.white.opacity(0.07),
+                            lineWidth: 1
+                        )
+                }
+        }
+        .animation(AstralTheme.Motion.quick, value: isAchieved)
     }
 }
 
