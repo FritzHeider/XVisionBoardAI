@@ -3,6 +3,7 @@ import SwiftUI
 struct VisionBoardGalleryView: View {
     @Environment(VisionBoardManager.self) var visionBoardManager
     @Environment(UserManager.self) var userManager
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var searchText = ""
     @State private var selectedFilter: FilterOption = .all
@@ -111,9 +112,14 @@ struct VisionBoardGalleryView: View {
 
     // MARK: - Grid
 
+    private var gridColumns: [GridItem] {
+        let count = sizeClass == .regular ? 3 : 2
+        return Array(repeating: GridItem(.flexible()), count: count)
+    }
+
     private var visionBoardsGrid: some View {
         ScrollView {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())],
+            LazyVGrid(columns: gridColumns,
                       spacing: AstralTheme.Spacing.md) {
                 ForEach(filteredVisionBoards) { board in
                     VisionBoardGridItem(visionBoard: board) {

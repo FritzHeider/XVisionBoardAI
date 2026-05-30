@@ -14,6 +14,7 @@ struct VisionBoardDetailView: View {
     let visionBoard: VisionBoard
     @Environment(\.dismiss) private var dismiss
     @Environment(VisionBoardManager.self) var visionBoardManager
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var speechManager = SpeechManager()
     @State private var showingEditView = false
@@ -226,14 +227,14 @@ struct VisionBoardDetailView: View {
     }
     
     private var gridColumns: [GridItem] {
+        let base: Int
         switch visionBoard.layout {
-        case .grid3x3:
-            return Array(repeating: GridItem(.flexible()), count: 3)
-        case .collage:
-            return Array(repeating: GridItem(.flexible()), count: 2)
-        case .singlePoster:
-            return [GridItem(.flexible())]
+        case .grid3x3: base = 3
+        case .collage: base = 2
+        case .singlePoster: base = 1
         }
+        let count = sizeClass == .regular && base > 1 ? base + 1 : base
+        return Array(repeating: GridItem(.flexible()), count: count)
     }
     
     // MARK: - Affirmations Section

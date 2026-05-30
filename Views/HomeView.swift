@@ -4,6 +4,7 @@ struct HomeView: View {
     @Environment(UserManager.self) var userManager
     @Environment(VisionBoardManager.self) var visionBoardManager
     @Environment(StoreManager.self) var storeManager
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var showingCreateView = false
     @State private var showingUpgradeView = false
@@ -140,6 +141,10 @@ struct HomeView: View {
             StatCard(title: "Day Streak",
                      value: "\(userManager.currentStreak)",
                      icon: "flame.fill", color: .astralRose)
+            if sizeClass == .regular {
+                StatCard(title: "Total Views", value: "\(visionBoardManager.totalViews)",
+                         icon: "eye.fill", color: .astralIndigo)
+            }
             StatCard(
                 title: "Remaining",
                 value: storeManager.maxVisionBoards() == -1
@@ -250,7 +255,7 @@ struct HomeView: View {
                 HStack(spacing: AstralTheme.Spacing.md) {
                     ForEach(visionBoardManager.recentVisionBoards) { board in
                         VisionBoardCard(visionBoard: board)
-                            .frame(width: 180)
+                            .frame(width: sizeClass == .regular ? 220 : 180)
                     }
                 }
                 .padding(.horizontal, 2)

@@ -206,15 +206,22 @@ private struct OnboardingPageView: View {
                 .frame(width: 120, height: 120)
 
             // Inner fill
-            Circle()
-                .fill(
-                    LinearGradient(
-                        colors: [page.accentColor.opacity(0.2), page.glowColor.opacity(0.1)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+            if #available(iOS 26, *) {
+                Circle()
+                    .fill(page.accentColor.opacity(0.15))
+                    .glassEffect(.regular, in: Circle())
+                    .frame(width: 118, height: 118)
+            } else {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [page.accentColor.opacity(0.2), page.glowColor.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
-                )
-                .frame(width: 118, height: 118)
+                    .frame(width: 118, height: 118)
+            }
 
             // Icon
             Image(systemName: page.icon)

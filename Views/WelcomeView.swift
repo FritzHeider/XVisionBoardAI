@@ -170,11 +170,17 @@ struct WelcomeFeaturePill: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 9)
         .background {
-            Capsule()
-                .fill(color.opacity(0.10))
-                .overlay {
-                    Capsule().strokeBorder(color.opacity(0.25), lineWidth: 1)
-                }
+            if #available(iOS 26, *) {
+                Capsule()
+                    .fill(color.opacity(0.12))
+                    .glassEffect(.regular, in: Capsule())
+            } else {
+                Capsule()
+                    .fill(color.opacity(0.10))
+                    .overlay {
+                        Capsule().strokeBorder(color.opacity(0.25), lineWidth: 1)
+                    }
+            }
         }
     }
 }

@@ -172,6 +172,9 @@ class VisionBoardManager {
             }
 
             images.append(image)
+            if currentGeneratingBoard != nil {
+                currentGeneratingBoard!.images = images
+            }
         }
         return images
     }

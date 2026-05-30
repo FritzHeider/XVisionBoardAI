@@ -48,6 +48,7 @@ struct MainTabView: View {
             }
         }
         .tint(.astralViolet)
+        .tabViewStyle(.sidebarAdaptable)
     }
 }
 

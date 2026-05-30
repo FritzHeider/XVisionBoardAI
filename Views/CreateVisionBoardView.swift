@@ -450,30 +450,51 @@ struct CreateVisionBoardView: View {
     }
     
     // MARK: - Generate Step
-    
+
     private var generateStep: some View {
         VStack(spacing: 32) {
             Image(systemName: "brain.head.profile")
                 .font(.system(size: 80))
                 .foregroundStyle(Color.astralViolet)
                 .pulsing()
-            
+
             VStack(spacing: 16) {
                 Text("Creating Your Personalized Vision Board")
                     .manifestationTitle()
                     .multilineTextAlignment(.center)
-                
+
                 Text("AI is generating images featuring YOU living your dreams...")
                     .manifestationBody()
                     .multilineTextAlignment(.center)
             }
-            
+
+            // Live image preview grid — thumbnails appear as each image is generated
+            if let images = visionBoardManager.currentGeneratingBoard?.images, !images.isEmpty {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
+                    ForEach(images) { img in
+                        VisionBoardImageView(image: img) { }
+                            .frame(height: 90)
+                            .clipShape(RoundedRectangle(cornerRadius: AstralTheme.Radius.sm))
+                    }
+                    ForEach(images.count..<(visionBoardManager.currentGeneratingBoard!.layout.imageCount), id: \.self) { _ in
+                        RoundedRectangle(cornerRadius: AstralTheme.Radius.sm)
+                            .fill(Color.astralSurface2)
+                            .frame(height: 90)
+                            .astralShimmer()
+                    }
+                }
+                .padding(AstralTheme.Spacing.md)
+                .astralCard()
+                .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                .animation(AstralTheme.Motion.smooth, value: images.count)
+            }
+
             // Progress indicator
             VStack(spacing: 16) {
                 ProgressView(value: visionBoardManager.generationProgress)
                     .progressViewStyle(LinearProgressViewStyle(tint: .cosmicPurple))
                     .scaleEffect(x: 1, y: 3, anchor: .center)
-                
+
                 Text("\(Int(visionBoardManager.generationProgress * 100))% Complete")
                     .font(.subheadline)
                     .foregroundStyle(Color.astralText)
