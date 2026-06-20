@@ -1,27 +1,27 @@
 import SwiftUI
 
-// MARK: - Astral Color Palette
+// MARK: - Astral Color Palette — Manifest Amber (warm luxury)
 
 extension Color {
-    // Backgrounds — deep navy-black space
-    static let astralBlack    = Color(red: 0.024, green: 0.024, blue: 0.071)   // #060612
-    static let astralSurface  = Color(red: 0.051, green: 0.051, blue: 0.125)   // #0D0D20
-    static let astralSurface2 = Color(red: 0.075, green: 0.075, blue: 0.188)   // #131330
+    // Backgrounds — deep warm espresso
+    static let astralBlack    = Color(red: 0.063, green: 0.047, blue: 0.031)   // #100C08 warm espresso
+    static let astralSurface  = Color(red: 0.110, green: 0.082, blue: 0.055)   // #1C150E warm leather
+    static let astralSurface2 = Color(red: 0.157, green: 0.118, blue: 0.078)   // #281E14 warm chocolate
 
     // Brand
-    static let astralViolet = Color(red: 0.655, green: 0.545, blue: 0.980)     // #A78BFA
-    static let astralRose   = Color(red: 0.957, green: 0.443, blue: 0.714)     // #F472B6
-    static let astralGold   = Color(red: 0.984, green: 0.690, blue: 0.251)     // #FBB040
-    static let astralIndigo = Color(red: 0.506, green: 0.549, blue: 0.973)     // #818CF8
-    static let astralMint   = Color(red: 0.204, green: 0.827, blue: 0.600)     // #34D399
+    static let astralViolet = Color(red: 0.784, green: 0.565, blue: 0.353)     // #C8905A amber caramel (primary)
+    static let astralRose   = Color(red: 0.769, green: 0.455, blue: 0.420)     // #C47470 dusty terracotta
+    static let astralGold   = Color(red: 0.910, green: 0.784, blue: 0.510)     // #E8C882 warm champagne
+    static let astralIndigo = Color(red: 0.478, green: 0.620, blue: 0.510)     // #7A9E82 sage green
+    static let astralMint   = Color(red: 0.565, green: 0.749, blue: 0.627)     // #90BFA0 light sage
 
     // Text
-    static let astralText        = Color(red: 0.941, green: 0.941, blue: 1.000) // #F0F0FF
-    static let astralTextMuted   = Color(red: 0.565, green: 0.565, blue: 0.722) // #9090B8
-    static let astralTextDim     = Color(red: 0.314, green: 0.314, blue: 0.471) // #505078
+    static let astralText        = Color(red: 0.941, green: 0.902, blue: 0.824) // #F0E6D2 warm cream
+    static let astralTextMuted   = Color(red: 0.549, green: 0.471, blue: 0.376) // #8C7860 warm stone
+    static let astralTextDim     = Color(red: 0.290, green: 0.227, blue: 0.157) // #4A3A28 dark warm
 
     // Semantic
-    static let astralError   = Color(red: 0.973, green: 0.529, blue: 0.529)    // #F87171
+    static let astralError   = Color(red: 0.878, green: 0.439, blue: 0.420)    // #E07060 warm red
     static let astralSuccess = Color.astralMint
 
     // Backward-compat aliases — existing views keep compiling
@@ -44,16 +44,16 @@ extension Color {
     static let manifestationSurface    = astralSurface
     static let adaptiveCTA = astralViolet
 
-    // Gradients
+    // Gradients — warm sunset: amber → sage → terracotta
     static let auroraGradient = LinearGradient(
-        colors: [.astralViolet, .astralIndigo, .astralRose],
+        colors: [.astralGold, .astralViolet, .astralRose],
         startPoint: .topLeading, endPoint: .bottomTrailing
     )
 
     static let auroraHeroGradient = LinearGradient(
         colors: [
-            Color(red: 0.10, green: 0.06, blue: 0.22),
-            Color(red: 0.05, green: 0.05, blue: 0.16),
+            Color(red: 0.20, green: 0.13, blue: 0.07),  // dark amber-brown
+            Color(red: 0.13, green: 0.09, blue: 0.05),  // dark espresso
             Color.astralBlack
         ],
         startPoint: .top, endPoint: .bottom

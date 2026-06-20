@@ -15,26 +15,11 @@ struct HomeView: View {
             ZStack {
                 Color.astralBlack.ignoresSafeArea()
 
-                // Ambient glow
-                ZStack {
-                    Ellipse()
-                        .fill(Color.astralViolet.opacity(0.13))
-                        .frame(width: 340, height: 340)
-                        .blur(radius: 90)
-                        .offset(x: 80, y: -160)
-
-                    Ellipse()
-                        .fill(Color.astralIndigo.opacity(0.09))
-                        .frame(width: 280, height: 280)
-                        .blur(radius: 80)
-                        .offset(x: -100, y: 100)
-                }
-                .ignoresSafeArea()
-
                 ScrollView {
                     VStack(spacing: AstralTheme.Spacing.xl) {
                         headerSection
-                        statsSection
+                        statsStrip
+                        affirmationCard
                         if userManager.hasPendingInsight {
                             insightCard
                         }
@@ -42,7 +27,6 @@ struct HomeView: View {
                         if !visionBoardManager.recentVisionBoards.isEmpty {
                             recentSection
                         }
-                        dailyPracticeSection
                         Spacer(minLength: 100)
                     }
                     .padding(.horizontal, AstralTheme.Spacing.lg)
@@ -50,7 +34,7 @@ struct HomeView: View {
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
-        .onAppear { userManager.recordDailyVisit() }
+            .onAppear { userManager.recordDailyVisit() }
         }
         .sheet(isPresented: $showingCreateView) { CreateVisionBoardView() }
         .sheet(isPresented: $showingUpgradeView) { SubscriptionView() }
@@ -148,143 +132,211 @@ struct HomeView: View {
 
     private var insightCard: some View {
         Button { showingInsightSheet = true } label: {
-            HStack(spacing: AstralTheme.Spacing.md) {
-                ZStack {
-                    Circle()
-                        .fill(Color.astralViolet.opacity(0.18))
-                        .frame(width: 44, height: 44)
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(Color.astralViolet)
+            VStack(alignment: .leading, spacing: AstralTheme.Spacing.sm) {
+                HStack {
+                    Text("WEEKLY REFLECTION")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Color.astralRose)
+                        .tracking(1.2)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.astralTextDim)
                 }
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Weekly Reflection")
-                        .font(.system(.caption, design: .rounded, weight: .bold))
-                        .foregroundStyle(Color.astralViolet)
-                        .textCase(.uppercase)
-                        .tracking(0.8)
+                Text(userManager.nextInsightQuestion)
+                    .font(.system(.subheadline, design: .serif, weight: .medium))
+                    .foregroundStyle(Color.astralText)
+                    .lineLimit(3)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                    Text(userManager.nextInsightQuestion)
-                        .font(.system(.subheadline, design: .rounded, weight: .medium))
-                        .foregroundStyle(Color.astralText)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Color.astralTextDim)
+                Text("Tap to reflect →")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Color.astralRose.opacity(0.8))
             }
             .padding(AstralTheme.Spacing.md)
-            .astralGlass(tint: .astralViolet)
+            .background {
+                RoundedRectangle(cornerRadius: AstralTheme.Radius.lg, style: .continuous)
+                    .fill(Color.astralRose.opacity(0.1))
+                    .overlay(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.astralRose)
+                            .frame(width: 3)
+                            .padding(.vertical, 12)
+                    }
+                    .overlay {
+                        RoundedRectangle(cornerRadius: AstralTheme.Radius.lg, style: .continuous)
+                            .strokeBorder(Color.astralRose.opacity(0.2), lineWidth: 1)
+                    }
+            }
         }
         .buttonStyle(.plain)
     }
 
-    // MARK: - Stats
+    // MARK: - Stats Strip (clean horizontal metrics — no icon-in-circle grid)
 
-    private var statsSection: some View {
-        HStack(spacing: AstralTheme.Spacing.sm) {
-            StatCard(title: "Boards", value: "\(visionBoardManager.totalVisionBoards)",
-                     icon: "photo.stack.fill", color: .astralViolet)
-            StatCard(title: "Day Streak",
-                     value: "\(userManager.currentStreak)",
-                     icon: "flame.fill", color: .astralRose)
-            if sizeClass == .regular {
-                StatCard(title: "Total Views", value: "\(visionBoardManager.totalViews)",
-                         icon: "eye.fill", color: .astralIndigo)
+    private var statsStrip: some View {
+        let remaining = storeManager.maxVisionBoards() == -1
+            ? "∞"
+            : "\(max(0, storeManager.maxVisionBoards() - visionBoardManager.totalVisionBoards))"
+        let streakVal = "\(userManager.currentStreak)\(userManager.currentStreak > 0 ? " 🔥" : "")"
+
+        return HStack(spacing: 0) {
+            metricCell(value: "\(visionBoardManager.totalVisionBoards)", label: "Boards")
+            metricDivider
+            metricCell(value: streakVal, label: "Day Streak")
+            metricDivider
+            metricCell(value: remaining, label: "Remaining")
+        }
+        .padding(.vertical, AstralTheme.Spacing.md)
+        .astralCard()
+    }
+
+    private func metricCell(value: String, label: String) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.system(.title2, design: .rounded, weight: .bold))
+                .foregroundStyle(Color.astralText)
+            Text(label)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(Color.astralTextMuted)
+                .textCase(.uppercase)
+                .tracking(0.8)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var metricDivider: some View {
+        Rectangle()
+            .fill(Color.white.opacity(0.08))
+            .frame(width: 1, height: 30)
+    }
+
+    // MARK: - Daily Affirmation Card (new feature)
+
+    private var affirmationCard: some View {
+        let affirmation = Self.dailyAffirmation
+        return VStack(alignment: .leading, spacing: AstralTheme.Spacing.sm) {
+            HStack(spacing: 6) {
+                Text("TODAY'S AFFIRMATION")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(Color.astralGold)
+                    .tracking(1.2)
+                Spacer()
+                Text(Date(), format: .dateTime.month(.abbreviated).day())
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color.astralTextDim)
             }
-            StatCard(
-                title: "Remaining",
-                value: storeManager.maxVisionBoards() == -1
-                    ? "∞"
-                    : "\(max(0, storeManager.maxVisionBoards() - visionBoardManager.totalVisionBoards))",
-                icon: "plus.circle.fill",
-                color: .astralGold
-            )
+
+            Text("\u{201C}\(affirmation)\u{201D}")
+                .font(.system(.body, design: .serif, weight: .medium))
+                .foregroundStyle(Color.astralText)
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(AstralTheme.Spacing.md)
+        .background {
+            RoundedRectangle(cornerRadius: AstralTheme.Radius.lg, style: .continuous)
+                .fill(Color.astralViolet.opacity(0.12))
+                .overlay(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(Color.astralGold)
+                        .frame(width: 3)
+                        .padding(.vertical, 12)
+                        .offset(x: 0)
+                }
         }
     }
 
-    // MARK: - Create Section
+    private static let affirmations: [String] = [
+        "I am worthy of everything I desire and more.",
+        "My dreams are becoming my reality with every breath.",
+        "I attract abundance effortlessly and joyfully.",
+        "I am the architect of my life and I build its foundation daily.",
+        "Wealth, love, and health flow to me with ease.",
+        "I trust the process and know that I am guided.",
+        "Every day I grow closer to the life I am creating.",
+        "I deserve deep love, true health, and unlimited abundance.",
+        "My vision is clear, my faith is strong, my life is extraordinary.",
+        "I am open to receiving miracles in expected and unexpected ways.",
+        "I radiate confidence, clarity, and calm.",
+        "The universe is always working in my favor.",
+        "I am becoming the highest version of myself.",
+        "My goals are achievable and I take inspired action toward them.",
+        "I choose joy and it chooses me in return.",
+        "I am magnetic to the life I am meant to live.",
+        "I release what no longer serves me and welcome what does.",
+        "Everything I need comes to me at the perfect time.",
+        "I am grateful for all that I have and all that is coming.",
+        "My potential is limitless and my future is bright.",
+        "I deserve to live a life I am genuinely excited about.",
+        "I am aligned with the energy of love, abundance, and purpose.",
+        "My thoughts create my reality — I choose powerful thoughts.",
+        "I am at peace with where I am and excited for where I am going.",
+        "I breathe in possibility and breathe out doubt.",
+        "Success is natural to me and flows through everything I do.",
+        "I am creating a life that feels as good as it looks.",
+        "I give myself permission to dream bigger than ever before.",
+        "I am loved, I am supported, I am exactly where I need to be.",
+        "Today I take one step closer to the life I was born to live.",
+    ]
+
+    private static var dailyAffirmation: String {
+        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1
+        return affirmations[dayOfYear % affirmations.count]
+    }
+
+    // MARK: - Create Section (editorial style — no feature listicle)
 
     private var createSection: some View {
-        VStack(spacing: AstralTheme.Spacing.lg) {
-            VStack(spacing: AstralTheme.Spacing.xs) {
-                Text("Create Personalized\nVision Board")
-                    .font(.system(.title2, design: .rounded, weight: .bold))
-                    .foregroundStyle(Color.astralText)
-                    .multilineTextAlignment(.center)
+        VStack(alignment: .leading, spacing: AstralTheme.Spacing.lg) {
+            VStack(alignment: .leading, spacing: AstralTheme.Spacing.sm) {
+                Text("SEE YOURSELF\nLIVING IT.")
+                    .font(.system(.title, design: .serif, weight: .bold))
+                    .foregroundStyle(Color.auroraGradient)
+                    .lineSpacing(2)
 
-                Text("A selfie + your goals → AI places you living your dreams")
+                Text("Upload a selfie. Describe your goals. AI places you inside your dream life.")
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(Color.astralTextMuted)
-                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
             }
 
-            VStack(spacing: AstralTheme.Spacing.md) {
-                benefitRow(icon: "heart.fill", color: .astralRose,
-                           title: "Emotional Connection",
-                           detail: "Seeing yourself makes dreams feel achievable")
-                benefitRow(icon: "brain.head.profile", color: .astralViolet,
-                           title: "Subconscious Programming",
-                           detail: "Your brain recognizes you in success scenarios")
-                benefitRow(icon: "bolt.fill", color: .astralGold,
-                           title: "Faster Results",
-                           detail: "Studies show 3× acceleration in manifestation")
-            }
-            .padding(AstralTheme.Spacing.lg)
-            .astralGlass(tint: .astralViolet)
-
-            // CTA with glow halo
-            ZStack {
-                Ellipse()
-                    .fill(
-                        RadialGradient(
-                            colors: [Color.astralViolet.opacity(0.40), Color.clear],
-                            center: .center, startRadius: 0, endRadius: 80
-                        )
-                    )
-                    .frame(width: 260, height: 60)
-                    .blur(radius: 20)
-
-                Button("Start with Your Selfie") {
-                    if storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards) {
-                        showingCreateView = true
-                    } else {
-                        showingUpgradeView = true
-                    }
+            Button {
+                if storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards) {
+                    showingCreateView = true
+                } else {
+                    showingUpgradeView = true
                 }
-                .astralButton(.primary)
+            } label: {
+                HStack(spacing: AstralTheme.Spacing.sm) {
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                    Text("Create Your Vision Board")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                }
                 .frame(maxWidth: .infinity)
             }
+            .astralButton(.primary)
         }
-    }
-
-    private func benefitRow(icon: String, color: Color, title: String, detail: String) -> some View {
-        HStack(spacing: AstralTheme.Spacing.md) {
-            ZStack {
-                RoundedRectangle(cornerRadius: AstralTheme.Radius.sm)
-                    .fill(color.opacity(0.18))
-                    .frame(width: 36, height: 36)
-                Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(color)
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                    .foregroundStyle(Color.astralText)
-                Text(detail)
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Color.astralTextMuted)
-            }
-
-            Spacer()
+        .padding(AstralTheme.Spacing.lg)
+        .background {
+            RoundedRectangle(cornerRadius: AstralTheme.Radius.xl, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.astralViolet.opacity(0.14),
+                            Color.astralRose.opacity(0.08),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay {
+                    RoundedRectangle(cornerRadius: AstralTheme.Radius.xl, style: .continuous)
+                        .strokeBorder(Color.astralViolet.opacity(0.2), lineWidth: 1)
+                }
         }
     }
 
@@ -293,7 +345,7 @@ struct HomeView: View {
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: AstralTheme.Spacing.md) {
             HStack {
-                Text("Recent Boards")
+                Text("Your Boards")
                     .font(.system(.title3, design: .rounded, weight: .bold))
                     .foregroundStyle(Color.astralText)
 
@@ -310,6 +362,38 @@ struct HomeView: View {
                         VisionBoardCard(visionBoard: board)
                             .frame(width: sizeClass == .regular ? 220 : 180)
                     }
+
+                    // Inline "add new board" tile after existing boards
+                    Button {
+                        if storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards) {
+                            showingCreateView = true
+                        } else {
+                            showingUpgradeView = true
+                        }
+                    } label: {
+                        VStack(spacing: AstralTheme.Spacing.sm) {
+                            RoundedRectangle(cornerRadius: AstralTheme.Radius.md, style: .continuous)
+                                .strokeBorder(
+                                    Color.astralViolet.opacity(0.35),
+                                    style: StrokeStyle(lineWidth: 1.5, dash: [6])
+                                )
+                                .frame(height: 130)
+                                .overlay {
+                                    VStack(spacing: AstralTheme.Spacing.sm) {
+                                        Image(systemName: "plus.circle")
+                                            .font(.system(size: 26, weight: .medium))
+                                            .foregroundStyle(Color.astralViolet)
+                                        Text("New Board")
+                                            .font(.system(.caption, design: .rounded, weight: .semibold))
+                                            .foregroundStyle(Color.astralViolet)
+                                    }
+                                }
+
+                            Spacer(minLength: 28)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .frame(width: 130)
                 }
                 .padding(.horizontal, 2)
             }
@@ -317,29 +401,6 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Daily Practice
-
-    private var dailyPracticeSection: some View {
-        VStack(alignment: .leading, spacing: AstralTheme.Spacing.md) {
-            Text("Daily Practice")
-                .font(.system(.title3, design: .rounded, weight: .bold))
-                .foregroundStyle(Color.astralText)
-
-            VStack(spacing: AstralTheme.Spacing.md) {
-                benefitRow(icon: "clock.fill", color: .astralIndigo,
-                           title: "Daily Visualization",
-                           detail: "Spend 5–10 min each morning viewing your boards")
-                benefitRow(icon: "heart.text.square.fill", color: .astralRose,
-                           title: "Feel the Emotions",
-                           detail: "Experience joy and excitement of achieving your goals")
-                benefitRow(icon: "target", color: .astralViolet,
-                           title: "Take Inspired Action",
-                           detail: "Let your vision boards guide your daily decisions")
-            }
-            .padding(AstralTheme.Spacing.lg)
-            .astralCard()
-        }
-    }
 }
 
 // MARK: - VisionBoardCard
