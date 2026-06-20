@@ -21,6 +21,7 @@ class UserManager {
     var errorMessage: String?
     var currentStreak: Int = 0
     var lastStreakDate: Date?
+    var lastInsightDate: Date?
 
     private(set) var authToken: String?
 
@@ -28,6 +29,37 @@ class UserManager {
     private let onboardingKey = "hasCompletedOnboarding"
     private let userKey = "currentUser"
     private let tokenStore: TokenStore
+
+    // Questions rotate weekly to build a richer user profile over time
+    static let insightQuestions: [String] = [
+        "Describe your perfect day, in as much detail as you can.",
+        "What would you do if you knew you couldn't fail?",
+        "What does financial freedom look like to you?",
+        "Who are the three people you most want to become like, and why?",
+        "What emotion do you most want to feel more of in your life?",
+        "What's one thing you'd regret not having done in 10 years?",
+        "Describe where you want to live and what your home feels like.",
+        "What does your ideal relationship look and feel like?",
+        "What would you do with your time if money weren't a concern?",
+        "What's the single boldest dream you've never told anyone?",
+        "How do you want to feel when you wake up each morning?",
+        "What would achieving your biggest goal change about your daily life?",
+        "Who do you want to become in the next 12 months?",
+        "What's a small, concrete step you took toward your dream this week?",
+        "What belief about yourself might be slowing you down?",
+    ]
+
+    var hasPendingInsight: Bool {
+        guard isLoggedIn else { return false }
+        guard let last = lastInsightDate else { return true }
+        let days = Calendar.current.dateComponents([.day], from: last, to: Date()).day ?? 0
+        return days >= 7
+    }
+
+    var nextInsightQuestion: String {
+        let answered = currentUser?.insights.count ?? 0
+        return Self.insightQuestions[answered % Self.insightQuestions.count]
+    }
 
     init(tokenStore: TokenStore? = nil) {
 #if DEBUG
@@ -50,6 +82,7 @@ class UserManager {
         hasCompletedOnboarding = userDefaults.bool(forKey: onboardingKey)
         currentStreak = userDefaults.integer(forKey: "currentStreak")
         lastStreakDate = userDefaults.object(forKey: "lastStreakDate") as? Date
+        lastInsightDate = userDefaults.object(forKey: "lastInsightDate") as? Date
     }
     
     // MARK: - User Authentication
@@ -167,6 +200,27 @@ class UserManager {
         saveUserData()
     }
     
+    func saveOnboardingAnswers(_ answers: OnboardingAnswers) {
+        guard var user = currentUser else { return }
+        user.onboardingAnswers = answers
+        // Sync primary dream to manifestationGoals for backward compat
+        if !answers.primaryDream.isEmpty, !user.manifestationGoals.contains(answers.primaryDream) {
+            user.manifestationGoals.insert(answers.primaryDream, at: 0)
+        }
+        currentUser = user
+        saveUserData()
+    }
+
+    func addInsight(question: String, answer: String) {
+        guard var user = currentUser else { return }
+        let insight = UserInsight(question: question, answer: answer)
+        user.insights.append(insight)
+        currentUser = user
+        lastInsightDate = Date()
+        userDefaults.set(lastInsightDate, forKey: "lastInsightDate")
+        saveUserData()
+    }
+
     func addManifestationGoal(_ goal: String) {
         guard var user = currentUser else { return }
         if !user.manifestationGoals.contains(goal) {

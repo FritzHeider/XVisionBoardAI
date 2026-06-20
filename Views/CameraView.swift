@@ -210,7 +210,8 @@ var body: some View {
                         
                         if cameraManager.isCapturing {
                             ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .cosmicPurple))
+                                .progressViewStyle(.circular)
+                                .tint(.astralViolet)
                         }
                     }
                 }

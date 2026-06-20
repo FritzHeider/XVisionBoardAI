@@ -82,7 +82,7 @@ struct CreateVisionBoardView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
                         dismiss()
                     }
@@ -116,7 +116,7 @@ struct CreateVisionBoardView: View {
                 }
             }
         }
-        .alert("Generation Failed", isPresented: Binding(
+        .alert("Generation Failed", isPresented: Binding<Bool>(
             get: { generationError != nil },
             set: { if !$0 { generationError = nil } }
         )) {
@@ -131,7 +131,8 @@ struct CreateVisionBoardView: View {
     private var progressBar: some View {
         VStack(spacing: 8) {
             ProgressView(value: currentStep.progress)
-                .progressViewStyle(LinearProgressViewStyle(tint: .cosmicPurple))
+                .progressViewStyle(.linear)
+                .tint(.astralViolet)
                 .scaleEffect(x: 1, y: 2, anchor: .center)
             
             HStack {
@@ -379,7 +380,7 @@ struct CreateVisionBoardView: View {
             // Add new goal
             HStack {
                 TextField("Enter a manifestation goal...", text: $newGoal)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .textFieldStyle(.roundedBorder)
                 
                 Button("Add") {
                     if !newGoal.isEmpty {
@@ -492,7 +493,8 @@ struct CreateVisionBoardView: View {
             // Progress indicator
             VStack(spacing: 16) {
                 ProgressView(value: visionBoardManager.generationProgress)
-                    .progressViewStyle(LinearProgressViewStyle(tint: .cosmicPurple))
+                    .progressViewStyle(.linear)
+                    .tint(.astralViolet)
                     .scaleEffect(x: 1, y: 3, anchor: .center)
 
                 Text("\(Int(visionBoardManager.generationProgress * 100))% Complete")
@@ -567,14 +569,15 @@ struct CreateVisionBoardView: View {
                                     .aspectRatio(contentMode: .fill)
                                     .frame(height: 80)
                                     .clipped()
-                                    .cornerRadius(8)
+                                    .clipShape(.rect(cornerRadius: 8))
                             } else {
                                 RoundedRectangle(cornerRadius: 8)
                                     .fill(Color.cosmicGray)
                                     .frame(height: 80)
                                     .overlay(
                                         ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .cosmicPurple))
+                                            .progressViewStyle(.circular)
+                                                .tint(.astralViolet)
                                     )
                             }
                         }

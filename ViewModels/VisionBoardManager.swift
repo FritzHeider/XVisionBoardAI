@@ -149,18 +149,25 @@ class VisionBoardManager {
             var image = VisionBoardImage(prompt: prompt, position: index, isPersonalized: referenceData != nil)
 
             do {
-                let url = try await FalAIService.generateImage(
+                // Try Gemini (Imagen 3) first; fall back to fal.ai
+                if let imgData = try? await GeminiImageService.generateImage(
                     prompt: prompt,
-                    referenceImageData: referenceData,
-                    imageSize: .forLayout(visionBoard.layout)
-                )
-                image.imageURL = url
-
-                // Download and cache locally
-                if let imageURL = URL(string: url),
-                   let (imgData, _) = try? await URLSession.shared.data(from: imageURL),
-                   UIImage(data: imgData) != nil {
+                    aspectRatio: GeminiImageService.aspectRatio(for: visionBoard.layout)
+                ) {
                     image.imageData = imgData
+                } else {
+                    let url = try await FalAIService.generateImage(
+                        prompt: prompt,
+                        referenceImageData: referenceData,
+                        imageSize: .forLayout(visionBoard.layout)
+                    )
+                    image.imageURL = url
+
+                    if let imageURL = URL(string: url),
+                       let (imgData, _) = try? await URLSession.shared.data(from: imageURL),
+                       UIImage(data: imgData) != nil {
+                        image.imageData = imgData
+                    }
                 }
             } catch FalAIError.missingAPIKey {
                 // No API key — use placeholder (dev/demo mode)

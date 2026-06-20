@@ -9,6 +9,97 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Manifestation Domain Types
+
+enum LifeArea: String, Codable, CaseIterable, Identifiable {
+    case career, relationships, health, wealth, creativity, travel, family
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .career:        return "Career"
+        case .relationships: return "Love & Relationships"
+        case .health:        return "Health & Vitality"
+        case .wealth:        return "Wealth & Abundance"
+        case .creativity:    return "Creativity & Expression"
+        case .travel:        return "Travel & Adventure"
+        case .family:        return "Family & Home"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .career:        return "briefcase.fill"
+        case .relationships: return "heart.fill"
+        case .health:        return "heart.circle.fill"
+        case .wealth:        return "dollarsign.circle.fill"
+        case .creativity:    return "paintpalette.fill"
+        case .travel:        return "airplane"
+        case .family:        return "house.fill"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .career:        return .astralIndigo
+        case .relationships: return .astralRose
+        case .health:        return .astralMint
+        case .wealth:        return .astralGold
+        case .creativity:    return .astralViolet
+        case .travel:        return .astralIndigo
+        case .family:        return .astralGold
+        }
+    }
+}
+
+enum ManifestationTimeline: String, Codable, CaseIterable, Identifiable {
+    case thisMonth = "this_month"
+    case thisYear  = "this_year"
+    case fiveYears = "five_years"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .thisMonth: return "This Month"
+        case .thisYear:  return "This Year"
+        case .fiveYears: return "5 Years"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .thisMonth: return "calendar"
+        case .thisYear:  return "calendar.badge.checkmark"
+        case .fiveYears: return "star.fill"
+        }
+    }
+}
+
+struct OnboardingAnswers: Codable {
+    var lifeAreas: [LifeArea]
+    var primaryDream: String
+    var timeline: ManifestationTimeline
+    var completedAt: Date
+}
+
+struct UserInsight: Codable, Identifiable {
+    var id: UUID
+    var question: String
+    var answer: String
+    var answeredAt: Date
+
+    init(question: String, answer: String) {
+        self.id = UUID()
+        self.question = question
+        self.answer = answer
+        self.answeredAt = Date()
+    }
+}
+
+// MARK: - User
+
 struct User: Codable, Identifiable {
     let id: UUID
     var email: String
@@ -19,6 +110,8 @@ struct User: Codable, Identifiable {
     var visionBoardCount: Int
     var manifestationGoals: [String]
     var preferences: UserPreferences
+    var onboardingAnswers: OnboardingAnswers?
+    var insights: [UserInsight]
 
     init(email: String, username: String, profileImageFilename: String? = nil) {
         self.id = UUID()
@@ -30,6 +123,8 @@ struct User: Codable, Identifiable {
         self.visionBoardCount = 0
         self.manifestationGoals = []
         self.preferences = UserPreferences()
+        self.onboardingAnswers = nil
+        self.insights = []
     }
 
     var profileImage: UIImage? {

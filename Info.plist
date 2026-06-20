@@ -41,5 +41,7 @@
 	<string>$(ANTHROPIC_API_KEY)</string>
 	<key>FAL_API_KEY</key>
 	<string>$(FAL_API_KEY)</string>
+	<key>GEMINI_API_KEY</key>
+	<string>$(GEMINI_API_KEY)</string>
 </dict>
 </plist>

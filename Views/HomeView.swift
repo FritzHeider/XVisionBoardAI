@@ -8,6 +8,7 @@ struct HomeView: View {
 
     @State private var showingCreateView = false
     @State private var showingUpgradeView = false
+    @State private var showingInsightSheet = false
 
     var body: some View {
         NavigationStack {
@@ -34,6 +35,9 @@ struct HomeView: View {
                     VStack(spacing: AstralTheme.Spacing.xl) {
                         headerSection
                         statsSection
+                        if userManager.hasPendingInsight {
+                            insightCard
+                        }
                         createSection
                         if !visionBoardManager.recentVisionBoards.isEmpty {
                             recentSection
@@ -50,6 +54,14 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showingCreateView) { CreateVisionBoardView() }
         .sheet(isPresented: $showingUpgradeView) { SubscriptionView() }
+        .sheet(isPresented: $showingInsightSheet) {
+            InsightAnswerSheet(
+                question: userManager.nextInsightQuestion,
+                onSave: { answer in
+                    userManager.addInsight(question: userManager.nextInsightQuestion, answer: answer)
+                }
+            )
+        }
     }
 
     // MARK: - Header
@@ -130,6 +142,47 @@ struct HomeView: View {
                     .clipShape(Capsule())
             }
         }
+    }
+
+    // MARK: - Weekly Insight Card
+
+    private var insightCard: some View {
+        Button { showingInsightSheet = true } label: {
+            HStack(spacing: AstralTheme.Spacing.md) {
+                ZStack {
+                    Circle()
+                        .fill(Color.astralViolet.opacity(0.18))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Color.astralViolet)
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Weekly Reflection")
+                        .font(.system(.caption, design: .rounded, weight: .bold))
+                        .foregroundStyle(Color.astralViolet)
+                        .textCase(.uppercase)
+                        .tracking(0.8)
+
+                    Text(userManager.nextInsightQuestion)
+                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                        .foregroundStyle(Color.astralText)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.astralTextDim)
+            }
+            .padding(AstralTheme.Spacing.md)
+            .astralGlass(tint: .astralViolet)
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Stats
@@ -251,7 +304,7 @@ struct HomeView: View {
                     .foregroundStyle(Color.auroraGradient)
             }
 
-            ScrollView(.horizontal, showsIndicators: false) {
+            ScrollView(.horizontal) {
                 HStack(spacing: AstralTheme.Spacing.md) {
                     ForEach(visionBoardManager.recentVisionBoards) { board in
                         VisionBoardCard(visionBoard: board)
@@ -260,6 +313,7 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 2)
             }
+            .scrollIndicators(.hidden)
         }
     }
 
@@ -401,6 +455,88 @@ struct IconRow: View {
 
             Spacer()
         }
+    }
+}
+
+// MARK: - Insight Answer Sheet
+
+struct InsightAnswerSheet: View {
+    let question: String
+    let onSave: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var answer = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.astralBlack.ignoresSafeArea()
+
+                VStack(alignment: .leading, spacing: AstralTheme.Spacing.xl) {
+                    // Coaching context
+                    CoachingCard(
+                        icon: "brain.head.profile",
+                        color: .astralViolet,
+                        text: "Taking time to reflect on your desires builds a clearer signal for the universe. The more vividly you can feel your answer, the more real it becomes."
+                    )
+
+                    // Question
+                    VStack(alignment: .leading, spacing: AstralTheme.Spacing.sm) {
+                        Text(question)
+                            .font(.system(.title3, design: .rounded, weight: .bold))
+                            .foregroundStyle(Color.astralText)
+                            .lineSpacing(3)
+
+                        TextEditor(text: $answer)
+                            .scrollContentBackground(.hidden)
+                            .font(.system(.body, design: .rounded))
+                            .foregroundStyle(Color.astralText)
+                            .frame(minHeight: 140)
+                            .padding(AstralTheme.Spacing.md)
+                            .background(Color.astralSurface2)
+                            .clipShape(RoundedRectangle(cornerRadius: AstralTheme.Radius.md, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: AstralTheme.Radius.md, style: .continuous)
+                                    .strokeBorder(
+                                        focused ? Color.astralViolet.opacity(0.6) : Color.clear,
+                                        lineWidth: 1
+                                    )
+                            )
+                            .focused($focused)
+
+                        Text("Write freely — there are no wrong answers.")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(Color.astralTextDim)
+                    }
+
+                    Button("Save Reflection") {
+                        let trimmed = answer.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !trimmed.isEmpty else { return }
+                        onSave(trimmed)
+                        dismiss()
+                    }
+                    .astralButton(answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .secondary : .primary)
+                    .frame(maxWidth: .infinity)
+                    .disabled(answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .animation(AstralTheme.Motion.quick, value: answer.isEmpty)
+
+                    Spacer()
+                }
+                .padding(AstralTheme.Spacing.lg)
+            }
+            .navigationTitle("Weekly Reflection")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Skip") { dismiss() }
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(Color.astralTextMuted)
+                }
+            }
+        }
+        .onAppear { focused = true }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 }
 

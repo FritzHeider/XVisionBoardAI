@@ -61,7 +61,7 @@ struct VisionBoardDetailView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .topBarLeading) {
                     Button("Close") {
                         dismiss()
                     }
@@ -75,32 +75,22 @@ struct VisionBoardDetailView: View {
                         .lineLimit(1)
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button(action: { showingEditView = true }) {
-                            Label("Edit Vision Board", systemImage: "pencil")
-                        }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu("Options", systemImage: "ellipsis.circle") {
+                        Button("Edit Vision Board", systemImage: "pencil", action: { showingEditView = true })
 
-                        Button(action: {
-                            visionBoardManager.toggleFavorite(visionBoard)
-                        }) {
-                            Label(
-                                visionBoard.isFavorite ? "Remove from Favorites" : "Add to Favorites",
-                                systemImage: visionBoard.isFavorite ? "heart.slash" : "heart"
-                            )
-                        }
+                        Button(
+                            visionBoard.isFavorite ? "Remove from Favorites" : "Add to Favorites",
+                            systemImage: visionBoard.isFavorite ? "heart.slash" : "heart",
+                            action: { visionBoardManager.toggleFavorite(visionBoard) }
+                        )
 
-                        Button("Share") {
-                            showingShareSheet = true
-                        }
+                        Button("Share", systemImage: "square.and.arrow.up", action: { showingShareSheet = true })
 
-                        Button("Delete", role: .destructive) {
-                            showingDeleteAlert = true
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .foregroundStyle(Color.astralText)
+                        Button("Delete", systemImage: "trash", role: .destructive, action: { showingDeleteAlert = true })
                     }
+                    .labelStyle(.iconOnly)
+                    .foregroundStyle(Color.astralText)
                 }
             }
         }
@@ -573,7 +563,7 @@ struct VisionBoardImageView: View {
                     .padding(4)
                 }
             }
-            .cornerRadius(8)
+            .clipShape(.rect(cornerRadius: 8))
         }
     }
 
@@ -600,7 +590,7 @@ struct VisionBoardImageView: View {
     private var imagePlaceholder: some View {
         RoundedRectangle(cornerRadius: 8)
             .fill(Color.cosmicGray)
-            .overlay(ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .cosmicPurple)))
+            .overlay(ProgressView().progressViewStyle(.circular).tint(.astralViolet))
     }
 }
 
@@ -666,7 +656,7 @@ struct FullScreenImageView: View {
                         if case .success(let img) = phase {
                             img.resizable().aspectRatio(contentMode: .fit)
                         } else {
-                            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            ProgressView().progressViewStyle(.circular).tint(.white)
                         }
                     }
                 }

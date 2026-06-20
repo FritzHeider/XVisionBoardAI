@@ -20,44 +20,46 @@ extension View {
 
     
     func floating() -> some View {
-        self
-            .offset(y: 0)
-            .animation(
-                Animation.easeInOut(duration: 2.0)
-                    .repeatForever(autoreverses: true),
-                value: UUID()
-            )
-            .onAppear {
-                withAnimation {
-                    // Trigger floating animation
-                }
-            }
+        modifier(FloatingModifier())
     }
-    
-    func shimmer() -> some View {
-        self
+
+}
+
+private struct ShimmerModifier: ViewModifier {
+    @State private var offset: CGFloat = -200
+
+    func body(content: Content) -> some View {
+        content
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                .clear,
-                                .cosmicWhite.opacity(0.3),
-                                .clear
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .fill(LinearGradient(
+                        colors: [.clear, Color.astralText.opacity(0.3), .clear],
+                        startPoint: .leading, endPoint: .trailing
+                    ))
                     .rotationEffect(.degrees(-45))
-                    .offset(x: -200)
-                    .animation(
-                        Animation.linear(duration: 1.5)
-                            .repeatForever(autoreverses: false),
-                        value: UUID()
-                    )
+                    .offset(x: offset)
+                    .animation(.linear(duration: 1.5).repeatForever(autoreverses: false), value: offset)
+                    .onAppear { offset = 200 }
             )
             .clipped()
+    }
+}
+
+private struct FloatingModifier: ViewModifier {
+    @State private var isUp = false
+
+    func body(content: Content) -> some View {
+        content
+            .offset(y: isUp ? -6 : 0)
+            .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: isUp)
+            .onAppear { isUp = true }
+    }
+}
+
+extension View {
+    
+    func shimmer() -> some View {
+        modifier(ShimmerModifier())
     }
     
     // MARK: - Conditional Modifiers
@@ -73,12 +75,7 @@ extension View {
     
     // MARK: - Haptic Feedback
     
-    func hapticFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) -> some View {
-        self.onTapGesture {
-            let impactFeedback = UIImpactFeedbackGenerator(style: style)
-            impactFeedback.impactOccurred()
-        }
-    }
+    func hapticFeedback() -> some View { self }
     
     // MARK: - Safe Area
     
