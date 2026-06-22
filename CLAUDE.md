@@ -91,3 +91,14 @@ Key routing rules:
 - Save progress → invoke /context-save
 - Resume context → invoke /context-restore
 - iOS quality audit → invoke /ios-polish
+
+## API Keys & Secrets
+
+**Never put API keys in `project.pbxproj` buildSettings.** They get committed to the public repo.
+
+The correct pattern:
+1. Keys live in `Secrets.xcconfig` (gitignored — never committed)
+2. `project.pbxproj` references it via `baseConfigurationReference` for both Debug and Release
+3. `Secrets.xcconfig.template` (committed) shows contributors what keys are needed
+
+If a new API key is required, add it to `Secrets.xcconfig` and `Secrets.xcconfig.template`, then reference it as `$(KEY_NAME)` in Info.plist or Swift via `Bundle.main.infoDictionary`.
