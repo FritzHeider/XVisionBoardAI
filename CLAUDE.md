@@ -58,6 +58,21 @@ com.xvisionboardai.premium.monthly / .yearly
 com.xvisionboardai.credits.small / .medium / .large
 ```
 
+## Swift Concurrency Patterns
+
+### AVFoundation + @MainActor
+`CameraManager` is `@MainActor` but AVFoundation must run on a dedicated background queue. Pattern: capture `@MainActor` AVFoundation properties as local `let` constants before `sessionQueue.async`, pass them into the closure, and use `Task { @MainActor in }` for any UI updates from inside the closure. Always use `@preconcurrency import AVFoundation` to suppress `non-Sendable` type warnings — AVFoundation predates Swift 6 Sendable conformance.
+
+### Agent worktrees
+Swarm agent sessions leave worktrees in `.claude/worktrees/`. After any swarm run, check `git worktree list` and remove entries on commits already in `main`: `git worktree remove --force .claude/worktrees/<name>`.
+
+### Health check shortcut
+```bash
+xcodebuild -project XVisionBoardAI.xcodeproj -scheme XVisionBoardAI \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -configuration Debug build 2>&1 | grep -E "error:|warning:|BUILD SUCCEEDED|BUILD FAILED"
+```
+
 ## Skill routing
 
 When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
