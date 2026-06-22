@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import AVFoundation
+@preconcurrency import AVFoundation
 import SwiftUI
 import Vision
 
@@ -87,76 +87,75 @@ class CameraManager: NSObject, ObservableObject {
     }
     
     // MARK: - Camera Setup
-    
+
     private func setupCamera() {
+        // Capture AVFoundation objects on MainActor before crossing to background queue
+        let capturedSession = session
+        let capturedPhotoOutput = photoOutput
+        let capturedVideoOutput = videoOutput
+        let capturedQueue = sessionQueue
         sessionQueue.async { [weak self] in
-            self?.configureSession()
+            capturedSession.beginConfiguration()
+
+            guard let frontCamera = AVCaptureDevice.default(
+                .builtInWideAngleCamera,
+                for: .video,
+                position: .front
+            ) else {
+                Task { @MainActor [weak self] in
+                    self?.errorMessage = "Front camera not available"
+                }
+                return
+            }
+
+            do {
+                let input = try AVCaptureDeviceInput(device: frontCamera)
+                if capturedSession.canAddInput(input) {
+                    capturedSession.addInput(input)
+                }
+            } catch {
+                Task { @MainActor [weak self] in
+                    self?.errorMessage = "Failed to setup camera input: \(error.localizedDescription)"
+                }
+                return
+            }
+
+            if capturedSession.canAddOutput(capturedPhotoOutput) {
+                capturedSession.addOutput(capturedPhotoOutput)
+            }
+
+            capturedVideoOutput.setSampleBufferDelegate(self, queue: capturedQueue)
+            if capturedSession.canAddOutput(capturedVideoOutput) {
+                capturedSession.addOutput(capturedVideoOutput)
+            }
+
+            capturedSession.sessionPreset = .photo
+            capturedSession.commitConfiguration()
+
+            let previewLayer = AVCaptureVideoPreviewLayer(session: capturedSession)
+            previewLayer.videoGravity = .resizeAspectFill
+            Task { @MainActor [weak self] in
+                self?.preview = previewLayer
+            }
         }
     }
-    
-    private func configureSession() {
-        session.beginConfiguration()
-        
-        // Add video input (front camera for selfies)
-        guard let frontCamera = AVCaptureDevice.default(
-            .builtInWideAngleCamera,
-            for: .video,
-            position: .front
-        ) else {
-            DispatchQueue.main.async {
-                self.errorMessage = "Front camera not available"
-            }
-            return
-        }
-        
-        do {
-            let input = try AVCaptureDeviceInput(device: frontCamera)
-            if session.canAddInput(input) {
-                session.addInput(input)
-            }
-        } catch {
-            DispatchQueue.main.async {
-                self.errorMessage = "Failed to setup camera input: \(error.localizedDescription)"
-            }
-            return
-        }
-        
-        // Add photo output
-        if session.canAddOutput(photoOutput) {
-            session.addOutput(photoOutput)
-        }
-        
-        // Add video output for face detection
-        videoOutput.setSampleBufferDelegate(self, queue: sessionQueue)
-        if session.canAddOutput(videoOutput) {
-            session.addOutput(videoOutput)
-        }
-        
-        // Configure session quality
-        session.sessionPreset = .photo
-        
-        session.commitConfiguration()
-        
-        DispatchQueue.main.async {
-            self.preview = AVCaptureVideoPreviewLayer(session: self.session)
-            self.preview?.videoGravity = .resizeAspectFill
-        }
-    }
-    
+
     // MARK: - Camera Control
-    
+
     func startSession() {
-        sessionQueue.async { [weak self] in
-            if !(self?.session.isRunning ?? true) {
-                self?.session.startRunning()
+        let capturedSession = session
+        sessionQueue.async {
+            if !capturedSession.isRunning {
+                capturedSession.startRunning()
             }
         }
     }
-    
+
     func stopSession() {
-        sessionQueue.async { [weak self] in
-            if self?.session.isRunning ?? false {
-                self?.session.stopRunning()
+        let capturedSession = session
+        sessionQueue.async {
+            if capturedSession.isRunning {
+                capturedSession.stopRunning()
             }
         }
     }

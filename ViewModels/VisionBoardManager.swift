@@ -131,86 +131,117 @@ class VisionBoardManager {
     }
     
     private func generatePersonalizedImages(for visionBoard: VisionBoard, userImage: UIImage) async throws -> [VisionBoardImage] {
-        var images: [VisionBoardImage] = []
         let imageCount = visionBoard.layout.imageCount
-        // Resize selfie to 512px max — keeps base64 payload small
         let referenceData = userImage.resized(maxDimension: 512).jpegData(compressionQuality: 0.75)
+        let hasSelfie = referenceData != nil
 
         let prompts = generateImagePrompts(
             description: visionBoard.description,
             goals: visionBoard.manifestationGoals.map(\.title),
             style: visionBoard.style,
-            count: imageCount
+            count: imageCount,
+            hasSelfie: false
         )
 
-        for (index, prompt) in prompts.enumerated() {
-            generationProgress = 0.4 + (0.55 * Double(index) / Double(imageCount))
-
-            var image = VisionBoardImage(prompt: prompt, position: index, isPersonalized: referenceData != nil)
-
-            do {
-                // Try Gemini (Imagen 3) first; fall back to fal.ai
-                if let imgData = try? await GeminiImageService.generateImage(
-                    prompt: prompt,
-                    aspectRatio: GeminiImageService.aspectRatio(for: visionBoard.layout)
-                ) {
-                    image.imageData = imgData
-                } else {
-                    let url = try await FalAIService.generateImage(
-                        prompt: prompt,
-                        referenceImageData: referenceData,
-                        imageSize: .forLayout(visionBoard.layout)
-                    )
-                    image.imageURL = url
-
-                    if let imageURL = URL(string: url),
-                       let (imgData, _) = try? await URLSession.shared.data(from: imageURL),
-                       UIImage(data: imgData) != nil {
-                        image.imageData = imgData
-                    }
-                }
-            } catch FalAIError.missingAPIKey {
-                // No API key — use placeholder (dev/demo mode)
-                image.imageURL = "https://picsum.photos/1024/1024?random=\(index + Int.random(in: 0..<9999))"
-                if let url = URL(string: image.imageURL!),
-                   let (imgData, _) = try? await URLSession.shared.data(from: url) {
-                    image.imageData = imgData
-                }
-            }
-
-            images.append(image)
-            if currentGeneratingBoard != nil {
-                currentGeneratingBoard!.images = images
-            }
+        // Seed the board with placeholder slots so the live grid appears immediately
+        var images: [VisionBoardImage] = (0..<imageCount).map { i in
+            VisionBoardImage(prompt: prompts[safe: i] ?? prompts[0], position: i, isPersonalized: hasSelfie)
         }
-        return images
+        currentGeneratingBoard?.images = images
+
+        // Generate ALL images in parallel — total time = slowest single image, not sum
+        let layout = visionBoard.layout
+        let refData = referenceData
+
+        let results: [(Int, VisionBoardImage)] = await withTaskGroup(of: (Int, VisionBoardImage).self) { group in
+            for index in 0..<imageCount {
+                let prompt = prompts[safe: index] ?? prompts[0]
+                group.addTask {
+                    var image = VisionBoardImage(prompt: prompt, position: index, isPersonalized: hasSelfie)
+                    let imageSize = FalImageSize.forLayout(layout)
+
+                    // 1. fal.ai PuLID with selfie — face-consistent generation
+                    if let selfieData = refData,
+                       let url = try? await FalAIService.generateImage(
+                           prompt: prompt,
+                           referenceImageData: selfieData,
+                           imageSize: imageSize
+                       ) {
+                        image.imageURL = url
+                        if let imageURL = URL(string: url),
+                           let (imgData, _) = try? await URLSession.shared.data(from: imageURL),
+                           UIImage(data: imgData) != nil {
+                            image.imageData = imgData
+                        }
+                    }
+                    // 2. fal.ai FLUX Schnell — fast fallback (no face)
+                    else if let url = try? await FalAIService.generateImage(
+                        prompt: prompt,
+                        referenceImageData: nil,
+                        imageSize: imageSize
+                    ) {
+                        image.imageURL = url
+                        if let imageURL = URL(string: url),
+                           let (imgData, _) = try? await URLSession.shared.data(from: imageURL),
+                           UIImage(data: imgData) != nil {
+                            image.imageData = imgData
+                        }
+                    }
+                    return (index, image)
+                }
+            }
+
+            var collected: [(Int, VisionBoardImage)] = []
+            for await result in group {
+                collected.append(result)
+                // Update progress and live preview as each image arrives
+                let done = Double(collected.count)
+                await MainActor.run {
+                    self.generationProgress = 0.4 + (0.55 * done / Double(imageCount))
+                    var updated = images
+                    for (i, img) in collected { updated[i] = img }
+                    images = updated
+                    self.currentGeneratingBoard?.images = updated
+                }
+            }
+            return collected
+        }
+
+        var finalImages = images
+        for (i, img) in results { finalImages[i] = img }
+        return finalImages
     }
 
     private func generateImagePrompts(
         description: String,
         goals: [String],
         style: VisionBoardStyle,
-        count: Int
+        count: Int,
+        hasSelfie: Bool = true
     ) -> [String] {
         let styleMeta = styleMeta(for: style)
+        let subjectPhrase = hasSelfie
+            ? "the person from the reference photo"
+            : "a confident, radiant person"
+        let selfieInstruction = hasSelfie
+            ? "Use the attached reference photo as the subject's face and appearance. "
+            : ""
 
-        // Rich, aspirational prompts for each goal
         var prompts: [String] = goals.prefix(max(1, count / 2)).map { goal in
-            "\(styleMeta.prefix) \(goal), ultra-detailed, photorealistic, 8k, \(styleMeta.suffix)"
+            "\(selfieInstruction)\(styleMeta.prefix) \(subjectPhrase) achieving \(goal), ultra-detailed, photorealistic, 8k, \(styleMeta.suffix)"
         }
 
-        // Fill remaining slots with lifestyle scenes keyed to the description
         let topic = description.isEmpty ? "living their dream life" : description.lowercased()
         let fillers: [String] = [
-            "\(styleMeta.prefix) successful person \(topic), \(styleMeta.suffix)",
-            "\(styleMeta.prefix) abundance and luxury lifestyle, \(styleMeta.suffix)",
-            "\(styleMeta.prefix) person radiating confidence and joy, \(styleMeta.suffix)",
-            "\(styleMeta.prefix) dream home interior with beautiful design, \(styleMeta.suffix)",
-            "\(styleMeta.prefix) person celebrating achievement, crowd cheering, \(styleMeta.suffix)",
-            "\(styleMeta.prefix) dream travel destination at golden hour, \(styleMeta.suffix)",
-            "\(styleMeta.prefix) successful entrepreneur working from paradise, \(styleMeta.suffix)",
-            "\(styleMeta.prefix) person surrounded by abundance and prosperity, \(styleMeta.suffix)",
-            "\(styleMeta.prefix) peak fitness and health, vibrant energy, \(styleMeta.suffix)"
+            "\(selfieInstruction)\(styleMeta.prefix) \(subjectPhrase) \(topic), \(styleMeta.suffix)",
+            "\(selfieInstruction)\(styleMeta.prefix) \(subjectPhrase) in an abundant luxury lifestyle, \(styleMeta.suffix)",
+            "\(selfieInstruction)\(styleMeta.prefix) \(subjectPhrase) radiating confidence and joy, \(styleMeta.suffix)",
+            "\(selfieInstruction)\(styleMeta.prefix) \(subjectPhrase) in a stunning dream home interior, \(styleMeta.suffix)",
+            "\(selfieInstruction)\(styleMeta.prefix) \(subjectPhrase) celebrating a major achievement, \(styleMeta.suffix)",
+            "\(selfieInstruction)\(styleMeta.prefix) \(subjectPhrase) at a beautiful dream travel destination at golden hour, \(styleMeta.suffix)",
+            "\(selfieInstruction)\(styleMeta.prefix) \(subjectPhrase) as a successful entrepreneur working from paradise, \(styleMeta.suffix)",
+            "\(selfieInstruction)\(styleMeta.prefix) \(subjectPhrase) surrounded by abundance and prosperity, \(styleMeta.suffix)",
+            "\(selfieInstruction)\(styleMeta.prefix) \(subjectPhrase) at peak fitness and health, vibrant energy, \(styleMeta.suffix)"
         ]
 
         prompts.append(contentsOf: fillers.prefix(count - prompts.count))
