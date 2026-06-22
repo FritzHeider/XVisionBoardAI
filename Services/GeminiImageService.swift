@@ -59,7 +59,7 @@ struct GeminiImageService {
                 ]
             ]],
             "generationConfig": [
-                "responseModalities": ["IMAGE"]
+                "responseModalities": ["TEXT", "IMAGE"]
             ]
         ]
 

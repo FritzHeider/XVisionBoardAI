@@ -32,29 +32,27 @@ struct CreateVisionBoardView: View {
     @State private var showingBoardDetail = false
     
     enum CreationStep: CaseIterable {
-        case selfie, details, layout, style, goals, generate, complete
-        
+        case selfie, details, customize, goals, generate, complete
+
         var title: String {
             switch self {
-            case .selfie: return "Capture Your Selfie"
-            case .details: return "Vision Details"
-            case .layout: return "Choose Layout"
-            case .style: return "Select Style"
-            case .goals: return "Manifestation Goals"
-            case .generate: return "Generating..."
-            case .complete: return "Complete!"
+            case .selfie:    return "Your Photo"
+            case .details:   return "Vision Details"
+            case .customize: return "Layout & Style"
+            case .goals:     return "Your Goals"
+            case .generate:  return "Generating..."
+            case .complete:  return "Complete!"
             }
         }
-        
+
         var progress: Double {
             switch self {
-            case .selfie: return 0.15
-            case .details: return 0.3
-            case .layout: return 0.45
-            case .style: return 0.6
-            case .goals: return 0.75
-            case .generate: return 0.9
-            case .complete: return 1.0
+            case .selfie:    return 0.17
+            case .details:   return 0.34
+            case .customize: return 0.51
+            case .goals:     return 0.68
+            case .generate:  return 0.85
+            case .complete:  return 1.0
             }
         }
     }
@@ -160,10 +158,8 @@ struct CreateVisionBoardView: View {
             selfieStep
         case .details:
             detailsStep
-        case .layout:
-            layoutStep
-        case .style:
-            styleStep
+        case .customize:
+            customizeStep
         case .goals:
             goalsStep
         case .generate:
@@ -311,53 +307,44 @@ struct CreateVisionBoardView: View {
     
     // MARK: - Layout Step
     
-    private var layoutStep: some View {
-        VStack(spacing: 24) {
-            VStack(spacing: 16) {
-                Text("Choose Your Layout")
+    // MARK: - Customize Step (Layout + Style combined)
+
+    private var customizeStep: some View {
+        VStack(spacing: 28) {
+            VStack(spacing: 8) {
+                Text("Layout & Style")
                     .manifestationTitle()
-                
-                Text("Select how you want your personalized vision board to be arranged.")
+                Text("Choose how your board is arranged and its visual mood.")
                     .manifestationBody()
                     .multilineTextAlignment(.center)
             }
-            
-            VStack(spacing: 16) {
-                ForEach(VisionBoardLayout.allCases, id: \.self) { layout in
-                    LayoutOption(
-                        layout: layout,
-                        isSelected: selectedLayout == layout
-                    ) {
-                        selectedLayout = layout
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("LAYOUT")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Color.astralGold)
+                    .tracking(1.5)
+
+                VStack(spacing: 10) {
+                    ForEach(VisionBoardLayout.allCases, id: \.self) { layout in
+                        LayoutOption(layout: layout, isSelected: selectedLayout == layout) {
+                            selectedLayout = layout
+                        }
                     }
                 }
             }
-        }
-    }
-    
-    // MARK: - Style Step
-    
-    private var styleStep: some View {
-        VStack(spacing: 24) {
-            VStack(spacing: 16) {
-                Text("Select Your Style")
-                    .manifestationTitle()
-                
-                Text("Choose the visual aesthetic for your personalized vision board.")
-                    .manifestationBody()
-                    .multilineTextAlignment(.center)
-            }
-            
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 16) {
-                ForEach(VisionBoardStyle.allCases, id: \.self) { style in
-                    StyleOption(
-                        style: style,
-                        isSelected: selectedStyle == style
-                    ) {
-                        selectedStyle = style
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("STYLE")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Color.astralGold)
+                    .tracking(1.5)
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    ForEach(VisionBoardStyle.allCases, id: \.self) { style in
+                        StyleOption(style: style, isSelected: selectedStyle == style) {
+                            selectedStyle = style
+                        }
                     }
                 }
             }
@@ -639,13 +626,12 @@ struct CreateVisionBoardView: View {
     
     private var canProceed: Bool {
         switch currentStep {
-        case .selfie: return capturedSelfie != nil
-        case .details: return !title.isEmpty && !description.isEmpty
-        case .layout: return true
-        case .style: return true
-        case .goals: return true
-        case .generate: return false
-        case .complete: return true
+        case .selfie:    return capturedSelfie != nil
+        case .details:   return !title.isEmpty && !description.isEmpty
+        case .customize: return true
+        case .goals:     return true
+        case .generate:  return false
+        case .complete:  return true
         }
     }
     
@@ -672,22 +658,19 @@ struct CreateVisionBoardView: View {
             } else {
                 showingUpgrade = true
             }
-        case .details: currentStep = .layout
-        case .layout: currentStep = .style
-        case .style: currentStep = .goals
-        case .goals:
-            generateVisionBoard()
-        case .generate: break
-        case .complete: dismiss()
+        case .details:   currentStep = .customize
+        case .customize: currentStep = .goals
+        case .goals:     generateVisionBoard()
+        case .generate:  break
+        case .complete:  dismiss()
         }
     }
     
     private func previousStep() {
         switch currentStep {
-        case .details: currentStep = .selfie
-        case .layout: currentStep = .details
-        case .style: currentStep = .layout
-        case .goals: currentStep = .style
+        case .details:   currentStep = .selfie
+        case .customize: currentStep = .details
+        case .goals:     currentStep = .customize
         default: break
         }
     }

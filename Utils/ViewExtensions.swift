@@ -178,6 +178,14 @@ extension Date {
     }
 }
 
+// MARK: - Array safe subscript
+
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        indices.contains(index) ? self[index] : nil
+    }
+}
+
 // MARK: - UIImage Extensions
 
 extension UIImage {

@@ -35,6 +35,9 @@ Carthage/Checkouts/
 # Archives
 *.xcarchive
 
+# API keys — never commit
+Secrets.xcconfig
+
 # Playgrounds
 timeline.xctimeline
 playground.xcworkspace
