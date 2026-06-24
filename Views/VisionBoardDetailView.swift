@@ -454,7 +454,7 @@ struct VisionBoardDetailView: View {
             content += "• \(affirmation)\n"
         }
 
-        content += "\nCreated with XVisionBoard AI - See yourself living your dreams!"
+        content += "\nCreated with ManifestMe - See yourself living your dreams!"
         return content
     }
 
