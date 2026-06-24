@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>XVisionBoard AI</string>
+	<string>ManifestMe</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -23,9 +23,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>XVisionBoard AI needs camera access to take selfies for personalized vision boards where you appear living your dreams.</string>
+	<string>ManifestMe needs camera access to take selfies for personalized vision boards where you appear living your dreams.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>XVisionBoard AI needs photo library access to select images for personalized vision boards and save your creations.</string>
+	<string>ManifestMe needs photo library access to select images for personalized vision boards and save your creations.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Use Face ID to securely access your personalized vision boards and manifestation content.</string>
 	<key>UIApplicationSceneManifest</key>

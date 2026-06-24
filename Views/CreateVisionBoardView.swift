@@ -65,17 +65,18 @@ struct CreateVisionBoardView: View {
                 VStack(spacing: 0) {
                     // Progress bar
                     progressBar
-                    
-                    // Content
+
+                    // Content — safeAreaInset pins nav buttons above the tab bar
+                    // and auto-insets the scroll view so content stays visible
                     ScrollView {
                         VStack(spacing: 24) {
                             stepContent
                         }
                         .padding()
                     }
-                    
-                    // Navigation buttons
-                    navigationButtons
+                    .safeAreaInset(edge: .bottom, spacing: 0) {
+                        navigationButtons
+                    }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -134,7 +135,7 @@ struct CreateVisionBoardView: View {
                 .scaleEffect(x: 1, y: 2, anchor: .center)
             
             HStack {
-                Text("Step \(CreationStep.allCases.firstIndex(of: currentStep)! + 1) of \(CreationStep.allCases.count)")
+                Text("Step \(CreationStep.allCases.firstIndex(of: currentStep)! + 1) of \(CreationStep.allCases.count - 1)")
                     .font(.caption)
                     .foregroundStyle(Color.astralText.opacity(0.7))
                 
