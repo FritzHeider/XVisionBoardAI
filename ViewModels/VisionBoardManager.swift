@@ -63,6 +63,8 @@ class VisionBoardManager {
             generationProgress = 0.4
             visionBoard.images = try await generatePersonalizedImages(for: visionBoard, userImage: userImage)
 
+            try Task.checkCancellation()
+
             generationProgress = 1.0
             visionBoards.append(visionBoard)
             saveVisionBoards()
@@ -71,6 +73,10 @@ class VisionBoardManager {
             currentGeneratingBoard = nil
             return visionBoard
 
+        } catch is CancellationError {
+            isGenerating = false
+            currentGeneratingBoard = nil
+            return nil
         } catch {
             errorMessage = "Failed to create vision board: \(error.localizedDescription)"
             isGenerating = false

@@ -103,9 +103,11 @@ struct FalAIService {
             "id_weight": 0.85,
             "enable_safety_checker": false
         ]
-        // PuLID falls back to flux/schnell if unavailable
+        // PuLID falls back to flux/schnell on non-cancellation errors only
         do {
             return try await submitAndPoll(model: pulidModel, body: body, apiKey: apiKey)
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
             return try await generateFluxSchnell(prompt: prompt, imageSize: imageSize, apiKey: apiKey)
         }
@@ -128,7 +130,8 @@ struct FalAIService {
 
         let (submitData, submitResponse) = try await URLSession.shared.data(for: req)
 
-        guard let http = submitResponse as? HTTPURLResponse, http.statusCode == 200 else {
+        guard let http = submitResponse as? HTTPURLResponse,
+              http.statusCode == 200 || http.statusCode == 202 else {
             let msg = String(data: submitData, encoding: .utf8) ?? "unknown"
             throw FalAIError.requestFailed(msg)
         }
@@ -138,8 +141,19 @@ struct FalAIService {
             throw FalAIError.requestFailed("No request_id in response")
         }
 
+        // Prefer status_url/response_url from submit response over manual construction
+        let statusURL: URL
+        let resultURL: URL
+        if let statusStr = submitJSON["status_url"] as? String, let parsedStatus = URL(string: statusStr),
+           let responseStr = submitJSON["response_url"] as? String, let parsedResult = URL(string: responseStr) {
+            statusURL = parsedStatus
+            resultURL = parsedResult
+        } else {
+            statusURL = URL(string: "\(queueBase)/\(model)/requests/\(requestID)/status")!
+            resultURL = URL(string: "\(queueBase)/\(model)/requests/\(requestID)")!
+        }
+
         // 2. Poll status
-        let statusURL = URL(string: "\(queueBase)/\(model)/requests/\(requestID)/status")!
         for attempt in 0..<60 {
             let delay: UInt64 = attempt < 5 ? 2_000_000_000 : 3_000_000_000
             try await Task.sleep(nanoseconds: delay)
@@ -163,7 +177,6 @@ struct FalAIService {
             }
 
             // 3. Fetch result
-            let resultURL = URL(string: "\(queueBase)/\(model)/requests/\(requestID)")!
             var resultReq = URLRequest(url: resultURL)
             resultReq.setValue("Key \(apiKey)", forHTTPHeaderField: "Authorization")
             let (resultData, _) = try await URLSession.shared.data(for: resultReq)

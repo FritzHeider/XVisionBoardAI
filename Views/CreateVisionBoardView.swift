@@ -30,6 +30,7 @@ struct CreateVisionBoardView: View {
     @State private var photoPickerItem: PhotosPickerItem?
     @State private var generationError: String?
     @State private var showingBoardDetail = false
+    @State private var generationTask: Task<Void, Never>?
     
     enum CreationStep: CaseIterable {
         case selfie, details, customize, goals, generate, complete
@@ -57,25 +58,33 @@ struct CreateVisionBoardView: View {
         }
     }
     
+    private var hasReachedLimit: Bool {
+        !storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards)
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.astralBlack.ignoresSafeArea()
-                
-                VStack(spacing: 0) {
-                    // Progress bar
-                    progressBar
 
-                    // Content — safeAreaInset pins nav buttons above the tab bar
-                    // and auto-insets the scroll view so content stays visible
-                    ScrollView {
-                        VStack(spacing: 24) {
-                            stepContent
+                if hasReachedLimit {
+                    limitReachedView
+                } else {
+                    VStack(spacing: 0) {
+                        // Progress bar
+                        progressBar
+
+                        // Content — safeAreaInset pins nav buttons above the tab bar
+                        // and auto-insets the scroll view so content stays visible
+                        ScrollView {
+                            VStack(spacing: 24) {
+                                stepContent
+                            }
+                            .padding()
                         }
-                        .padding()
-                    }
-                    .safeAreaInset(edge: .bottom, spacing: 0) {
-                        navigationButtons
+                        .safeAreaInset(edge: .bottom, spacing: 0) {
+                            navigationButtons
+                        }
                     }
                 }
             }
@@ -83,13 +92,14 @@ struct CreateVisionBoardView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
+                        generationTask?.cancel()
                         dismiss()
                     }
                     .foregroundStyle(Color.astralText)
                 }
-                
+
                 ToolbarItem(placement: .principal) {
-                    Text(currentStep.title)
+                    Text(hasReachedLimit ? "Create Board" : currentStep.title)
                         .font(.headline)
                         .foregroundStyle(Color.astralText)
                 }
@@ -125,8 +135,59 @@ struct CreateVisionBoardView: View {
         }
     }
     
+    // MARK: - Limit Reached View
+
+    private var limitReachedView: some View {
+        VStack(spacing: 32) {
+            Spacer()
+
+            VStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(Color.astralGold.opacity(0.12))
+                        .frame(width: 100, height: 100)
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 44, weight: .semibold))
+                        .foregroundStyle(
+                            LinearGradient(colors: [.astralGold, .orange], startPoint: .top, endPoint: .bottom)
+                        )
+                }
+                .astralPulsing()
+
+                Text("Upgrade to Create More")
+                    .font(.system(.title2, design: .rounded, weight: .bold))
+                    .foregroundStyle(Color.astralText)
+                    .multilineTextAlignment(.center)
+
+                Text("You've used your free board. Upgrade to ManifestMe Pro for unlimited vision boards.")
+                    .font(.system(.body, design: .rounded))
+                    .foregroundStyle(Color.astralTextMuted)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 8)
+            }
+
+            Button {
+                showingUpgrade = true
+            } label: {
+                Label("Unlock Pro", systemImage: "crown.fill")
+                    .font(.system(.body, design: .rounded, weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(
+                        LinearGradient(colors: [.astralViolet, .astralIndigo], startPoint: .leading, endPoint: .trailing)
+                    )
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: AstralTheme.Radius.lg))
+            }
+            .padding(.horizontal, AstralTheme.Spacing.xl)
+
+            Spacer()
+        }
+        .padding()
+    }
+
     // MARK: - Progress Bar
-    
+
     private var progressBar: some View {
         VStack(spacing: 8) {
             ProgressView(value: currentStep.progress)
@@ -681,7 +742,7 @@ struct CreateVisionBoardView: View {
 
         currentStep = .generate
 
-        Task {
+        generationTask = Task {
             let visionBoard = await visionBoardManager.createVisionBoard(
                 title: title,
                 description: description,
@@ -690,6 +751,8 @@ struct CreateVisionBoardView: View {
                 style: selectedStyle,
                 manifestationGoals: manifestationGoals
             )
+
+            guard !Task.isCancelled else { return }
 
             if let board = visionBoard {
                 userManager.incrementVisionBoardCount()
