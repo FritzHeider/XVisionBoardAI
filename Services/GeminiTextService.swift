@@ -17,23 +17,35 @@ struct GeminiTextService {
         goals: [String],
         style: String
     ) async throws -> [String] {
-        guard let key = apiKey, !key.isEmpty else {
+        // In proxy mode the key lives server-side; only the direct path needs it.
+        let key = apiKey ?? ""
+        if !APIConfig.usesProxy, key.isEmpty {
             throw GeminiImageError.missingAPIKey
         }
 
-        let endpoint = "\(baseURL)/\(model):generateContent?key=\(key)"
-        guard let url = URL(string: endpoint) else {
+        // Direct: key in the query string. Proxy: the Worker injects it.
+        guard let direct = URL(string: "\(baseURL)/\(model):generateContent?key=\(key)") else {
             throw GeminiImageError.requestFailed("Invalid endpoint URL")
         }
+        let url = APIConfig.url(
+            provider: "gemini",
+            directURL: direct,
+            proxyPath: "v1beta/models/\(model):generateContent"
+        )
 
-        let body: [String: Any] = [
+        let httpBody = try JSONSerialization.data(withJSONObject: [
             "contents": [["parts": [["text": buildPrompt(description: description, goals: goals, style: style)]]]]
-        ]
+        ])
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        request.httpBody = httpBody
+        if APIConfig.usesProxy {
+            for (k, v) in await AppAttestManager.shared.assertionHeaders(for: httpBody) {
+                request.setValue(v, forHTTPHeaderField: k)
+            }
+        }
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
