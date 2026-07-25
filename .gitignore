@@ -41,3 +41,7 @@ Secrets.xcconfig
 # Playgrounds
 timeline.xctimeline
 playground.xcworkspace
+
+# Node / Cloudflare Worker proxy
+proxy/node_modules/
+proxy/.wrangler/

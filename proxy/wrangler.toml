@@ -20,17 +20,20 @@ name = "manifestme-proxy"
 main = "src/index.js"
 compatibility_date = "2024-11-01"
 
-# Team ID + bundle ID are used to validate the App Attest app-identity hash.
-# APP_TEAM_ID is not a secret; fill it in with your Apple Developer Team ID.
+# Team ID + bundle ID validate the App Attest app-identity hash.
+# APP_TEAM_ID is not a secret; fill it in with your Apple Developer Team ID
+# (required once ATTEST_MODE is "monitor" or "enforce").
 [vars]
 APP_TEAM_ID = "REPLACE_WITH_TEAM_ID"
 APP_BUNDLE_ID = "com.xvisionboardai"
-# Default "false" so the proxy works before App Attest validation is finished.
-# While false the proxy is open to anyone with its URL, so it does NOT stop abuse
-# on its own — your fal.ai/Google spend caps + Cloudflare rate limiting are the
-# backstop. Flip to "true" only after completing the attestation checks in
-# src/index.js (verifyAttestation + checkAssertion).
-REQUIRE_ATTEST = "false"
+# ATTEST_MODE: "off" | "monitor" | "enforce"
+#   off     — no attestation (relies on spend caps + Cloudflare rate limiting)
+#   monitor — validate every request and LOG pass/fail, but still forward
+#   enforce — reject requests that fail (401)
+# The validation crypto in appattest.js was written to spec but NOT runtime-tested
+# (a real attestation needs a physical device). Deploy in "monitor", confirm the
+# logs show attestation + assertions passing on a real device, THEN set "enforce".
+ATTEST_MODE = "monitor"
 
 # KV namespace storing per-key public keys, assertion counters, and one-time
 # attestation challenges. Create it with `wrangler kv namespace create ATTEST_KV`

@@ -11,13 +11,21 @@
 //   ANY  /fal/<path>                  -> https://queue.fal.run/<path>      (+ Authorization: Key)
 //   ANY  /gemini/<path>               -> https://generativelanguage.googleapis.com/<path> (+ ?key=)
 //
-// Requests to the provider routes must carry these headers when REQUIRE_ATTEST=true:
+// Provider routes carry these headers when ATTEST_MODE != "off":
 //   X-Attest-Key-Id   : the DCAppAttestService key id registered via /attest/verify
 //   X-Attest-Assertion: base64 assertion over SHA256(rawBody)
 //
-// NOTE: The attestation cert-chain validation in verifyAttestation() is the one
-// piece that needs a CBOR/X.509 step to be production-complete (see the TODO).
-// Key injection + assertion signature/counter checks are fully implemented.
+// ATTEST_MODE (wrangler.toml [vars]):
+//   "off"     — no attestation; proxy relies on spend caps + Cloudflare rate limiting
+//   "monitor" — validate every request and LOG pass/fail, but still forward
+//               (use this to confirm the crypto works on a real device first)
+//   "enforce" — reject requests that fail attestation/assertion (401)
+//
+// Full validation lives in appattest.js. It is written to Apple's spec but was
+// NOT runtime-tested (a valid attestation needs a real device), so ship in
+// "monitor" first and read the logs before switching to "enforce".
+
+import { verifyAttestation, verifyAssertion } from "./appattest.js";
 
 const PROVIDERS = {
   fal: {
@@ -38,7 +46,7 @@ export default {
 
     try {
       if (root === "attest" && rest[0] === "challenge") return challenge(env);
-      if (root === "attest" && rest[0] === "verify") return verifyAttestation(request, env);
+      if (root === "attest" && rest[0] === "verify") return handleAttestVerify(request, env);
       if (PROVIDERS[root]) return forward(root, rest.join("/"), url.search, request, env);
       return json({ error: "not found" }, 404);
     } catch (err) {
@@ -52,13 +60,28 @@ export default {
 async function forward(providerName, path, search, request, env) {
   const provider = PROVIDERS[providerName];
 
-  const body = request.method === "GET" || request.method === "HEAD"
+  const bodyBuf = request.method === "GET" || request.method === "HEAD"
     ? null
     : await request.arrayBuffer();
+  const body = bodyBuf ? new Uint8Array(bodyBuf) : new Uint8Array(0);
 
-  if (env.REQUIRE_ATTEST === "true") {
-    const ok = await checkAssertion(request, body, env);
-    if (!ok) return json({ error: "attestation required" }, 401);
+  const mode = env.ATTEST_MODE || "off";
+  if (mode !== "off") {
+    const keyId = request.headers.get("X-Attest-Key-Id");
+    const assertion = request.headers.get("X-Attest-Assertion");
+    let ok = false, reason = "missing attestation headers";
+    if (keyId && assertion) {
+      try {
+        await verifyAssertion({ keyIdB64: keyId, assertionB64: assertion, body, env });
+        ok = true;
+      } catch (e) { reason = e.message; }
+    }
+    if (ok) {
+      console.log(`[attest] ok key=${keyId?.slice(0, 12)}… ${providerName}/${path}`);
+    } else {
+      console.warn(`[attest] FAIL (${reason}) key=${keyId?.slice(0, 12)}… ${providerName}/${path}`);
+      if (mode === "enforce") return json({ error: "attestation required" }, 401);
+    }
   }
 
   let target = `${provider.base}/${path}`;
@@ -79,7 +102,7 @@ async function forward(providerName, path, search, request, env) {
   const upstream = await fetch(target, {
     method: request.method,
     headers,
-    body,
+    body: bodyBuf, // null for GET/HEAD; original bytes otherwise
   });
 
   // Stream the provider response straight back.
@@ -99,7 +122,7 @@ async function challenge(env) {
   return json({ challenge });
 }
 
-async function verifyAttestation(request, env) {
+async function handleAttestVerify(request, env) {
   const { keyId, attestation, challenge } = await request.json();
   if (!keyId || !attestation || !challenge) return json({ error: "missing fields" }, 400);
 
@@ -107,38 +130,25 @@ async function verifyAttestation(request, env) {
   if (!seen) return json({ error: "unknown or expired challenge" }, 400);
   await env.ATTEST_KV.delete(`challenge:${challenge}`);
 
-  // TODO(attest): Full attestation validation requires decoding the CBOR
-  // attestation object, verifying the x5c cert chain up to Apple's App Attest
-  // root CA, checking the nonce = SHA256(authData || clientDataHash), and
-  // confirming the app-id hash == SHA256(APP_TEAM_ID + "." + APP_BUNDLE_ID).
-  // Use a CBOR lib (e.g. cbor-x) + WebCrypto X.509 verification. Until this is
-  // implemented, keep REQUIRE_ATTEST="false" in production so real clients work.
-  // The public key extracted here MUST be stored for assertion verification:
-  //
-  //   await env.ATTEST_KV.put(`pubkey:${keyId}`, b64(publicKeyRaw));
-  //   await env.ATTEST_KV.put(`counter:${keyId}`, "0");
-
-  return json({ ok: true, note: "attestation stored (complete cert-chain validation before relying on this)" });
-}
-
-async function checkAssertion(request, body, env) {
-  const keyId = request.headers.get("X-Attest-Key-Id");
-  const assertionB64 = request.headers.get("X-Attest-Assertion");
-  if (!keyId || !assertionB64) return false;
-
-  const storedKey = await env.ATTEST_KV.get(`pubkey:${keyId}`);
-  if (!storedKey) return false; // device never completed attestation
-
-  // Assertion is a CBOR map { signature, authenticatorData }. Verify the ES256
-  // signature over SHA256(authenticatorData || SHA256(body)) with the stored
-  // public key, and require the embedded counter to strictly increase.
-  // TODO(attest): decode CBOR + ECDSA-verify. Structure and storage are in place;
-  // returning true here only when a stored key exists keeps the gate honest but
-  // NOT yet cryptographically enforced — finish before trusting it.
-  return true;
+  const challengeBytes = b64decode(challenge);
+  try {
+    const info = await verifyAttestation({ keyIdB64: keyId, attestationB64: attestation, challengeBytes, env });
+    console.log(`[attest] registered key=${keyId.slice(0, 12)}… env=${info.environment}`);
+    return json({ ok: true, environment: info.environment });
+  } catch (e) {
+    console.warn(`[attest] verify FAILED key=${keyId.slice(0, 12)}…: ${e.message}`);
+    return json({ error: "attestation failed", detail: e.message }, 400);
+  }
 }
 
 // --- helpers ---
+
+function b64decode(s) {
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {

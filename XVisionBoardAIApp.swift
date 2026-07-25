@@ -53,6 +53,11 @@ struct XVisionBoardAIApp: App {
                     await storeManager.refreshCustomerInfo()
                     await storeManager.fetchCurrentOffering()
                 }
+                // Register an App Attest key with the proxy (no-op unless the
+                // proxy is configured and the device supports App Attest).
+                .task {
+                    await AppAttestManager.shared.prepare()
+                }
         }
     }
 }
