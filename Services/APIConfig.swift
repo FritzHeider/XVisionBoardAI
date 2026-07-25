@@ -12,8 +12,7 @@ enum APIConfig {
 
     // TODO(manifestme): set to your deployed Worker URL, e.g.
     // URL(string: "https://manifestme-proxy.<subdomain>.workers.dev")
-    static let proxyBaseURL: URL? = nil
-
+    static let proxyBaseURL: URL? = URL(string: "https://manifestme-proxy.blueloke.workers.dev")
     static var usesProxy: Bool { proxyBaseURL != nil }
 
     /// Builds the request URL for a provider path: proxied when configured,
