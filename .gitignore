@@ -45,3 +45,6 @@ playground.xcworkspace
 # Node / Cloudflare Worker proxy
 proxy/node_modules/
 proxy/.wrangler/
+
+# Claude Code local settings (machine-specific; may hold permission entries)
+.claude/settings.local.json
