@@ -19,8 +19,7 @@ enum AppLinks {
 
     // MARK: - Contact
 
-    // TODO(manifestme): Replace with a real support inbox before submission.
-    static let supportEmail = "support@example.com"
+    static let supportEmail = "support@fritzthatcat.com"
 
     /// `true` while the placeholders above are still unset — used to hide/guard
     /// UI that would otherwise point users at a dead link in the meantime.
