@@ -136,24 +136,21 @@ struct User: Codable, Identifiable {
 enum SubscriptionType: String, Codable, CaseIterable {
     case free = "free"
     case pro = "pro"
-    case premium = "premium"
-    
+
+    /// Decodes unknown/legacy raw values (e.g. a retired "premium") as .free
+    /// rather than throwing and losing the surrounding payload.
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        self = SubscriptionType(rawValue: raw) ?? .free
+    }
+
     var displayName: String {
         switch self {
         case .free: return "Free"
         case .pro: return "Pro"
-        case .premium: return "Premium"
         }
     }
-    
-    var monthlyPrice: String {
-        switch self {
-        case .free: return "$0"
-        case .pro: return "$9.99"
-        case .premium: return "$19.99"
-        }
-    }
-    
+
     var features: [String] {
         switch self {
         case .free:
@@ -165,20 +162,12 @@ enum SubscriptionType: String, Codable, CaseIterable {
             ]
         case .pro:
             return [
-                "50 personalized vision boards",
-                "Advanced AI features",
+                "Unlimited vision boards",
+                "Advanced AI personalization",
                 "HD exports without watermarks",
                 "Priority processing",
-                "Audio affirmations"
-            ]
-        case .premium:
-            return [
-                "Unlimited vision boards",
-                "Premium AI models",
-                "4K exports",
-                "Advanced personalization",
-                "Video manifestations",
-                "Personal coach AI"
+                "Audio affirmations",
+                "Daily reminder notifications"
             ]
         }
     }

@@ -47,17 +47,21 @@ private struct FallbackPaywallView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(StoreManager.self) var storeManager
     @State private var infoMessage: String?
+    @State private var selectedProduct: StoreProduct?
 
-    // Apple's standard EULA; replace privacyPolicyURL with the app's hosted policy before release.
-    private static let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
-    private static let privacyPolicyURL = URL(string: "https://xvisionboardai.com/privacy")!
-
-    private var trialBadgeText: String? {
-        guard let product = storeManager.fallbackProduct else { return nil }
-        if product.introductoryDiscount?.paymentMode == .freeTrial {
-            return "Free Trial — then \(product.localizedPriceString)/year"
+    /// Human-readable billing period suffix, e.g. "week", "month", "year".
+    private func periodLabel(_ product: StoreProduct) -> String {
+        switch product.subscriptionPeriod?.unit {
+        case .day:   return "day"
+        case .week:  return "week"
+        case .month: return "month"
+        case .year:  return "year"
+        default:     return "period"
         }
-        return "\(product.localizedPriceString)/year"
+    }
+
+    private func hasFreeTrial(_ product: StoreProduct) -> Bool {
+        product.introductoryDiscount?.paymentMode == .freeTrial
     }
 
     var body: some View {
@@ -108,22 +112,12 @@ private struct FallbackPaywallView: View {
                         }
                         .padding(.top, AstralTheme.Spacing.sm)
 
-                        // Price badge — only shown once real product data has loaded
-                        if let badgeText = trialBadgeText {
-                            HStack(spacing: 6) {
-                                Image(systemName: "gift.fill")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(Color.astralGold)
-                                Text(badgeText)
-                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                                    .foregroundStyle(Color.astralGold)
-                            }
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 10)
-                            .background {
-                                Capsule()
-                                    .fill(Color.astralGold.opacity(0.12))
-                                    .overlay { Capsule().strokeBorder(Color.astralGold.opacity(0.35), lineWidth: 1) }
+                        // Plan selector — shown once real product data has loaded
+                        if !storeManager.fallbackProducts.isEmpty {
+                            VStack(spacing: AstralTheme.Spacing.sm) {
+                                ForEach(storeManager.fallbackProducts, id: \.productIdentifier) { product in
+                                    planRow(product)
+                                }
                             }
                         }
 
@@ -144,7 +138,7 @@ private struct FallbackPaywallView: View {
                             ProgressView()
                                 .tint(Color.astralViolet)
                                 .scaleEffect(1.4)
-                        } else if let product = storeManager.fallbackProduct {
+                        } else if let product = selectedProduct ?? storeManager.fallbackProducts.last {
                             VStack(spacing: AstralTheme.Spacing.sm) {
                                 Button {
                                     Task {
@@ -153,7 +147,7 @@ private struct FallbackPaywallView: View {
                                         }
                                     }
                                 } label: {
-                                    Text("Subscribe — \(product.localizedPriceString)/year")
+                                    Text(hasFreeTrial(product) ? "Start Free Trial" : "Subscribe")
                                         .font(.system(.headline, design: .rounded, weight: .bold))
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 16)
@@ -168,7 +162,7 @@ private struct FallbackPaywallView: View {
                                         .foregroundStyle(Color.astralText)
                                 }
 
-                                Text("Auto-renews yearly until cancelled. Cancel anytime in Settings.")
+                                Text(renewalTerms(product))
                                     .font(.system(.caption2, design: .rounded))
                                     .foregroundStyle(Color.astralTextMuted)
                                     .multilineTextAlignment(.center)
@@ -182,7 +176,7 @@ private struct FallbackPaywallView: View {
                                 Button("Retry") {
                                     Task {
                                         await storeManager.fetchCurrentOffering()
-                                        await storeManager.fetchFallbackProduct()
+                                        await storeManager.fetchFallbackProducts()
                                     }
                                 }
                                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
@@ -204,8 +198,8 @@ private struct FallbackPaywallView: View {
 
                         // Legal links (required on subscription purchase screens)
                         HStack(spacing: AstralTheme.Spacing.lg) {
-                            Link("Terms of Use", destination: Self.termsURL)
-                            Link("Privacy Policy", destination: Self.privacyPolicyURL)
+                            Link("Terms of Use", destination: AppLinks.termsOfUse)
+                            Link("Privacy Policy", destination: AppLinks.privacyPolicy)
                         }
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(Color.astralTextMuted)
@@ -226,7 +220,11 @@ private struct FallbackPaywallView: View {
         .task {
             await storeManager.fetchCurrentOffering()
             if storeManager.currentOffering == nil {
-                await storeManager.fetchFallbackProduct()
+                await storeManager.fetchFallbackProducts()
+                // Default to the best-value (last = yearly) plan
+                if selectedProduct == nil {
+                    selectedProduct = storeManager.fallbackProducts.last
+                }
             }
         }
         .alert("Something Went Wrong", isPresented: Binding(
@@ -245,6 +243,56 @@ private struct FallbackPaywallView: View {
         } message: {
             Text(infoMessage ?? "")
         }
+    }
+
+    /// One selectable plan row (weekly / monthly / yearly).
+    private func planRow(_ product: StoreProduct) -> some View {
+        let isSelected = (selectedProduct ?? storeManager.fallbackProducts.last)?.productIdentifier == product.productIdentifier
+        return Button {
+            selectedProduct = product
+        } label: {
+            HStack(spacing: AstralTheme.Spacing.md) {
+                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                    .font(.system(size: 20))
+                    .foregroundStyle(isSelected ? Color.astralViolet : Color.astralTextMuted)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(product.localizedTitle.isEmpty ? periodLabel(product).capitalized : product.localizedTitle)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(Color.astralText)
+                    if hasFreeTrial(product) {
+                        Text("3-day free trial included")
+                            .font(.system(.caption2, design: .rounded, weight: .semibold))
+                            .foregroundStyle(Color.astralGold)
+                    }
+                }
+
+                Spacer()
+
+                Text("\(product.localizedPriceString)/\(periodLabel(product))")
+                    .font(.system(.subheadline, design: .rounded, weight: .bold))
+                    .foregroundStyle(Color.astralText)
+            }
+            .padding(AstralTheme.Spacing.md)
+            .background {
+                RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
+                    .fill(Color.astralViolet.opacity(isSelected ? 0.16 : 0.05))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
+                            .strokeBorder(isSelected ? Color.astralViolet : Color.white.opacity(0.08),
+                                          lineWidth: isSelected ? 1.5 : 1)
+                    }
+            }
+        }
+        .accessibilityLabel("\(periodLabel(product)) plan, \(product.localizedPriceString)\(hasFreeTrial(product) ? ", 3-day free trial" : "")")
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+    }
+
+    /// App Review requires the auto-renewal terms to be disclosed on the purchase screen.
+    private func renewalTerms(_ product: StoreProduct) -> String {
+        let period = periodLabel(product)
+        let trial = hasFreeTrial(product) ? "3-day free trial, then " : ""
+        return "\(trial)\(product.localizedPriceString) per \(period). Auto-renews until cancelled. Cancel anytime in Settings."
     }
 
     private func featureRow(_ title: String, icon: String, color: Color) -> some View {

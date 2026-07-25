@@ -20,8 +20,8 @@ To enable auto-login in debug builds, set the environment variable `DEBUG_AUTO_L
 
 MVVM with three `@MainActor ObservableObject` view models injected app-wide via `environmentObject`:
 
-- **`StoreManager`** — StoreKit 2 wrapper; owns product loading, purchase flow, and entitlement checks. Source of truth for `SubscriptionType`.
-- **`UserManager`** — Auth state, user profile, onboarding flag. Persists `User` to `UserDefaults`; stores the auth token in `KeychainTokenStore` (production) or `InMemoryTokenStore` (DEBUG).
+- **`StoreManager`** — RevenueCat wrapper (`import RevenueCat`); owns offering/product loading, purchase flow, and entitlement checks via the `"XVisionBoardAI Pro"` entitlement. Source of truth for `SubscriptionType`.
+- **`UserManager`** — Auth state, user profile, onboarding flag. Persists the `User` (email, goals, journal insights) to `KeychainStore` (production) — migrated off UserDefaults for PII safety — and the auth token in `KeychainTokenStore`; both use `InMemoryTokenStore` under DEBUG auto-login.
 - **`VisionBoardManager`** — CRUD for `VisionBoard` objects; drives the async AI-generation flow (currently simulated). Persists boards via `JSONEncoder` → `UserDefaults`.
 
 ### Navigation flow
@@ -44,18 +44,22 @@ All colors are in the "cosmic" palette (`Color.cosmicPurple`, `.cosmicBlack`, `.
 ### Models
 
 - `VisionBoard` — `Codable/Identifiable` struct; contains `[VisionBoardImage]`, `[String]` affirmations, `VisionBoardLayout` (grid3x3/collage/singlePoster), `VisionBoardStyle` (cinematic/luxurious/minimalist/natural/futuristic/artistic).
-- `User` — `Codable/Identifiable` struct; owns `SubscriptionType` (.free / .pro / .premium) and `UserPreferences`.
+- `User` — `Codable/Identifiable` struct; owns `SubscriptionType` (.free / .pro) and `UserPreferences`.
 
 ### AI generation (stub)
 
 `VisionBoardManager.createVisionBoard(...)` simulates multi-step generation with `Task.sleep`. Image URLs are currently hardcoded to `picsum.photos` placeholders. Affirmations are generated locally from templates. Replacing these with real API calls is the main integration gap.
 
-### StoreKit product IDs
+### Subscription products (RevenueCat)
+
+A single "Pro" entitlement (`XVisionBoardAI Pro`) sold in three durations. All
+must exist in App Store Connect and be attached to the entitlement + current
+Offering in the RevenueCat dashboard. IDs are defined in `StoreManager`:
 
 ```
-com.xvisionboardai.pro.monthly / .yearly
-com.xvisionboardai.premium.monthly / .yearly
-com.xvisionboardai.credits.small / .medium / .large
+com.xvisionboardai.pro.weekly    — $4.99/wk
+com.xvisionboardai.pro.monthly   — $9.99/mo
+com.xvisionboardai.pro.yearly    — $39.99/yr, 3-day free trial
 ```
 
 ## Swift Concurrency Patterns

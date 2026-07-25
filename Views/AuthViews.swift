@@ -245,7 +245,7 @@ struct SignInView: View {
                             .alert("Reset Password", isPresented: $showingForgotPassword) {
                                 Button("OK", role: .cancel) {}
                             } message: {
-                                Text("In-app password reset is coming soon. Email support@xvisionboardai.com from your account address and we'll reset it for you.")
+                                Text("In-app password reset is coming soon. Email \(AppLinks.supportEmail) from your account address and we'll reset it for you.")
                             }
                     }
                     .opacity(appeared ? 1 : 0)

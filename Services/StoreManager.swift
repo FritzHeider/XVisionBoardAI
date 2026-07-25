@@ -23,13 +23,21 @@ class StoreManager {
     var isLoading = false
     var errorMessage: String?
 
-    /// Product fetched directly by ID when no Offering is available (fallback paywall).
-    var fallbackProduct: StoreProduct?
+    /// Products fetched directly by ID when no Offering is available (fallback paywall),
+    /// ordered weekly → monthly → yearly.
+    var fallbackProducts: [StoreProduct] = []
 
     // MARK: - Constants
 
     /// The RevenueCat entitlement identifier configured in the dashboard.
     static let entitlementID = "XVisionBoardAI Pro"
+
+    /// Pro is sold as three durations; all map to the single entitlement above.
+    /// These MUST match the product IDs in App Store Connect + RevenueCat.
+    static let weeklyProductID  = "com.xvisionboardai.pro.weekly"
+    static let monthlyProductID = "com.xvisionboardai.pro.monthly"
+    static let yearlyProductID  = "com.xvisionboardai.pro.yearly"
+    static let allProductIDs = [weeklyProductID, monthlyProductID, yearlyProductID]
 
     private static let apiKey = "appl_mJajGcFwBUCbnMHNmzkWYhdRDcR"
 
@@ -74,11 +82,16 @@ class StoreManager {
         }
     }
 
-    /// Fetches the Pro yearly product directly, for the fallback paywall when no Offering loads.
-    func fetchFallbackProduct() async {
-        guard fallbackProduct == nil else { return }
-        let products = await Purchases.shared.products(["com.xvisionboardai.pro.yearly"])
-        fallbackProduct = products.first
+    /// Fetches all Pro products directly, for the fallback paywall when no Offering loads.
+    /// Ordered weekly → monthly → yearly regardless of the order RevenueCat returns them.
+    func fetchFallbackProducts() async {
+        guard fallbackProducts.isEmpty else { return }
+        let products = await Purchases.shared.products(Self.allProductIDs)
+        let order = Self.allProductIDs
+        fallbackProducts = products.sorted {
+            (order.firstIndex(of: $0.productIdentifier) ?? .max) <
+            (order.firstIndex(of: $1.productIdentifier) ?? .max)
+        }
     }
 
     // MARK: - Entitlement Status
@@ -105,7 +118,6 @@ class StoreManager {
 
     var subscriptionDisplayName: String { currentSubscription.displayName }
     var isProUser: Bool { hasActiveSubscription }
-    var isPremiumUser: Bool { hasActiveSubscription }
 
     // MARK: - Purchasing
 

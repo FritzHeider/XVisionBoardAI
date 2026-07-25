@@ -28,6 +28,7 @@
 		137 /* Services/CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136 /* Services/CameraManager.swift */; };
 		138 /* Services/TokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139 /* Services/TokenStore.swift */; };
 		141 /* Utils/ImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140 /* Utils/ImageStore.swift */; };
+		321 /* Utils/AppLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320 /* Utils/AppLinks.swift */; };
 		143 /* Views/Components/SharedCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142 /* Views/Components/SharedCards.swift */; };
 		145 /* Services/ClaudeAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144 /* Services/ClaudeAPIService.swift */; };
 		147 /* Services/ImageGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146 /* Services/ImageGenerationService.swift */; };
@@ -64,6 +65,7 @@
 		136 /* Services/CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/CameraManager.swift; sourceTree = "<group>"; };
 		139 /* Services/TokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenStore.swift; sourceTree = "<group>"; };
 		140 /* Utils/ImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/ImageStore.swift; sourceTree = "<group>"; };
+		320 /* Utils/AppLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/AppLinks.swift; sourceTree = "<group>"; };
 		142 /* Views/Components/SharedCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Components/SharedCards.swift; sourceTree = "<group>"; };
 		144 /* Services/ClaudeAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeAPIService.swift; sourceTree = "<group>"; };
 		146 /* Services/ImageGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ImageGenerationService.swift; sourceTree = "<group>"; };
@@ -118,6 +120,7 @@
 				136 /* Services/CameraManager.swift */,
 				139 /* Services/TokenStore.swift */,
 				140 /* Utils/ImageStore.swift */,
+				320 /* Utils/AppLinks.swift */,
 				142 /* Views/Components/SharedCards.swift */,
 				144 /* Services/ClaudeAPIService.swift */,
 				146 /* Services/ImageGenerationService.swift */,
@@ -232,6 +235,7 @@
 				137 /* Services/CameraManager.swift in Sources */,
 				138 /* Services/TokenStore.swift in Sources */,
 				141 /* Utils/ImageStore.swift in Sources */,
+				321 /* Utils/AppLinks.swift in Sources */,
 				143 /* Views/Components/SharedCards.swift in Sources */,
 				145 /* Services/ClaudeAPIService.swift in Sources */,
 				147 /* Services/ImageGenerationService.swift in Sources */,
