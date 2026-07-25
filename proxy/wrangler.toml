@@ -1,8 +1,8 @@
 # Cloudflare Workers config for the ManifestMe API proxy.
 #
-# The proxy holds the three provider keys as Worker *secrets* (never in the app)
-# and forwards requests to fal.ai / Google / Anthropic, injecting the key
-# server-side. Optionally gated by App Attest (see src/index.js).
+# The proxy holds the two provider keys as Worker *secrets* (never in the app)
+# and forwards requests to fal.ai / Google, injecting the key server-side.
+# Optionally gated by App Attest (see src/index.js).
 #
 # Deploy:
 #   npm install -g wrangler
@@ -10,11 +10,10 @@
 #   wrangler kv namespace create ATTEST_KV        # copy the id into [[kv_namespaces]] below
 #   wrangler secret put FAL_API_KEY
 #   wrangler secret put GEMINI_API_KEY
-#   wrangler secret put ANTHROPIC_API_KEY
 #   wrangler deploy
 #
 # After deploy, set APIConfig.proxyBaseURL in the iOS app to the printed
-# *.workers.dev URL (or your custom domain), then remove the three
+# *.workers.dev URL (or your custom domain), then remove the two
 # $(…)_API_KEY entries from Info.plist and rotate the old keys.
 
 name = "manifestme-proxy"

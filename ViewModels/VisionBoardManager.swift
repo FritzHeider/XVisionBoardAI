@@ -97,16 +97,16 @@ class VisionBoardManager {
         style: VisionBoardStyle
     ) async throws -> [String] {
         do {
-            return try await ClaudeAPIService.generateAffirmations(
+            return try await GeminiTextService.generateAffirmations(
                 description: description,
                 goals: goals,
                 style: style.displayName
             )
-        } catch ClaudeAPIError.missingAPIKey {
+        } catch GeminiImageError.missingAPIKey {
             // Fall through to template affirmations when no key configured
         } catch {
             // Log but fall through to templates on any API error
-            print("Claude API error: \(error)")
+            print("Gemini affirmations error: \(error)")
         }
         return templateAffirmations(goals: goals, style: style)
     }

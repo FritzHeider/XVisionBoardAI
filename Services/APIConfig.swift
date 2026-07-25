@@ -18,7 +18,7 @@ enum APIConfig {
 
     /// Builds the request URL for a provider path: proxied when configured,
     /// otherwise the provider's direct URL.
-    /// - provider: the proxy route segment ("fal", "gemini", "claude").
+    /// - provider: the proxy route segment ("fal", "gemini").
     /// - directURL: the URL to use when the proxy is not configured.
     /// - proxyPath: the path appended after `/<provider>/` on the proxy.
     static func url(provider: String, directURL: URL, proxyPath: String, query: String? = nil) -> URL {

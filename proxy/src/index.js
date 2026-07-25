@@ -10,7 +10,6 @@
 //   POST /attest/verify               -> registers a device key (attestation)
 //   ANY  /fal/<path>                  -> https://queue.fal.run/<path>      (+ Authorization: Key)
 //   ANY  /gemini/<path>               -> https://generativelanguage.googleapis.com/<path> (+ ?key=)
-//   POST /claude/v1/messages          -> https://api.anthropic.com/v1/messages (+ x-api-key)
 //
 // Requests to the provider routes must carry these headers when REQUIRE_ATTEST=true:
 //   X-Attest-Key-Id   : the DCAppAttestService key id registered via /attest/verify
@@ -29,13 +28,6 @@ const PROVIDERS = {
     base: "https://generativelanguage.googleapis.com",
     // Gemini takes the key as a query param; handled in forward().
     apply: () => {},
-  },
-  claude: {
-    base: "https://api.anthropic.com",
-    apply: (headers, env) => {
-      headers.set("x-api-key", env.ANTHROPIC_API_KEY);
-      if (!headers.has("anthropic-version")) headers.set("anthropic-version", "2023-06-01");
-    },
   },
 };
 
