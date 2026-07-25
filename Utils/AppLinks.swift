@@ -12,9 +12,10 @@ enum AppLinks {
     /// Apple's standard EULA — valid to use as-is unless you host a custom one.
     static let termsOfUse = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
 
-    // TODO(manifestme): Host a privacy policy (GitHub Pages / Termly / iubenda)
-    // and replace this URL before submitting to the App Store.
-    static let privacyPolicy = URL(string: "https://example.com/manifestme/privacy")!
+    // Served from docs/privacy-policy.html via GitHub Pages. Enable Pages
+    // (Settings → Pages → Source: main / /docs) and fill the placeholders in
+    // that file before submitting to the App Store.
+    static let privacyPolicy = URL(string: "https://fritzheider.github.io/XVisionBoardAI/privacy-policy.html")!
 
     // MARK: - Contact
 
