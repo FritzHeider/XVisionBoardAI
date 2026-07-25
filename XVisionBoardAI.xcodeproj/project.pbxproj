@@ -32,10 +32,11 @@
 		321 /* Utils/AppLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320 /* Utils/AppLinks.swift */; };
 		143 /* Views/Components/SharedCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142 /* Views/Components/SharedCards.swift */; };
 		145 /* Services/ClaudeAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144 /* Services/ClaudeAPIService.swift */; };
-		147 /* Services/ImageGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146 /* Services/ImageGenerationService.swift */; };
 		149 /* Views/EditVisionBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148 /* Views/EditVisionBoardView.swift */; };
 		151 /* Views/OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150 /* Views/OnboardingView.swift */; };
 		153 /* Services/FalAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 152 /* Services/FalAIService.swift */; };
+		343 /* Services/AppAttestManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342 /* Services/AppAttestManager.swift */; };
+		341 /* Services/APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340 /* Services/APIConfig.swift */; };
 		155 /* Services/GeminiImageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 154 /* Services/GeminiImageService.swift */; };
 		9E86F9132FC97C5600510CC9 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 9E86F9112FC97C5600510CC9 /* RevenueCat */; };
 		9E86F9142FC97C5600510CC9 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 9E86F9122FC97C5600510CC9 /* RevenueCatUI */; };
@@ -70,10 +71,11 @@
 		320 /* Utils/AppLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/AppLinks.swift; sourceTree = "<group>"; };
 		142 /* Views/Components/SharedCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Components/SharedCards.swift; sourceTree = "<group>"; };
 		144 /* Services/ClaudeAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeAPIService.swift; sourceTree = "<group>"; };
-		146 /* Services/ImageGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ImageGenerationService.swift; sourceTree = "<group>"; };
 		148 /* Views/EditVisionBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/EditVisionBoardView.swift; sourceTree = "<group>"; };
 		150 /* Views/OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/OnboardingView.swift; sourceTree = "<group>"; };
 		152 /* Services/FalAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/FalAIService.swift; sourceTree = "<group>"; };
+		342 /* Services/AppAttestManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppAttestManager.swift; path = Services/AppAttestManager.swift; sourceTree = "<group>"; };
+		340 /* Services/APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = APIConfig.swift; path = Services/APIConfig.swift; sourceTree = "<group>"; };
 		154 /* Services/GeminiImageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/GeminiImageService.swift; sourceTree = "<group>"; };
 		7 /* XVisionBoardAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = XVisionBoardAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B21BEF9E2E4338C700EDBF92 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -126,8 +128,9 @@
 				320 /* Utils/AppLinks.swift */,
 				142 /* Views/Components/SharedCards.swift */,
 				144 /* Services/ClaudeAPIService.swift */,
-				146 /* Services/ImageGenerationService.swift */,
 				152 /* Services/FalAIService.swift */,
+				342 /* Services/AppAttestManager.swift */,
+				340 /* Services/APIConfig.swift */,
 				154 /* Services/GeminiImageService.swift */,
 				148 /* Views/EditVisionBoardView.swift */,
 				150 /* Views/OnboardingView.swift */,
@@ -242,8 +245,9 @@
 				321 /* Utils/AppLinks.swift in Sources */,
 				143 /* Views/Components/SharedCards.swift in Sources */,
 				145 /* Services/ClaudeAPIService.swift in Sources */,
-				147 /* Services/ImageGenerationService.swift in Sources */,
 				153 /* Services/FalAIService.swift in Sources */,
+				343 /* Services/AppAttestManager.swift in Sources */,
+				341 /* Services/APIConfig.swift in Sources */,
 				155 /* Services/GeminiImageService.swift in Sources */,
 				149 /* Views/EditVisionBoardView.swift in Sources */,
 				151 /* Views/OnboardingView.swift in Sources */,

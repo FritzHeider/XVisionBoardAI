@@ -1,0 +1,37 @@
+# Cloudflare Workers config for the ManifestMe API proxy.
+#
+# The proxy holds the three provider keys as Worker *secrets* (never in the app)
+# and forwards requests to fal.ai / Google / Anthropic, injecting the key
+# server-side. Optionally gated by App Attest (see src/index.js).
+#
+# Deploy:
+#   npm install -g wrangler
+#   cd proxy && npm install
+#   wrangler kv namespace create ATTEST_KV        # copy the id into [[kv_namespaces]] below
+#   wrangler secret put FAL_API_KEY
+#   wrangler secret put GEMINI_API_KEY
+#   wrangler secret put ANTHROPIC_API_KEY
+#   wrangler deploy
+#
+# After deploy, set APIConfig.proxyBaseURL in the iOS app to the printed
+# *.workers.dev URL (or your custom domain), then remove the three
+# $(…)_API_KEY entries from Info.plist and rotate the old keys.
+
+name = "manifestme-proxy"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# Team ID + bundle ID are used to validate the App Attest app-identity hash.
+# APP_TEAM_ID is not a secret; fill it in with your Apple Developer Team ID.
+[vars]
+APP_TEAM_ID = "REPLACE_WITH_TEAM_ID"
+APP_BUNDLE_ID = "com.xvisionboardai"
+# Set to "false" only while the proxy is deployed but App Attest isn't finished.
+REQUIRE_ATTEST = "true"
+
+# KV namespace storing per-key public keys, assertion counters, and one-time
+# attestation challenges. Create it with `wrangler kv namespace create ATTEST_KV`
+# and paste the returned id here.
+[[kv_namespaces]]
+binding = "ATTEST_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"

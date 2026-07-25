@@ -1,0 +1,13 @@
+{
+  "name": "manifestme-proxy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Worker that holds ManifestMe's AI provider keys server-side and forwards requests, optionally gated by App Attest.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

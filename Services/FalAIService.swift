@@ -43,7 +43,9 @@ struct FalAIService {
         referenceImageData: Data? = nil,
         imageSize: FalImageSize = .squareHD
     ) async throws -> String {
-        guard let key = apiKey, !key.isEmpty else {
+        // In proxy mode the key lives server-side; only the direct path needs it.
+        let key = apiKey ?? ""
+        if !APIConfig.usesProxy, key.isEmpty {
             throw FalAIError.missingAPIKey
         }
 
@@ -112,13 +114,23 @@ struct FalAIService {
         body: [String: Any],
         apiKey: String
     ) async throws -> String {
-        // 1. Submit to queue
-        let submitURL = URL(string: "\(queueBase)/\(model)")!
+        // 1. Submit to queue.
+        // When the proxy is configured, route through it (key injected server-side)
+        // and attach an App Attest assertion; otherwise call fal.ai directly.
+        let directSubmit = URL(string: "\(queueBase)/\(model)")!
+        let submitURL = APIConfig.url(provider: "fal", directURL: directSubmit, proxyPath: model)
         var req = URLRequest(url: submitURL)
         req.httpMethod = "POST"
-        req.setValue("Key \(apiKey)", forHTTPHeaderField: "Authorization")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let httpBody = try JSONSerialization.data(withJSONObject: body)
+        req.httpBody = httpBody
+        if APIConfig.usesProxy {
+            for (k, v) in await AppAttestManager.shared.assertionHeaders(for: httpBody) {
+                req.setValue(v, forHTTPHeaderField: k)
+            }
+        } else {
+            req.setValue("Key \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
 
         let (submitData, submitResponse) = try await URLSession.shared.data(for: req)
 
@@ -133,18 +145,27 @@ struct FalAIService {
             throw FalAIError.requestFailed("No request_id in response")
         }
 
-        // Prefer status_url/response_url from submit response over manual construction
+        // Status/result/cancel URLs. In proxy mode the absolute *.fal.run URLs
+        // from the submit response would bypass the proxy (and lack the key), so
+        // build proxy-relative paths from model + requestID instead.
         let statusURL: URL
         let resultURL: URL
-        if let statusStr = submitJSON["status_url"] as? String, let parsedStatus = URL(string: statusStr),
-           let responseStr = submitJSON["response_url"] as? String, let parsedResult = URL(string: responseStr) {
+        let cancelURLString: String?
+        if APIConfig.usesProxy {
+            let direct = URL(string: "\(queueBase)/\(model)/requests/\(requestID)")!
+            statusURL = APIConfig.url(provider: "fal", directURL: direct, proxyPath: "\(model)/requests/\(requestID)/status")
+            resultURL = APIConfig.url(provider: "fal", directURL: direct, proxyPath: "\(model)/requests/\(requestID)")
+            cancelURLString = APIConfig.url(provider: "fal", directURL: direct, proxyPath: "\(model)/requests/\(requestID)/cancel").absoluteString
+        } else if let statusStr = submitJSON["status_url"] as? String, let parsedStatus = URL(string: statusStr),
+                  let responseStr = submitJSON["response_url"] as? String, let parsedResult = URL(string: responseStr) {
             statusURL = parsedStatus
             resultURL = parsedResult
+            cancelURLString = submitJSON["cancel_url"] as? String
         } else {
             statusURL = URL(string: "\(queueBase)/\(model)/requests/\(requestID)/status")!
             resultURL = URL(string: "\(queueBase)/\(model)/requests/\(requestID)")!
+            cancelURLString = submitJSON["cancel_url"] as? String
         }
-        let cancelURLString = submitJSON["cancel_url"] as? String
 
         do {
             return try await poll(statusURL: statusURL, resultURL: resultURL, apiKey: apiKey)
@@ -153,13 +174,27 @@ struct FalAIService {
             // otherwise it runs to completion server-side and still bills.
             let wasCancelled = error is CancellationError || (error as? URLError)?.code == .cancelled
             if wasCancelled, let str = cancelURLString, let cancelURL = URL(string: str) {
-                var cancelReq = URLRequest(url: cancelURL)
-                cancelReq.httpMethod = "PUT"
-                cancelReq.setValue("Key \(apiKey)", forHTTPHeaderField: "Authorization")
+                let usesProxy = APIConfig.usesProxy
                 // Detached: the current task is already cancelled and can't await
-                Task.detached { _ = try? await URLSession.shared.data(for: cancelReq) }
+                Task.detached {
+                    var cancelReq = URLRequest(url: cancelURL)
+                    cancelReq.httpMethod = "PUT"
+                    await authorize(&cancelReq, apiKey: apiKey, usesProxy: usesProxy, body: Data())
+                    _ = try? await URLSession.shared.data(for: cancelReq)
+                }
             }
             throw error
+        }
+    }
+
+    /// Attaches auth: App Attest assertion in proxy mode, else the fal.ai key.
+    private static func authorize(_ req: inout URLRequest, apiKey: String, usesProxy: Bool, body: Data) async {
+        if usesProxy {
+            for (k, v) in await AppAttestManager.shared.assertionHeaders(for: body) {
+                req.setValue(v, forHTTPHeaderField: k)
+            }
+        } else {
+            req.setValue("Key \(apiKey)", forHTTPHeaderField: "Authorization")
         }
     }
 
@@ -168,12 +203,13 @@ struct FalAIService {
         resultURL: URL,
         apiKey: String
     ) async throws -> String {
+        let usesProxy = APIConfig.usesProxy
         for attempt in 0..<60 {
             let delay: UInt64 = attempt < 5 ? 2_000_000_000 : 3_000_000_000
             try await Task.sleep(nanoseconds: delay)
 
             var statusReq = URLRequest(url: statusURL)
-            statusReq.setValue("Key \(apiKey)", forHTTPHeaderField: "Authorization")
+            await authorize(&statusReq, apiKey: apiKey, usesProxy: usesProxy, body: Data())
             guard let (statusData, _) = try? await URLSession.shared.data(for: statusReq),
                   let statusJSON = try? JSONSerialization.jsonObject(with: statusData) as? [String: Any],
                   let status = statusJSON["status"] as? String else {
@@ -192,7 +228,7 @@ struct FalAIService {
 
             // 3. Fetch result
             var resultReq = URLRequest(url: resultURL)
-            resultReq.setValue("Key \(apiKey)", forHTTPHeaderField: "Authorization")
+            await authorize(&resultReq, apiKey: apiKey, usesProxy: usesProxy, body: Data())
             let (resultData, _) = try await URLSession.shared.data(for: resultReq)
 
             guard let resultJSON = try? JSONSerialization.jsonObject(with: resultData) as? [String: Any],
