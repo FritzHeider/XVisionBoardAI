@@ -158,6 +158,7 @@ struct SignInView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var showingError = false
+    @State private var showingForgotPassword = false
     @State private var appeared = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -238,9 +239,14 @@ struct SignInView: View {
                             ProgressView().tint(Color.astralViolet)
                         }
 
-                        Button("Forgot Password?") { }
+                        Button("Forgot Password?") { showingForgotPassword = true }
                             .font(.system(.subheadline, design: .rounded))
                             .foregroundStyle(Color.astralViolet)
+                            .alert("Reset Password", isPresented: $showingForgotPassword) {
+                                Button("OK", role: .cancel) {}
+                            } message: {
+                                Text("In-app password reset is coming soon. Email support@xvisionboardai.com from your account address and we'll reset it for you.")
+                            }
                     }
                     .opacity(appeared ? 1 : 0)
                     .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.3), value: appeared)

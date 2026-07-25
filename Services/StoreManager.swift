@@ -23,6 +23,9 @@ class StoreManager {
     var isLoading = false
     var errorMessage: String?
 
+    /// Product fetched directly by ID when no Offering is available (fallback paywall).
+    var fallbackProduct: StoreProduct?
+
     // MARK: - Constants
 
     /// The RevenueCat entitlement identifier configured in the dashboard.
@@ -69,6 +72,13 @@ class StoreManager {
         } catch {
             print("[RevenueCat] fetchCurrentOffering: \(error.localizedDescription)")
         }
+    }
+
+    /// Fetches the Pro yearly product directly, for the fallback paywall when no Offering loads.
+    func fetchFallbackProduct() async {
+        guard fallbackProduct == nil else { return }
+        let products = await Purchases.shared.products(["com.xvisionboardai.pro.yearly"])
+        fallbackProduct = products.first
     }
 
     // MARK: - Entitlement Status
@@ -121,8 +131,30 @@ class StoreManager {
         }
     }
 
-    /// Restores previous purchases.
-    func restorePurchases() async {
+    /// Purchases a `StoreProduct` directly (fallback paywall path, no Offering needed).
+    /// Returns `true` on successful purchase, `false` on cancellation or error.
+    func purchase(product: StoreProduct) async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        do {
+            let result = try await Purchases.shared.purchase(product: product)
+            customerInfo = result.customerInfo
+            isLoading = false
+            return !result.userCancelled
+        } catch {
+            let isCancel = (error as NSError).domain == "RevenueCat.ErrorCode" &&
+                           (error as NSError).code == 1 // purchaseCancelledError
+            if !isCancel {
+                errorMessage = error.localizedDescription
+            }
+            isLoading = false
+            return false
+        }
+    }
+
+    /// Restores previous purchases. Returns `true` when an active entitlement was restored.
+    @discardableResult
+    func restorePurchases() async -> Bool {
         isLoading = true
         errorMessage = nil
         do {
@@ -131,6 +163,7 @@ class StoreManager {
             errorMessage = "Restore failed: \(error.localizedDescription)"
         }
         isLoading = false
+        return hasActiveSubscription
     }
 
     // MARK: - User Identity

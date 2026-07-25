@@ -3,9 +3,9 @@ import UIKit
 
 // MARK: - fal.ai Image Generation Service
 // Queue-based API: POST → poll status → fetch result
-// Models:
-//   fal-ai/flux/schnell  — fast (4 steps, ~3s), no face reference
-//   fal-ai/pulid         — face-consistent (FLUX + PuLID), uses selfie reference
+// Models (Gemini Nano Banana 2):
+//   fal-ai/nano-banana-2       — text-to-image
+//   fal-ai/nano-banana-2/edit  — face-consistent, takes selfie via image_urls
 
 enum FalAIError: Error, LocalizedError {
     case missingAPIKey
@@ -28,9 +28,8 @@ struct FalAIService {
     // MARK: - Config
 
     private static let queueBase = "https://queue.fal.run"
-    private static let fluxSchnell = "fal-ai/flux/schnell"
-    private static let fluxDev     = "fal-ai/flux/dev"
-    private static let pulidModel  = "fal-ai/pulid"
+    private static let nanoBanana2     = "fal-ai/nano-banana-2"
+    private static let nanoBanana2Edit = "fal-ai/nano-banana-2/edit"
 
     static var apiKey: String? {
         Bundle.main.object(forInfoDictionaryKey: "FAL_API_KEY") as? String
@@ -38,7 +37,7 @@ struct FalAIService {
 
     // MARK: - Public API
 
-    /// Generate one image. Uses PuLID when referenceImageData is provided, FLUX Schnell otherwise.
+    /// Generate one image. Uses Nano Banana 2 edit when referenceImageData is provided, text-to-image otherwise.
     static func generateImage(
         prompt: String,
         referenceImageData: Data? = nil,
@@ -56,7 +55,7 @@ struct FalAIService {
                 apiKey: key
             )
         } else {
-            return try await generateFluxSchnell(
+            return try await generateTextToImage(
                 prompt: prompt,
                 imageSize: imageSize,
                 apiKey: key
@@ -64,24 +63,22 @@ struct FalAIService {
         }
     }
 
-    // MARK: - FLUX Schnell (no face)
+    // MARK: - Nano Banana 2 text-to-image (no face)
 
-    private static func generateFluxSchnell(
+    private static func generateTextToImage(
         prompt: String,
         imageSize: FalImageSize,
         apiKey: String
     ) async throws -> String {
         let body: [String: Any] = [
             "prompt": prompt,
-            "image_size": imageSize.rawValue,
-            "num_inference_steps": 4,
-            "num_images": 1,
-            "enable_safety_checker": false
+            "aspect_ratio": imageSize.aspectRatio,
+            "num_images": 1
         ]
-        return try await submitAndPoll(model: fluxSchnell, body: body, apiKey: apiKey)
+        return try await submitAndPoll(model: nanoBanana2, body: body, apiKey: apiKey)
     }
 
-    // MARK: - PuLID (face-consistent)
+    // MARK: - Nano Banana 2 edit (face-consistent)
 
     private static func generateWithFace(
         prompt: String,
@@ -94,22 +91,17 @@ struct FalAIService {
 
         let body: [String: Any] = [
             "prompt": prompt,
-            "reference_images": [["image_url": dataURI]],
-            "image_size": imageSize.rawValue,
-            "num_inference_steps": 20,
-            "guidance_scale": 7.5,
-            "num_images": 1,
-            "true_cfg": 1.0,
-            "id_weight": 0.85,
-            "enable_safety_checker": false
+            "image_urls": [dataURI],
+            "aspect_ratio": imageSize.aspectRatio,
+            "num_images": 1
         ]
-        // PuLID falls back to flux/schnell on non-cancellation errors only
+        // Edit falls back to text-to-image on non-cancellation errors only
         do {
-            return try await submitAndPoll(model: pulidModel, body: body, apiKey: apiKey)
+            return try await submitAndPoll(model: nanoBanana2Edit, body: body, apiKey: apiKey)
         } catch is CancellationError {
             throw CancellationError()
         } catch {
-            return try await generateFluxSchnell(prompt: prompt, imageSize: imageSize, apiKey: apiKey)
+            return try await generateTextToImage(prompt: prompt, imageSize: imageSize, apiKey: apiKey)
         }
     }
 
@@ -152,8 +144,30 @@ struct FalAIService {
             statusURL = URL(string: "\(queueBase)/\(model)/requests/\(requestID)/status")!
             resultURL = URL(string: "\(queueBase)/\(model)/requests/\(requestID)")!
         }
+        let cancelURLString = submitJSON["cancel_url"] as? String
 
-        // 2. Poll status
+        do {
+            return try await poll(statusURL: statusURL, resultURL: resultURL, apiKey: apiKey)
+        } catch {
+            // If our Task was cancelled, tell fal.ai to stop the queued job too —
+            // otherwise it runs to completion server-side and still bills.
+            let wasCancelled = error is CancellationError || (error as? URLError)?.code == .cancelled
+            if wasCancelled, let str = cancelURLString, let cancelURL = URL(string: str) {
+                var cancelReq = URLRequest(url: cancelURL)
+                cancelReq.httpMethod = "PUT"
+                cancelReq.setValue("Key \(apiKey)", forHTTPHeaderField: "Authorization")
+                // Detached: the current task is already cancelled and can't await
+                Task.detached { _ = try? await URLSession.shared.data(for: cancelReq) }
+            }
+            throw error
+        }
+    }
+
+    private static func poll(
+        statusURL: URL,
+        resultURL: URL,
+        apiKey: String
+    ) async throws -> String {
         for attempt in 0..<60 {
             let delay: UInt64 = attempt < 5 ? 2_000_000_000 : 3_000_000_000
             try await Task.sleep(nanoseconds: delay)
@@ -202,6 +216,17 @@ enum FalImageSize: String {
     case portrait169     = "portrait_16_9"      // 576×1024
     case landscape43     = "landscape_4_3"      // 1024×768
     case landscape169    = "landscape_16_9"     // 1024×576
+
+    /// Nano Banana 2 takes aspect_ratio strings rather than named sizes.
+    var aspectRatio: String {
+        switch self {
+        case .squareHD, .square: return "1:1"
+        case .portrait43:        return "3:4"
+        case .portrait169:       return "9:16"
+        case .landscape43:       return "4:3"
+        case .landscape169:      return "16:9"
+        }
+    }
 
     static func forLayout(_ layout: VisionBoardLayout) -> FalImageSize {
         switch layout {

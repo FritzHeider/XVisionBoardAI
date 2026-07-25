@@ -14,6 +14,10 @@ import Vision
 @MainActor
 class CameraManager: NSObject, ObservableObject {
     @Published var isAuthorized = false
+    /// True when the user has explicitly denied camera access (needs Settings, not a re-prompt).
+    @Published var permissionDenied = false
+    /// True while the session is interrupted (phone call, Face ID, another app using the camera).
+    @Published var isInterrupted = false
     @Published var session = AVCaptureSession()
     @Published var preview: AVCaptureVideoPreviewLayer?
     @Published var capturedImage: UIImage?
@@ -21,10 +25,11 @@ class CameraManager: NSObject, ObservableObject {
     @Published var errorMessage: String?
     @Published var faceDetected = false
     @Published var faceQuality: FaceQuality = .unknown
-    
+
     private var photoOutput = AVCapturePhotoOutput()
     private var videoOutput = AVCaptureVideoDataOutput()
     private let sessionQueue = DispatchQueue(label: "camera.session.queue")
+    private var notificationObservers: [NSObjectProtocol] = []
     
     enum FaceQuality {
         case unknown
@@ -54,33 +59,72 @@ class CameraManager: NSObject, ObservableObject {
     override init() {
         super.init()
         checkPermissions()
+        registerSessionObservers()
     }
-    
+
+    deinit {
+        for observer in notificationObservers {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+
+    // MARK: - Session Interruption / Runtime Errors
+
+    private func registerSessionObservers() {
+        let center = NotificationCenter.default
+        notificationObservers.append(center.addObserver(
+            forName: AVCaptureSession.wasInterruptedNotification,
+            object: session, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.isInterrupted = true }
+        })
+        notificationObservers.append(center.addObserver(
+            forName: AVCaptureSession.interruptionEndedNotification,
+            object: session, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.isInterrupted = false
+                self?.startSession()
+            }
+        })
+        notificationObservers.append(center.addObserver(
+            forName: AVCaptureSession.runtimeErrorNotification,
+            object: session, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                // Attempt a restart; if the error persists the session stays stopped
+                self?.startSession()
+            }
+        })
+    }
+
     // MARK: - Permissions
-    
+
     func checkPermissions() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
             isAuthorized = true
+            permissionDenied = false
             setupCamera()
         case .notDetermined:
             requestPermission()
         case .denied, .restricted:
             isAuthorized = false
-            errorMessage = "Camera access is required to take selfies"
+            permissionDenied = true
         @unknown default:
             isAuthorized = false
         }
     }
-    
+
     private func requestPermission() {
         AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
             DispatchQueue.main.async {
                 self?.isAuthorized = granted
                 if granted {
+                    self?.permissionDenied = false
                     self?.setupCamera()
                 } else {
-                    self?.errorMessage = "Camera access denied"
+                    self?.permissionDenied = true
                 }
             }
         }
@@ -157,6 +201,19 @@ class CameraManager: NSObject, ObservableObject {
             if capturedSession.isRunning {
                 capturedSession.stopRunning()
             }
+        }
+    }
+
+    /// Full teardown for view dismissal: stops the session and breaks the
+    /// sample-buffer delegate reference so the manager can deallocate.
+    func teardown() {
+        let capturedSession = session
+        let capturedVideoOutput = videoOutput
+        sessionQueue.async {
+            if capturedSession.isRunning {
+                capturedSession.stopRunning()
+            }
+            capturedVideoOutput.setSampleBufferDelegate(nil, queue: nil)
         }
     }
     

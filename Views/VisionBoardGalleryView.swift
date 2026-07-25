@@ -248,12 +248,13 @@ struct VisionBoardGridItem: View {
                             }
                     }
 
-                    // Overlay badges
+                    // Overlay badges (favorite lives in an .overlay below — a
+                    // Button nested inside this Button's label would be
+                    // unreachable for VoiceOver and steal touches)
                     VStack {
                         HStack {
                             if visionBoard.isPersonalized { PersonalizedBadge() }
                             Spacer()
-                            FavoriteButton(visionBoard: visionBoard)
                         }
                         Spacer()
                         HStack {
@@ -265,6 +266,10 @@ struct VisionBoardGridItem: View {
                     .padding(AstralTheme.Spacing.sm)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: AstralTheme.Radius.md, style: .continuous))
+                .overlay(alignment: .topTrailing) {
+                    FavoriteButton(visionBoard: visionBoard)
+                        .padding(AstralTheme.Spacing.xs)
+                }
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(visionBoard.title)
@@ -286,6 +291,8 @@ struct VisionBoardGridItem: View {
             }
         }
         .astralCard()
+        .accessibilityLabel("\(visionBoard.title), created \(visionBoard.formattedCreatedDate)")
+        .accessibilityHint("Opens the vision board")
     }
 }
 
@@ -316,7 +323,10 @@ struct FavoriteButton: View {
                 .font(.caption)
                 .padding(6)
                 .background(Circle().fill(Color.black.opacity(0.55)))
+                .frame(width: 44, height: 44)   // HIG minimum tap target
+                .contentShape(Rectangle())
         }
+        .accessibilityLabel(visionBoard.isFavorite ? "Remove from favorites" : "Add to favorites")
     }
 }
 

@@ -40,7 +40,12 @@ struct ManifestationGoal: Codable, Identifiable, Hashable, Equatable {
 // MARK: - VisionBoard Model
 
 struct VisionBoard: Codable, Identifiable {
+    /// Bump when the persisted shape changes; decode falls back per-field so old
+    /// payloads keep loading. New fields MUST use decodeIfPresent with a default.
+    static let currentSchemaVersion = 2
+
     let id: UUID
+    var schemaVersion: Int
     var title: String
     var description: String
     var userImageFilename: String
@@ -63,6 +68,7 @@ struct VisionBoard: Codable, Identifiable {
         style: VisionBoardStyle = .cinematic
     ) {
         self.id = UUID()
+        self.schemaVersion = Self.currentSchemaVersion
         self.title = title
         self.description = description
         self.userImageFilename = userImageFilename
@@ -81,26 +87,29 @@ struct VisionBoard: Codable, Identifiable {
     // MARK: - Codable (backward-compatible decoder)
 
     enum CodingKeys: String, CodingKey {
-        case id, title, description, userImageFilename, layout, style
+        case id, schemaVersion, title, description, userImageFilename, layout, style
         case images, affirmations, createdAt, updatedAt, isPersonalized
         case manifestationGoals, viewCount, isFavorite
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        // Only identity is strictly required — every other field falls back to a
+        // default so a single missing/unknown value can't destroy the whole board.
         id = try container.decode(UUID.self, forKey: .id)
-        title = try container.decode(String.self, forKey: .title)
-        description = try container.decode(String.self, forKey: .description)
-        userImageFilename = try container.decode(String.self, forKey: .userImageFilename)
-        layout = try container.decode(VisionBoardLayout.self, forKey: .layout)
-        style = try container.decode(VisionBoardStyle.self, forKey: .style)
-        images = try container.decode([VisionBoardImage].self, forKey: .images)
-        affirmations = try container.decode([String].self, forKey: .affirmations)
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
-        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
-        isPersonalized = try container.decode(Bool.self, forKey: .isPersonalized)
-        viewCount = try container.decode(Int.self, forKey: .viewCount)
-        isFavorite = try container.decode(Bool.self, forKey: .isFavorite)
+        schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
+        title = try container.decodeIfPresent(String.self, forKey: .title) ?? "Vision Board"
+        description = try container.decodeIfPresent(String.self, forKey: .description) ?? ""
+        userImageFilename = try container.decodeIfPresent(String.self, forKey: .userImageFilename) ?? ""
+        layout = (try? container.decode(VisionBoardLayout.self, forKey: .layout)) ?? .grid3x3
+        style = (try? container.decode(VisionBoardStyle.self, forKey: .style)) ?? .cinematic
+        images = try container.decodeIfPresent([VisionBoardImage].self, forKey: .images) ?? []
+        affirmations = try container.decodeIfPresent([String].self, forKey: .affirmations) ?? []
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt) ?? Date()
+        isPersonalized = try container.decodeIfPresent(Bool.self, forKey: .isPersonalized) ?? true
+        viewCount = try container.decodeIfPresent(Int.self, forKey: .viewCount) ?? 0
+        isFavorite = try container.decodeIfPresent(Bool.self, forKey: .isFavorite) ?? false
 
         // Backward-compatible decoding: try [ManifestationGoal] first, then fall back to [String]
         if let goals = try? container.decode([ManifestationGoal].self, forKey: .manifestationGoals) {
@@ -177,7 +186,11 @@ extension VisionBoard {
 
 struct VisionBoardImage: Codable, Identifiable {
     let id: UUID
+    /// Legacy storage — boards saved before images moved to disk carry raw bytes
+    /// here; VisionBoardManager migrates them to `imageFilename` on load.
     var imageData: Data?
+    /// Image file in ImageStore; preferred over imageData.
+    var imageFilename: String?
     var imageURL: String?
     var prompt: String
     var isPersonalized: Bool
@@ -192,10 +205,47 @@ struct VisionBoardImage: Codable, Identifiable {
         self.aspectRatio = 1.0
     }
 
-    var image: UIImage? {
-        guard let data = imageData else { return nil }
-        return UIImage(data: data)
+    enum CodingKeys: String, CodingKey {
+        case id, imageData, imageFilename, imageURL, prompt, isPersonalized, position, aspectRatio
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        imageData = try container.decodeIfPresent(Data.self, forKey: .imageData)
+        imageFilename = try container.decodeIfPresent(String.self, forKey: .imageFilename)
+        imageURL = try container.decodeIfPresent(String.self, forKey: .imageURL)
+        prompt = try container.decodeIfPresent(String.self, forKey: .prompt) ?? ""
+        isPersonalized = try container.decodeIfPresent(Bool.self, forKey: .isPersonalized) ?? true
+        position = try container.decodeIfPresent(Int.self, forKey: .position) ?? 0
+        aspectRatio = try container.decodeIfPresent(Double.self, forKey: .aspectRatio) ?? 1.0
+    }
+
+    /// Decoded once, then served from BoardImageCache — never re-decoded per body evaluation.
+    var image: UIImage? {
+        let key = id.uuidString as NSString
+        if let cached = BoardImageCache.shared.object(forKey: key) { return cached }
+        var decoded: UIImage?
+        if let filename = imageFilename {
+            decoded = ImageStore.load(filename)
+        }
+        if decoded == nil, let data = imageData {
+            decoded = UIImage(data: data)
+        }
+        if let decoded {
+            BoardImageCache.shared.setObject(decoded, forKey: key)
+        }
+        return decoded
+    }
+}
+
+/// In-memory cache of decoded board images; NSCache evicts under memory pressure.
+enum BoardImageCache {
+    static let shared: NSCache<NSString, UIImage> = {
+        let cache = NSCache<NSString, UIImage>()
+        cache.countLimit = 120
+        return cache
+    }()
 }
 
 // MARK: - VisionBoardLayout

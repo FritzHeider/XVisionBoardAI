@@ -38,7 +38,7 @@ var body: some View {
             cameraManager.startSession()
         }
         .onDisappear {
-            cameraManager.stopSession()
+            cameraManager.teardown()
         }
         .alert("Camera Permission Required", isPresented: $showingPermissionAlert) {
             Button("Settings") {
@@ -52,6 +52,15 @@ var body: some View {
         } message: {
             Text("Please enable camera access in Settings to take selfies for your personalized vision boards.")
         }
+        .alert("Camera Error", isPresented: Binding(
+            get: { cameraManager.errorMessage != nil },
+            set: { if !$0 { cameraManager.errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+            Button("Choose from Photos") { showingImagePicker = true }
+        } message: {
+            Text(cameraManager.errorMessage ?? "")
+        }
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(image: $capturedImage) {
                 isPresented = false
@@ -63,8 +72,8 @@ var body: some View {
                 isPresented = false
             }
         }
-        .onChange(of: cameraManager.errorMessage) { _, errorMessage in
-            if errorMessage != nil {
+        .onChange(of: cameraManager.permissionDenied) { _, denied in
+            if denied {
                 showingPermissionAlert = true
             }
         }
@@ -83,6 +92,18 @@ var body: some View {
                 // Face detection overlay
                 faceDetectionOverlay
                     .frame(width: geometry.size.width, height: geometry.size.height)
+
+                if cameraManager.isInterrupted {
+                    VStack(spacing: 12) {
+                        Image(systemName: "pause.circle.fill")
+                            .font(.system(size: 44))
+                        Text("Camera paused")
+                            .font(.headline)
+                    }
+                    .foregroundStyle(Color.astralText)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .background(Color.black.opacity(0.7))
+                }
             }
         }
     }
@@ -138,7 +159,15 @@ var body: some View {
             }
             
             Button("Enable Camera") {
-                cameraManager.checkPermissions()
+                // A previously-denied permission can only be changed in Settings
+                if AVCaptureDevice.authorizationStatus(for: .video) == .denied ||
+                   AVCaptureDevice.authorizationStatus(for: .video) == .restricted {
+                    if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(settingsUrl)
+                    }
+                } else {
+                    cameraManager.checkPermissions()
+                }
             }
             .cosmicButton()
             
@@ -218,6 +247,8 @@ var body: some View {
                 .disabled(cameraManager.isCapturing || cameraManager.faceQuality == .poor)
                 .scaleEffect(cameraManager.faceQuality == .excellent ? 1.1 : 1.0)
                 .animation(.easeInOut(duration: 0.2), value: cameraManager.faceQuality)
+                .accessibilityLabel("Take photo")
+                .accessibilityHint(cameraManager.faceQuality.description)
             }
         }
     }
@@ -225,23 +256,34 @@ var body: some View {
 
 // MARK: - Camera Preview UIViewRepresentable
 
+/// Backing view that keeps the preview layer sized to its bounds through
+/// layout passes — a layer frame set at construction time would be zero.
+final class CameraPreviewUIView: UIView {
+    let previewLayer: AVCaptureVideoPreviewLayer
+
+    init(session: AVCaptureSession) {
+        previewLayer = AVCaptureVideoPreviewLayer(session: session)
+        super.init(frame: .zero)
+        previewLayer.videoGravity = .resizeAspectFill
+        layer.addSublayer(previewLayer)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        previewLayer.frame = bounds
+    }
+}
+
 struct CameraPreview: UIViewRepresentable {
     let session: AVCaptureSession
-    
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        
-        let previewLayer = AVCaptureVideoPreviewLayer(session: session)
-        previewLayer.frame = view.frame
-        previewLayer.videoGravity = .resizeAspectFill
-        view.layer.addSublayer(previewLayer)
-        
-        return view
+
+    func makeUIView(context: Context) -> CameraPreviewUIView {
+        CameraPreviewUIView(session: session)
     }
-    
-    func updateUIView(_ uiView: UIView, context: Context) {
-        // Update if needed
-    }
+
+    func updateUIView(_ uiView: CameraPreviewUIView, context: Context) {}
 }
 
 // MARK: - Image Picker

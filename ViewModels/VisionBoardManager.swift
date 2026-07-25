@@ -67,13 +67,17 @@ class VisionBoardManager {
 
             generationProgress = 1.0
             visionBoards.append(visionBoard)
-            saveVisionBoards()
+            save(visionBoard)
 
             isGenerating = false
             currentGeneratingBoard = nil
             return visionBoard
 
         } catch is CancellationError {
+            // Remove any image files written by children that finished before cancel
+            for image in currentGeneratingBoard?.images ?? [] {
+                if let filename = image.imageFilename { ImageStore.delete(filename) }
+            }
             isGenerating = false
             currentGeneratingBoard = nil
             return nil
@@ -146,7 +150,7 @@ class VisionBoardManager {
             goals: visionBoard.manifestationGoals.map(\.title),
             style: visionBoard.style,
             count: imageCount,
-            hasSelfie: false
+            hasSelfie: hasSelfie
         )
 
         // Seed the board with placeholder slots so the live grid appears immediately
@@ -164,33 +168,28 @@ class VisionBoardManager {
                 let prompt = prompts[safe: index] ?? prompts[0]
                 group.addTask {
                     var image = VisionBoardImage(prompt: prompt, position: index, isPersonalized: hasSelfie)
+                    guard !Task.isCancelled else { return (index, image) }
                     let imageSize = FalImageSize.forLayout(layout)
 
-                    // 1. fal.ai PuLID with selfie — face-consistent generation
-                    if let selfieData = refData,
-                       let url = try? await FalAIService.generateImage(
-                           prompt: prompt,
-                           referenceImageData: selfieData,
-                           imageSize: imageSize
-                       ) {
-                        image.imageURL = url
-                        if let imageURL = URL(string: url),
-                           let (imgData, _) = try? await URLSession.shared.data(from: imageURL),
-                           UIImage(data: imgData) != nil {
-                            image.imageData = imgData
-                        }
-                    }
-                    // 2. fal.ai FLUX Schnell — fast fallback (no face)
-                    else if let url = try? await FalAIService.generateImage(
+                    // Nano Banana 2: edit endpoint when a selfie exists (falls back
+                    // to text-to-image inside FalAIService on failure)
+                    if let url = try? await FalAIService.generateImage(
                         prompt: prompt,
-                        referenceImageData: nil,
+                        referenceImageData: refData,
                         imageSize: imageSize
                     ) {
                         image.imageURL = url
-                        if let imageURL = URL(string: url),
+                        if !Task.isCancelled,
+                           let imageURL = URL(string: url),
                            let (imgData, _) = try? await URLSession.shared.data(from: imageURL),
-                           UIImage(data: imgData) != nil {
-                            image.imageData = imgData
+                           let uiImage = UIImage(data: imgData) {
+                            // Persist to disk; JSON keeps only the filename
+                            if let filename = try? ImageStore.saveData(imgData, filename: "board-\(image.id.uuidString)") {
+                                image.imageFilename = filename
+                                BoardImageCache.shared.setObject(uiImage, forKey: image.id.uuidString as NSString)
+                            } else {
+                                image.imageData = imgData  // disk write failed — keep bytes as last resort
+                            }
                         }
                     }
                     return (index, image)
@@ -204,10 +203,8 @@ class VisionBoardManager {
                 let done = Double(collected.count)
                 await MainActor.run {
                     self.generationProgress = 0.4 + (0.55 * done / Double(imageCount))
-                    var updated = images
-                    for (i, img) in collected { updated[i] = img }
-                    images = updated
-                    self.currentGeneratingBoard?.images = updated
+                    images[result.0] = result.1
+                    self.currentGeneratingBoard?.images = images
                 }
             }
             return collected
@@ -294,6 +291,39 @@ class VisionBoardManager {
         }
     }
     
+    /// Regenerates a single failed image tile in an existing board.
+    func regenerateImage(boardID: UUID, imageID: UUID) async {
+        guard let boardIndex = visionBoards.firstIndex(where: { $0.id == boardID }),
+              let imageIndex = visionBoards[boardIndex].images.firstIndex(where: { $0.id == imageID }) else { return }
+        let board = visionBoards[boardIndex]
+        var image = board.images[imageIndex]
+        let refData = board.userImage?.resized(maxDimension: 512).jpegData(compressionQuality: 0.75)
+
+        do {
+            let url = try await FalAIService.generateImage(
+                prompt: image.prompt,
+                referenceImageData: refData,
+                imageSize: FalImageSize.forLayout(board.layout)
+            )
+            image.imageURL = url
+            if let imageURL = URL(string: url),
+               let (imgData, _) = try? await URLSession.shared.data(from: imageURL),
+               UIImage(data: imgData) != nil,
+               let filename = try? ImageStore.saveData(imgData, filename: "board-\(image.id.uuidString)") {
+                image.imageFilename = filename
+                BoardImageCache.shared.removeObject(forKey: image.id.uuidString as NSString)
+            }
+            // Re-resolve indices — the board list may have changed during the await
+            guard let idx = visionBoards.firstIndex(where: { $0.id == boardID }),
+                  let imgIdx = visionBoards[idx].images.firstIndex(where: { $0.id == imageID }) else { return }
+            visionBoards[idx].images[imgIdx] = image
+            visionBoards[idx].updatedAt = Date()
+            save(visionBoards[idx])
+        } catch {
+            errorMessage = "Image generation failed: \(error.localizedDescription)"
+        }
+    }
+
     // MARK: - Vision Board Management
     
     func toggleGoalAchieved(_ goal: ManifestationGoal, in boardID: UUID) {
@@ -307,33 +337,37 @@ class VisionBoardManager {
             visionBoards[boardIndex].manifestationGoals[goalIndex].markAchieved()
         }
         visionBoards[boardIndex].updatedAt = Date()
-        saveVisionBoards()
+        save(visionBoards[boardIndex])
     }
 
     func deleteVisionBoard(_ visionBoard: VisionBoard) {
         ImageStore.delete(visionBoard.userImageFilename)
+        for image in visionBoard.images {
+            if let filename = image.imageFilename { ImageStore.delete(filename) }
+        }
+        let file = Self.boardsDirectory.appendingPathComponent("\(visionBoard.id.uuidString).json")
+        try? FileManager.default.removeItem(at: file)
         visionBoards.removeAll { $0.id == visionBoard.id }
-        saveVisionBoards()
     }
-    
+
     func toggleFavorite(_ visionBoard: VisionBoard) {
         if let index = visionBoards.firstIndex(where: { $0.id == visionBoard.id }) {
             visionBoards[index].toggleFavorite()
-            saveVisionBoards()
+            save(visionBoards[index])
         }
     }
-    
+
     func incrementViewCount(_ visionBoard: VisionBoard) {
         if let index = visionBoards.firstIndex(where: { $0.id == visionBoard.id }) {
             visionBoards[index].incrementViewCount()
-            saveVisionBoards()
+            save(visionBoards[index])
         }
     }
-    
+
     func updateVisionBoard(_ visionBoard: VisionBoard) {
         if let index = visionBoards.firstIndex(where: { $0.id == visionBoard.id }) {
             visionBoards[index] = visionBoard
-            saveVisionBoards()
+            save(visionBoards[index])
         }
     }
     
@@ -346,34 +380,66 @@ class VisionBoardManager {
         return dir
     }
 
+    /// Writes a single board's JSON file, surfacing failures via errorMessage.
+    private func save(_ board: VisionBoard) {
+        let file = Self.boardsDirectory.appendingPathComponent("\(board.id.uuidString).json")
+        do {
+            let data = try JSONEncoder().encode(board)
+            try data.write(to: file, options: .atomic)
+        } catch {
+            print("[VisionBoardManager] Failed to save board \(board.id): \(error)")
+            errorMessage = "Failed to save your vision board: \(error.localizedDescription)"
+        }
+    }
+
     private func saveVisionBoards() {
-        let dir = Self.boardsDirectory
-        for board in visionBoards {
-            let file = dir.appendingPathComponent("\(board.id.uuidString).json")
-            if let data = try? JSONEncoder().encode(board) {
-                try? data.write(to: file, options: .atomic)
-            }
-        }
-        // Remove files for deleted boards
-        let existingIDs = Set(visionBoards.map { $0.id.uuidString + ".json" })
-        if let files = try? FileManager.default.contentsOfDirectory(atPath: dir.path) {
-            for file in files where !existingIDs.contains(file) {
-                try? FileManager.default.removeItem(at: dir.appendingPathComponent(file))
-            }
-        }
+        for board in visionBoards { save(board) }
     }
 
     private func loadVisionBoards() {
         let dir = Self.boardsDirectory
         guard let files = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { return }
-        visionBoards = files
-            .filter { $0.hasSuffix(".json") }
-            .compactMap { filename -> VisionBoard? in
-                let file = dir.appendingPathComponent(filename)
-                guard let data = try? Data(contentsOf: file) else { return nil }
-                return try? JSONDecoder().decode(VisionBoard.self, from: data)
+        var loaded: [VisionBoard] = []
+        for filename in files where filename.hasSuffix(".json") {
+            let file = dir.appendingPathComponent(filename)
+            do {
+                let data = try Data(contentsOf: file)
+                loaded.append(try JSONDecoder().decode(VisionBoard.self, from: data))
+            } catch {
+                // Never silently drop a board: log and quarantine for diagnosis
+                print("[VisionBoardManager] Failed to load \(filename): \(error)")
+                quarantine(file)
             }
-            .sorted { $0.createdAt < $1.createdAt }
+        }
+        visionBoards = loaded.sorted { $0.createdAt < $1.createdAt }
+        migrateLegacyImageData()
+    }
+
+    private func quarantine(_ file: URL) {
+        let dir = Self.boardsDirectory.appendingPathComponent("Corrupted", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try? FileManager.default.moveItem(at: file, to: dir.appendingPathComponent(file.lastPathComponent))
+    }
+
+    /// One-time migration: boards saved before images moved to disk carry raw
+    /// bytes in imageData; write them to ImageStore and drop the bytes from JSON.
+    private func migrateLegacyImageData() {
+        for boardIndex in visionBoards.indices {
+            var migrated = false
+            for imageIndex in visionBoards[boardIndex].images.indices {
+                let img = visionBoards[boardIndex].images[imageIndex]
+                guard img.imageFilename == nil, let data = img.imageData else { continue }
+                if let filename = try? ImageStore.saveData(data, filename: "board-\(img.id.uuidString)") {
+                    visionBoards[boardIndex].images[imageIndex].imageFilename = filename
+                    visionBoards[boardIndex].images[imageIndex].imageData = nil
+                    migrated = true
+                }
+            }
+            if migrated {
+                visionBoards[boardIndex].schemaVersion = VisionBoard.currentSchemaVersion
+                save(visionBoards[boardIndex])
+            }
+        }
     }
     
     // MARK: - Computed Properties

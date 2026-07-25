@@ -46,6 +46,19 @@ struct SubscriptionView: View {
 private struct FallbackPaywallView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(StoreManager.self) var storeManager
+    @State private var infoMessage: String?
+
+    // Apple's standard EULA; replace privacyPolicyURL with the app's hosted policy before release.
+    private static let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
+    private static let privacyPolicyURL = URL(string: "https://xvisionboardai.com/privacy")!
+
+    private var trialBadgeText: String? {
+        guard let product = storeManager.fallbackProduct else { return nil }
+        if product.introductoryDiscount?.paymentMode == .freeTrial {
+            return "Free Trial — then \(product.localizedPriceString)/year"
+        }
+        return "\(product.localizedPriceString)/year"
+    }
 
     var body: some View {
         NavigationStack {
@@ -95,21 +108,23 @@ private struct FallbackPaywallView: View {
                         }
                         .padding(.top, AstralTheme.Spacing.sm)
 
-                        // Free trial badge
-                        HStack(spacing: 6) {
-                            Image(systemName: "gift.fill")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(Color.astralGold)
-                            Text("3-Day Free Trial — then $49.99/year")
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                                .foregroundStyle(Color.astralGold)
-                        }
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 10)
-                        .background {
-                            Capsule()
-                                .fill(Color.astralGold.opacity(0.12))
-                                .overlay { Capsule().strokeBorder(Color.astralGold.opacity(0.35), lineWidth: 1) }
+                        // Price badge — only shown once real product data has loaded
+                        if let badgeText = trialBadgeText {
+                            HStack(spacing: 6) {
+                                Image(systemName: "gift.fill")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(Color.astralGold)
+                                Text(badgeText)
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(Color.astralGold)
+                            }
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 10)
+                            .background {
+                                Capsule()
+                                    .fill(Color.astralGold.opacity(0.12))
+                                    .overlay { Capsule().strokeBorder(Color.astralGold.opacity(0.35), lineWidth: 1) }
+                            }
                         }
 
                         // Feature highlights
@@ -124,19 +139,51 @@ private struct FallbackPaywallView: View {
                         .padding(AstralTheme.Spacing.lg)
                         .astralGlass(tint: .astralViolet)
 
-                        // Loading/error state
+                        // Purchase / loading state
                         if storeManager.isLoading {
                             ProgressView()
                                 .tint(Color.astralViolet)
                                 .scaleEffect(1.4)
-                        } else if storeManager.currentOffering == nil {
+                        } else if let product = storeManager.fallbackProduct {
+                            VStack(spacing: AstralTheme.Spacing.sm) {
+                                Button {
+                                    Task {
+                                        if await storeManager.purchase(product: product) {
+                                            dismiss()
+                                        }
+                                    }
+                                } label: {
+                                    Text("Subscribe — \(product.localizedPriceString)/year")
+                                        .font(.system(.headline, design: .rounded, weight: .bold))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 16)
+                                        .background {
+                                            Capsule().fill(
+                                                LinearGradient(
+                                                    colors: [.astralViolet, .astralIndigo],
+                                                    startPoint: .leading, endPoint: .trailing
+                                                )
+                                            )
+                                        }
+                                        .foregroundStyle(Color.astralText)
+                                }
+
+                                Text("Auto-renews yearly until cancelled. Cancel anytime in Settings.")
+                                    .font(.system(.caption2, design: .rounded))
+                                    .foregroundStyle(Color.astralTextMuted)
+                                    .multilineTextAlignment(.center)
+                            }
+                        } else {
                             VStack(spacing: AstralTheme.Spacing.sm) {
                                 Text("Loading subscription options…")
                                     .font(.system(.subheadline, design: .rounded))
                                     .foregroundStyle(Color.astralTextMuted)
 
                                 Button("Retry") {
-                                    Task { await storeManager.fetchCurrentOffering() }
+                                    Task {
+                                        await storeManager.fetchCurrentOffering()
+                                        await storeManager.fetchFallbackProduct()
+                                    }
                                 }
                                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                 .foregroundStyle(Color.astralViolet)
@@ -144,9 +191,23 @@ private struct FallbackPaywallView: View {
                         }
 
                         Button("Restore Purchases") {
-                            Task { await storeManager.restorePurchases() }
+                            Task {
+                                if await storeManager.restorePurchases() {
+                                    dismiss()
+                                } else if storeManager.errorMessage == nil {
+                                    infoMessage = "No previous purchases were found for this Apple Account."
+                                }
+                            }
                         }
                         .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(Color.astralTextMuted)
+
+                        // Legal links (required on subscription purchase screens)
+                        HStack(spacing: AstralTheme.Spacing.lg) {
+                            Link("Terms of Use", destination: Self.termsURL)
+                            Link("Privacy Policy", destination: Self.privacyPolicyURL)
+                        }
+                        .font(.system(.caption, design: .rounded))
                         .foregroundStyle(Color.astralTextMuted)
 
                         Spacer(minLength: 60)
@@ -162,7 +223,28 @@ private struct FallbackPaywallView: View {
                 }
             }
         }
-        .task { await storeManager.fetchCurrentOffering() }
+        .task {
+            await storeManager.fetchCurrentOffering()
+            if storeManager.currentOffering == nil {
+                await storeManager.fetchFallbackProduct()
+            }
+        }
+        .alert("Something Went Wrong", isPresented: Binding(
+            get: { storeManager.errorMessage != nil },
+            set: { if !$0 { storeManager.errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(storeManager.errorMessage ?? "")
+        }
+        .alert("Restore Purchases", isPresented: Binding(
+            get: { infoMessage != nil },
+            set: { if !$0 { infoMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(infoMessage ?? "")
+        }
     }
 
     private func featureRow(_ title: String, icon: String, color: Color) -> some View {

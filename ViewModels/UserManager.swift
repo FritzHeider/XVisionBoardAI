@@ -264,7 +264,15 @@ class UserManager {
     
     private func loadUserData() {
         guard let token = tokenStore.load(),
-              let userData = userDefaults.data(forKey: userKey) else { return }
+              let userData = userDefaults.data(forKey: userKey) else {
+            // Stored flag says logged in but there's no usable session — reset
+            // to the auth wall instead of a logged-in state with no user.
+            if isLoggedIn {
+                isLoggedIn = false
+                currentUser = nil
+            }
+            return
+        }
 
         do {
             let user = try JSONDecoder().decode(User.self, from: userData)
@@ -273,6 +281,12 @@ class UserManager {
             authToken = token
         } catch {
             print("Failed to load user data: \(error)")
+            // Corrupt user payload — fall back to the auth wall cleanly
+            clearUserData()
+            tokenStore.clear()
+            currentUser = nil
+            authToken = nil
+            isLoggedIn = false
         }
     }
     

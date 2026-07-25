@@ -9,6 +9,7 @@
 import SwiftUI
 import AVFoundation // if using AVSpeechSynthesizer
 import UserNotifications
+import Photos
 
 struct VisionBoardDetailView: View {
     let visionBoard: VisionBoard
@@ -25,6 +26,7 @@ struct VisionBoardDetailView: View {
     @State private var showingFullScreenImage: VisionBoardImage?
     @State private var currentAffirmationIndex = 0
     @State private var affirmationTask: Task<Void, Never>?
+    @State private var actionFeedback: String?
     
     private var currentBoard: VisionBoard {
         visionBoardManager.visionBoards.first { $0.id == visionBoard.id } ?? visionBoard
@@ -119,6 +121,14 @@ struct VisionBoardDetailView: View {
                 showingFullScreenImage = nil
             }
         }
+        .alert("Manifestation Actions", isPresented: Binding(
+            get: { actionFeedback != nil },
+            set: { if !$0 { actionFeedback = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(actionFeedback ?? "")
+        }
         .onAppear {
             startAffirmationCycle()
         }
@@ -206,10 +216,19 @@ struct VisionBoardDetailView: View {
             }
             
             LazyVGrid(columns: gridColumns, spacing: 8) {
-                ForEach(visionBoard.images) { image in
-                    VisionBoardImageView(image: image) {
-                        showingFullScreenImage = image
-                    }
+                ForEach(currentBoard.images) { image in
+                    VisionBoardImageView(
+                        image: image,
+                        action: { showingFullScreenImage = image },
+                        onRetry: {
+                            Task {
+                                await visionBoardManager.regenerateImage(
+                                    boardID: currentBoard.id,
+                                    imageID: image.id
+                                )
+                            }
+                        }
+                    )
                 }
             }
             .cosmicCard()
@@ -360,20 +379,22 @@ struct VisionBoardDetailView: View {
                     if let img = renderBoardImage() {
                         shareImage = img
                         showingImageShare = true
+                    } else {
+                        actionFeedback = "Couldn't render your board image. Please try again."
                     }
                 }
 
                 actionRow(icon: "photo.fill", iconColor: .cosmicPink,
                           title: "Set as Wallpaper",
                           description: "Keep your vision visible daily") {
-                    if let img = renderBoardImage() {
-                        UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
-                    }
+                    saveWallpaperToPhotos()
                 }
 
                 actionRow(icon: "printer.fill", iconColor: .cosmicGold,
                           title: "Print Vision Board",
-                          description: "Create a physical copy to display") { }
+                          description: "Create a physical copy to display") {
+                    printBoard()
+                }
             }
             .cosmicCard()
         }
@@ -473,10 +494,44 @@ struct VisionBoardDetailView: View {
         return renderer.uiImage
     }
 
+    private func saveWallpaperToPhotos() {
+        guard let img = renderBoardImage() else {
+            actionFeedback = "Couldn't render your board image. Please try again."
+            return
+        }
+        Task {
+            do {
+                try await PHPhotoLibrary.shared().performChanges {
+                    PHAssetChangeRequest.creationRequestForAsset(from: img)
+                }
+                actionFeedback = "Saved to Photos! Open the Photos app to set it as your wallpaper."
+            } catch {
+                actionFeedback = "Couldn't save to Photos. Check photo access for ManifestMe in Settings."
+            }
+        }
+    }
+
+    private func printBoard() {
+        guard let img = renderBoardImage() else {
+            actionFeedback = "Couldn't render your board image. Please try again."
+            return
+        }
+        let printInfo = UIPrintInfo(dictionary: nil)
+        printInfo.outputType = .photo
+        printInfo.jobName = visionBoard.title
+        let controller = UIPrintInteractionController.shared
+        controller.printInfo = printInfo
+        controller.printingItem = img
+        controller.present(animated: true)
+    }
+
     private func scheduleDailyReminder() {
         Task {
             let granted = (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])) ?? false
-            guard granted else { return }
+            guard granted else {
+                actionFeedback = "Notifications are disabled. Enable them for ManifestMe in Settings to get daily reminders."
+                return
+            }
             let content = UNMutableNotificationContent()
             content.title = "Time to Visualize 🌟"
             let affirmation = visionBoard.affirmations.randomElement() ?? "I am living my dream life"
@@ -492,7 +547,12 @@ struct VisionBoardDetailView: View {
                 content: content,
                 trigger: trigger
             )
-            try? await UNUserNotificationCenter.current().add(request)
+            do {
+                try await UNUserNotificationCenter.current().add(request)
+                actionFeedback = "Daily reminder set! You'll get a visualization nudge every morning at 8:00 AM."
+            } catch {
+                actionFeedback = "Couldn't schedule the reminder: \(error.localizedDescription)"
+            }
         }
     }
 }
@@ -544,27 +604,51 @@ struct StyleInfoCard: View {
 struct VisionBoardImageView: View {
     let image: VisionBoardImage
     let action: () -> Void
+    var onRetry: (() -> Void)? = nil
+
+    @State private var isRetrying = false
+
+    /// True when generation finished without producing anything — nothing on
+    /// disk, nothing to download. Distinct from "still loading".
+    private var generationFailed: Bool {
+        image.image == nil && image.imageURL == nil
+    }
 
     var body: some View {
-        Button(action: action) {
-            ZStack {
-                imageContent
-                    .frame(minHeight: 100)
-                    .clipped()
-                
-                if image.isPersonalized {
-                    VStack {
-                        HStack {
-                            PersonalizedBadge()
-                            Spacer()
-                        }
-                        Spacer()
-                    }
-                    .padding(4)
+        Group {
+            if generationFailed, let onRetry {
+                Button {
+                    isRetrying = true
+                    onRetry()
+                } label: {
+                    failedPlaceholder
                 }
+                .disabled(isRetrying)
+                .accessibilityLabel("Image generation failed. Retry")
+            } else {
+                Button(action: action) {
+                    ZStack {
+                        imageContent
+                            .frame(minHeight: 100)
+                            .clipped()
+
+                        if image.isPersonalized {
+                            VStack {
+                                HStack {
+                                    PersonalizedBadge()
+                                    Spacer()
+                                }
+                                Spacer()
+                            }
+                            .padding(4)
+                        }
+                    }
+                    .clipShape(.rect(cornerRadius: 8))
+                }
+                .accessibilityLabel("Vision board image: \(image.prompt)")
             }
-            .clipShape(.rect(cornerRadius: 8))
         }
+        .onChange(of: image.imageFilename) { _, _ in isRetrying = false }
     }
 
     @ViewBuilder
@@ -591,6 +675,26 @@ struct VisionBoardImageView: View {
         RoundedRectangle(cornerRadius: 8)
             .fill(Color.cosmicGray)
             .overlay(ProgressView().progressViewStyle(.circular).tint(.astralViolet))
+    }
+
+    private var failedPlaceholder: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .fill(Color.cosmicGray)
+            .frame(minHeight: 100)
+            .overlay {
+                VStack(spacing: 6) {
+                    if isRetrying {
+                        ProgressView().progressViewStyle(.circular).tint(.astralViolet)
+                    } else {
+                        Image(systemName: "arrow.clockwise.circle.fill")
+                            .font(.system(size: 26))
+                            .foregroundStyle(Color.astralViolet)
+                        Text("Retry")
+                            .font(.system(.caption, design: .rounded, weight: .semibold))
+                            .foregroundStyle(Color.astralTextMuted)
+                    }
+                }
+            }
     }
 }
 

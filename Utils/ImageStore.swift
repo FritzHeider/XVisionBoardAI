@@ -17,6 +17,13 @@ enum ImageStore {
         return name
     }
 
+    /// Writes already-encoded image bytes (JPEG/PNG) without recompressing.
+    static func saveData(_ data: Data, filename: String) throws -> String {
+        let name = filename.hasSuffix(".jpg") ? filename : "\(filename).jpg"
+        try data.write(to: directory.appendingPathComponent(name))
+        return name
+    }
+
     static func load(_ filename: String) -> UIImage? {
         guard let data = try? Data(contentsOf: directory.appendingPathComponent(filename)) else { return nil }
         return UIImage(data: data)
