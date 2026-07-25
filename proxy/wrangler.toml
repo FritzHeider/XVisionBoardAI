@@ -24,8 +24,8 @@ compatibility_date = "2024-11-01"
 # APP_TEAM_ID is not a secret; fill it in with your Apple Developer Team ID
 # (required once ATTEST_MODE is "monitor" or "enforce").
 [vars]
-APP_TEAM_ID = "REPLACE_WITH_TEAM_ID"
-APP_BUNDLE_ID = "com.xvisionboardai"
+APP_TEAM_ID = "CCK3M3DML9"
+APP_BUNDLE_ID = "com.xvisionboardai.app"
 # ATTEST_MODE: "off" | "monitor" | "enforce"
 #   off     — no attestation (relies on spend caps + Cloudflare rate limiting)
 #   monitor — validate every request and LOG pass/fail, but still forward
