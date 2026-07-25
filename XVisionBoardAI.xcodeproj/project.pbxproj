@@ -27,6 +27,7 @@
 		135 /* Services/StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134 /* Services/StoreManager.swift */; };
 		137 /* Services/CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136 /* Services/CameraManager.swift */; };
 		138 /* Services/TokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139 /* Services/TokenStore.swift */; };
+		331 /* Services/KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 330 /* Services/KeychainStore.swift */; };
 		141 /* Utils/ImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140 /* Utils/ImageStore.swift */; };
 		321 /* Utils/AppLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320 /* Utils/AppLinks.swift */; };
 		143 /* Views/Components/SharedCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142 /* Views/Components/SharedCards.swift */; };
@@ -64,6 +65,7 @@
 		134 /* Services/StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/StoreManager.swift; sourceTree = "<group>"; };
 		136 /* Services/CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/CameraManager.swift; sourceTree = "<group>"; };
 		139 /* Services/TokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenStore.swift; sourceTree = "<group>"; };
+		330 /* Services/KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KeychainStore.swift; path = Services/KeychainStore.swift; sourceTree = "<group>"; };
 		140 /* Utils/ImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/ImageStore.swift; sourceTree = "<group>"; };
 		320 /* Utils/AppLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/AppLinks.swift; sourceTree = "<group>"; };
 		142 /* Views/Components/SharedCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Components/SharedCards.swift; sourceTree = "<group>"; };
@@ -119,6 +121,7 @@
 				134 /* Services/StoreManager.swift */,
 				136 /* Services/CameraManager.swift */,
 				139 /* Services/TokenStore.swift */,
+				330 /* Services/KeychainStore.swift */,
 				140 /* Utils/ImageStore.swift */,
 				320 /* Utils/AppLinks.swift */,
 				142 /* Views/Components/SharedCards.swift */,
@@ -234,6 +237,7 @@
 				135 /* Services/StoreManager.swift in Sources */,
 				137 /* Services/CameraManager.swift in Sources */,
 				138 /* Services/TokenStore.swift in Sources */,
+				331 /* Services/KeychainStore.swift in Sources */,
 				141 /* Utils/ImageStore.swift in Sources */,
 				321 /* Utils/AppLinks.swift in Sources */,
 				143 /* Views/Components/SharedCards.swift in Sources */,

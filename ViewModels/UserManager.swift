@@ -251,20 +251,29 @@ class UserManager {
     
     // MARK: - Data Persistence
     
+    /// The User struct contains PII (email, goals, journal insights) so it lives
+    /// in the Keychain, not UserDefaults. `userKey` is retained only as the
+    /// legacy UserDefaults key to migrate away from.
     private func saveUserData() {
         guard let user = currentUser else { return }
-        
         do {
             let userData = try JSONEncoder().encode(user)
-            userDefaults.set(userData, forKey: userKey)
+            KeychainStore.save(userData, account: userKey)
         } catch {
             print("Failed to save user data: \(error)")
         }
     }
-    
+
     private func loadUserData() {
+        // One-time migration: move any legacy plaintext UserDefaults blob into
+        // the Keychain, then remove it from UserDefaults.
+        if let legacy = userDefaults.data(forKey: userKey) {
+            KeychainStore.save(legacy, account: userKey)
+            userDefaults.removeObject(forKey: userKey)
+        }
+
         guard let token = tokenStore.load(),
-              let userData = userDefaults.data(forKey: userKey) else {
+              let userData = KeychainStore.load(account: userKey) else {
             // Stored flag says logged in but there's no usable session — reset
             // to the auth wall instead of a logged-in state with no user.
             if isLoggedIn {
@@ -289,9 +298,10 @@ class UserManager {
             isLoggedIn = false
         }
     }
-    
+
     private func clearUserData() {
-        userDefaults.removeObject(forKey: userKey)
+        KeychainStore.delete(account: userKey)
+        userDefaults.removeObject(forKey: userKey)  // clear legacy location too
     }
     
     var visionBoardCount: Int { currentUser?.visionBoardCount ?? 0 }
