@@ -20,6 +20,11 @@ name = "manifestme-proxy"
 main = "src/index.js"
 compatibility_date = "2024-11-01"
 
+# Keep the stable *.workers.dev URL, but disable per-deployment Preview URLs so
+# the proxy doesn't expose extra public endpoints.
+workers_dev = true
+preview_urls = false
+
 # Team ID + bundle ID validate the App Attest app-identity hash.
 # APP_TEAM_ID is not a secret; fill it in with your Apple Developer Team ID
 # (required once ATTEST_MODE is "monitor" or "enforce").
