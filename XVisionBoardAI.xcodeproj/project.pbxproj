@@ -27,22 +27,22 @@
 		135 /* Services/StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134 /* Services/StoreManager.swift */; };
 		137 /* Services/CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136 /* Services/CameraManager.swift */; };
 		138 /* Services/TokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139 /* Services/TokenStore.swift */; };
-		331 /* Services/KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 330 /* Services/KeychainStore.swift */; };
 		141 /* Utils/ImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140 /* Utils/ImageStore.swift */; };
-		321 /* Utils/AppLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320 /* Utils/AppLinks.swift */; };
 		143 /* Views/Components/SharedCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142 /* Views/Components/SharedCards.swift */; };
 		149 /* Views/EditVisionBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148 /* Views/EditVisionBoardView.swift */; };
 		151 /* Views/OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150 /* Views/OnboardingView.swift */; };
 		153 /* Services/FalAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 152 /* Services/FalAIService.swift */; };
-		343 /* Services/AppAttestManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342 /* Services/AppAttestManager.swift */; };
-		341 /* Services/APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340 /* Services/APIConfig.swift */; };
 		155 /* Services/GeminiImageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 154 /* Services/GeminiImageService.swift */; };
-		351 /* Services/GeminiTextService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350 /* Services/GeminiTextService.swift */; };
+		301 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 300 /* Assets.xcassets */; };
+		311 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 310 /* PrivacyInfo.xcprivacy */; };
+		321 /* Utils/AppLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320 /* Utils/AppLinks.swift */; };
+		331 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 330 /* KeychainStore.swift */; };
+		341 /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340 /* APIConfig.swift */; };
+		343 /* AppAttestManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342 /* AppAttestManager.swift */; };
+		351 /* GeminiTextService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350 /* GeminiTextService.swift */; };
 		9E86F9132FC97C5600510CC9 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 9E86F9112FC97C5600510CC9 /* RevenueCat */; };
 		9E86F9142FC97C5600510CC9 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 9E86F9122FC97C5600510CC9 /* RevenueCatUI */; };
 		B21BEFA02E43409E00EDBF92 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */; };
-		301 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 300 /* Assets.xcassets */; };
-		311 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 310 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -66,23 +66,23 @@
 		134 /* Services/StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/StoreManager.swift; sourceTree = "<group>"; };
 		136 /* Services/CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/CameraManager.swift; sourceTree = "<group>"; };
 		139 /* Services/TokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenStore.swift; sourceTree = "<group>"; };
-		330 /* Services/KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KeychainStore.swift; path = Services/KeychainStore.swift; sourceTree = "<group>"; };
 		140 /* Utils/ImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/ImageStore.swift; sourceTree = "<group>"; };
-		320 /* Utils/AppLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/AppLinks.swift; sourceTree = "<group>"; };
 		142 /* Views/Components/SharedCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Components/SharedCards.swift; sourceTree = "<group>"; };
 		148 /* Views/EditVisionBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/EditVisionBoardView.swift; sourceTree = "<group>"; };
 		150 /* Views/OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/OnboardingView.swift; sourceTree = "<group>"; };
 		152 /* Services/FalAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/FalAIService.swift; sourceTree = "<group>"; };
-		342 /* Services/AppAttestManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppAttestManager.swift; path = Services/AppAttestManager.swift; sourceTree = "<group>"; };
-		340 /* Services/APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = APIConfig.swift; path = Services/APIConfig.swift; sourceTree = "<group>"; };
 		154 /* Services/GeminiImageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/GeminiImageService.swift; sourceTree = "<group>"; };
-		350 /* Services/GeminiTextService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GeminiTextService.swift; path = Services/GeminiTextService.swift; sourceTree = "<group>"; };
-		7 /* XVisionBoardAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = XVisionBoardAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B21BEF9E2E4338C700EDBF92 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SpeechManager.swift; path = Services/SpeechManager.swift; sourceTree = "<group>"; };
 		200 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		300 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		310 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		320 /* Utils/AppLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils/AppLinks.swift; sourceTree = "<group>"; };
+		330 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KeychainStore.swift; path = Services/KeychainStore.swift; sourceTree = "<group>"; };
+		340 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = APIConfig.swift; path = Services/APIConfig.swift; sourceTree = "<group>"; };
+		342 /* AppAttestManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppAttestManager.swift; path = Services/AppAttestManager.swift; sourceTree = "<group>"; };
+		350 /* GeminiTextService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GeminiTextService.swift; path = Services/GeminiTextService.swift; sourceTree = "<group>"; };
+		7 /* XVisionBoardAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = XVisionBoardAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B21BEF9E2E4338C700EDBF92 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SpeechManager.swift; path = Services/SpeechManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -123,15 +123,15 @@
 				134 /* Services/StoreManager.swift */,
 				136 /* Services/CameraManager.swift */,
 				139 /* Services/TokenStore.swift */,
-				330 /* Services/KeychainStore.swift */,
+				330 /* KeychainStore.swift */,
 				140 /* Utils/ImageStore.swift */,
 				320 /* Utils/AppLinks.swift */,
 				142 /* Views/Components/SharedCards.swift */,
 				152 /* Services/FalAIService.swift */,
-				342 /* Services/AppAttestManager.swift */,
-				340 /* Services/APIConfig.swift */,
+				342 /* AppAttestManager.swift */,
+				340 /* APIConfig.swift */,
 				154 /* Services/GeminiImageService.swift */,
-				350 /* Services/GeminiTextService.swift */,
+				350 /* GeminiTextService.swift */,
 				148 /* Views/EditVisionBoardView.swift */,
 				150 /* Views/OnboardingView.swift */,
 				200 /* Secrets.xcconfig */,
@@ -240,15 +240,15 @@
 				135 /* Services/StoreManager.swift in Sources */,
 				137 /* Services/CameraManager.swift in Sources */,
 				138 /* Services/TokenStore.swift in Sources */,
-				331 /* Services/KeychainStore.swift in Sources */,
+				331 /* KeychainStore.swift in Sources */,
 				141 /* Utils/ImageStore.swift in Sources */,
 				321 /* Utils/AppLinks.swift in Sources */,
 				143 /* Views/Components/SharedCards.swift in Sources */,
 				153 /* Services/FalAIService.swift in Sources */,
-				343 /* Services/AppAttestManager.swift in Sources */,
-				341 /* Services/APIConfig.swift in Sources */,
+				343 /* AppAttestManager.swift in Sources */,
+				341 /* APIConfig.swift in Sources */,
 				155 /* Services/GeminiImageService.swift in Sources */,
-				351 /* Services/GeminiTextService.swift in Sources */,
+				351 /* GeminiTextService.swift in Sources */,
 				149 /* Views/EditVisionBoardView.swift in Sources */,
 				151 /* Views/OnboardingView.swift in Sources */,
 			);
