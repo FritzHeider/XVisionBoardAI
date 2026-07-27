@@ -36,6 +36,17 @@ class VisionBoardManager {
         manifestationGoals: [String]
     ) async -> VisionBoard? {
 
+        // isGenerating / generationProgress / currentGeneratingBoard are single
+        // manager-level properties, not scoped per attempt. If a swipe-dismissed
+        // generation is still running and the user starts another, both tasks write
+        // the same three properties: the progress bar and preview grid flicker
+        // between runs, and one task's completion can flip isGenerating to false
+        // while the other is still in flight. Serialise instead.
+        guard !isGenerating else {
+            errorMessage = "A vision board is already being generated. Please wait for it to finish."
+            return nil
+        }
+
         isGenerating = true
         generationProgress = 0.0
         errorMessage = nil

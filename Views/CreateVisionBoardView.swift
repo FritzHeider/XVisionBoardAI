@@ -752,7 +752,28 @@ struct CreateVisionBoardView: View {
 
         currentStep = .generate
 
+        // Generation realistically runs 30s-3min (fal.ai polls up to ~60 attempts
+        // per image, all images in parallel). Nothing is persisted until it
+        // finishes, so if iOS suspends the app while the user checks a message the
+        // whole run is lost with no error and no record it ever happened. A
+        // background task assertion buys time to finish or fail visibly.
+        var backgroundTask: UIBackgroundTaskIdentifier = .invalid
+        backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "VisionBoardGeneration") {
+            // Expiration handler: iOS is reclaiming the assertion.
+            if backgroundTask != .invalid {
+                UIApplication.shared.endBackgroundTask(backgroundTask)
+                backgroundTask = .invalid
+            }
+        }
+
         generationTask = Task {
+            defer {
+                if backgroundTask != .invalid {
+                    UIApplication.shared.endBackgroundTask(backgroundTask)
+                    backgroundTask = .invalid
+                }
+            }
+
             let visionBoard = await visionBoardManager.createVisionBoard(
                 title: title,
                 description: description,

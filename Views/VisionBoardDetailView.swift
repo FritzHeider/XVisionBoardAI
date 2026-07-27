@@ -15,6 +15,8 @@ struct VisionBoardDetailView: View {
     let visionBoard: VisionBoard
     @Environment(\.dismiss) private var dismiss
     @Environment(VisionBoardManager.self) var visionBoardManager
+    /// Needed for the user's chosen daily-reminder time.
+    @Environment(UserManager.self) var userManager
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var speechManager = SpeechManager()
@@ -565,10 +567,12 @@ struct VisionBoardDetailView: View {
             content.body = affirmation
             content.sound = .default
 
-            var components = DateComponents()
-            components.hour = 8
-            components.minute = 0
-            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+            // Use the time the user actually picked in Profile. This was hardcoded
+            // to 08:00, so the Profile reminder-time picker silently did nothing.
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: userManager.reminderComponents,
+                repeats: true
+            )
             let request = UNNotificationRequest(
                 identifier: "daily-visualization-\(visionBoard.id)",
                 content: content,
@@ -576,7 +580,7 @@ struct VisionBoardDetailView: View {
             )
             do {
                 try await UNUserNotificationCenter.current().add(request)
-                actionFeedback = "Daily reminder set! You'll get a visualization nudge every morning at 8:00 AM."
+                actionFeedback = "Daily reminder set! You'll get a visualization nudge every day at \(userManager.formattedReminderTime)."
             } catch {
                 actionFeedback = "Couldn't schedule the reminder: \(error.localizedDescription)"
             }
@@ -891,5 +895,6 @@ extension View {
 #Preview {
     VisionBoardDetailView(visionBoard: VisionBoard.sampleVisionBoard)
         .environment(VisionBoardManager())
+        .environment(UserManager())
 }
 

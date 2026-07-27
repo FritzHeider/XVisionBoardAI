@@ -23,6 +23,32 @@ class UserManager {
     var lastStreakDate: Date?
     var lastInsightDate: Date?
 
+    /// Time of day for the daily visualization reminder.
+    ///
+    /// Single source of truth: ProfileView used to write "reminderTime" straight
+    /// to UserDefaults while VisionBoardDetailView scheduled a hardcoded 08:00,
+    /// so the picker silently did nothing. Both now go through this.
+    var reminderTime: Date = UserManager.defaultReminderTime {
+        didSet { UserDefaults.standard.set(reminderTime, forKey: "reminderTime") }
+    }
+
+    /// 8:00 AM, matching the previously hardcoded schedule.
+    static var defaultReminderTime: Date {
+        Calendar.current.date(from: DateComponents(hour: 8, minute: 0)) ?? Date()
+    }
+
+    /// Hour/minute the daily reminder should fire at.
+    var reminderComponents: DateComponents {
+        Calendar.current.dateComponents([.hour, .minute], from: reminderTime)
+    }
+
+    /// Reminder time rendered for display, e.g. "8:00 AM".
+    var formattedReminderTime: String {
+        let f = DateFormatter()
+        f.timeStyle = .short
+        return f.string(from: reminderTime)
+    }
+
     private(set) var authToken: String?
 
     private let userDefaults = UserDefaults.standard
@@ -83,6 +109,7 @@ class UserManager {
         currentStreak = userDefaults.integer(forKey: "currentStreak")
         lastStreakDate = userDefaults.object(forKey: "lastStreakDate") as? Date
         lastInsightDate = userDefaults.object(forKey: "lastInsightDate") as? Date
+        reminderTime = (userDefaults.object(forKey: "reminderTime") as? Date) ?? Self.defaultReminderTime
     }
     
     // MARK: - User Authentication

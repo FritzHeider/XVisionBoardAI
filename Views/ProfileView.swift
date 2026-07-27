@@ -11,12 +11,9 @@ struct ProfileView: View {
     @State private var showingSignOutAlert = false
     @State private var showingDeleteAccountAlert = false
     @State private var showingNotificationSettings = false
-    @State private var reminderTime: Date = {
-        let stored = UserDefaults.standard.object(forKey: "reminderTime") as? Date
-        if let stored { return stored }
-        var c = DateComponents(); c.hour = 8; c.minute = 0
-        return Calendar.current.date(from: c) ?? Date()
-    }()
+    /// Working copy for the picker; committed to UserManager on Save so that
+    /// cancelling the sheet doesn't silently change the schedule.
+    @State private var reminderTime: Date = UserManager.defaultReminderTime
 
     var body: some View {
         NavigationStack {
@@ -52,7 +49,11 @@ struct ProfileView: View {
         .sheet(isPresented: $showingCustomerCenter, onDismiss: {
             Task { await storeManager.refreshCustomerInfo() }
         }) { CustomerCenterView() }
-        .sheet(isPresented: $showingNotificationSettings) { notificationSettingsSheet }
+        .sheet(isPresented: $showingNotificationSettings) {
+            notificationSettingsSheet
+                // Seed the picker from the saved value each time it opens.
+                .onAppear { reminderTime = userManager.reminderTime }
+        }
         .alert("Sign Out", isPresented: $showingSignOutAlert) {
             Button("Sign Out", role: .destructive) {
                 Task {
@@ -319,11 +320,7 @@ struct ProfileView: View {
 
     // MARK: - Helpers
 
-    private var formattedReminderTime: String {
-        let f = DateFormatter()
-        f.timeStyle = .short
-        return f.string(from: reminderTime)
-    }
+    private var formattedReminderTime: String { userManager.formattedReminderTime }
 
     private var notificationSettingsSheet: some View {
         NavigationStack {
@@ -353,7 +350,7 @@ struct ProfileView: View {
                         .padding(.horizontal, AstralTheme.Spacing.lg)
 
                     Button("Save Reminder") {
-                        UserDefaults.standard.set(reminderTime, forKey: "reminderTime")
+                        userManager.reminderTime = reminderTime
                         showingNotificationSettings = false
                     }
                     .astralButton(.primary)
