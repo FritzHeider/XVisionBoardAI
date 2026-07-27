@@ -318,7 +318,11 @@ function bootstrapFromMemoryFiles() {
     // For the projects dir, scope to CURRENT project only (not all 51+ dirs)
     if (base.endsWith('projects')) {
       try {
-        const projectSlug = cwd.replace(/^\//, '').replace(/\//g, '-');
+        // Match Claude Code's project-dir slug: every non-alphanumeric char -> '-'
+        // (e.g. "G:\\My Drive\\TJ_Vault" -> "G--My-Drive-TJ-Vault"). The old version
+        // only handled POSIX '/', so on Windows the slug kept ':' and '\\' and never
+        // matched the real <projects>/<slug>/memory dir — bootstrap found nothing (FIX 5).
+        const projectSlug = cwd.replace(/[^a-zA-Z0-9]/g, '-');
         const memDir = path.join(base, projectSlug, 'memory');
         if (fs.existsSync(memDir)) {
           parseMemoryDir(memDir, entries);
@@ -330,6 +334,16 @@ function bootstrapFromMemoryFiles() {
   }
 
   return entries;
+}
+
+// Truncation transparency (FIX 4): mark the cut with an ellipsis and warn under
+// debug, so later reasoning isn't silently built on severed text.
+const CLIP_DEBUG = !!(process.env.RUFLO_DEBUG || process.env.DEBUG);
+function clip(text, max, label) {
+  text = text == null ? '' : String(text);
+  if (text.length <= max) return text;
+  if (CLIP_DEBUG) process.stderr.write(`[INTELLIGENCE] WARN: truncated ${label || 'value'} from ${text.length} to ${max} chars\n`);
+  return text.slice(0, max - 1) + '…';
 }
 
 function parseMemoryDir(dir, entries) {
@@ -353,7 +367,7 @@ function parseMemoryDir(dir, entries) {
         entries.push({
           id,
           key: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50),
-          content: body.slice(0, 500),
+          content: clip(body, 500, 'memory content'),
           summary: title,
           namespace: file === 'MEMORY.md' ? 'core' : file.replace('.md', ''),
           type: 'semantic',
@@ -561,15 +575,28 @@ function getContext(prompt) {
  * recordEdit(file) — Called from post-edit. Budget: <2ms.
  * Appends to pending-insights.jsonl.
  */
-function recordEdit(file) {
+function recordEdit(file, success) {
   ensureDataDir();
   const entry = JSON.stringify({
     type: 'edit',
     file: file || 'unknown',
+    // ADR-174: record failures too, not just successes — the learning substrate
+    // needs negative examples. Defaults true; an explicit false is a failed edit.
+    success: success !== false,
     timestamp: Date.now(),
     sessionId: sessionGet('sessionId') || null,
   });
   fs.appendFileSync(PENDING_PATH, entry + '\n', 'utf-8');
+  // Runaway-storage guard: pending-insights is append-only and only drained by
+  // consolidation. If it grows past ~512KB (thousands of un-consolidated edits
+  // — e.g. the daemon never ran), keep only the most recent 2000 lines so it
+  // can never grow unbounded. Cheap (a statSync per edit; rewrite only when over).
+  try {
+    if (fs.statSync(PENDING_PATH).size > 512 * 1024) {
+      const lines = fs.readFileSync(PENDING_PATH, 'utf-8').split('\n').filter(Boolean);
+      if (lines.length > 2000) fs.writeFileSync(PENDING_PATH, lines.slice(-2000).join('\n') + '\n', 'utf-8');
+    }
+  } catch (e) { /* non-fatal */ }
 }
 
 /**

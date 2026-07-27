@@ -179,7 +179,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1530;
+				LastUpgradeCheck = 2660;
 			};
 			buildConfigurationList = 2 /* Build configuration list for PBXNativeTarget "XVisionBoardAI" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -300,6 +300,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.xvisionboardai.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -345,6 +346,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.xvisionboardai.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_VERSION = 5.0;
 			};
