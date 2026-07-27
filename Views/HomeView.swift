@@ -98,7 +98,7 @@ struct HomeView: View {
                     .frame(width: 50, height: 50)
                     .overlay {
                         Image(systemName: "person.fill")
-                            .font(.system(size: 22, weight: .medium))
+                            .scaledFont(size: 22, relativeTo: .title3, weight: .medium)
                             .foregroundStyle(Color.astralViolet)
                     }
             }
@@ -109,16 +109,16 @@ struct HomeView: View {
     private var subscriptionBadge: some View {
         HStack(spacing: 6) {
             Image(systemName: storeManager.hasActiveSubscription ? "crown.fill" : "sparkle")
-                .font(.system(size: 11, weight: .semibold))
+                .scaledFont(size: 11, relativeTo: .caption2, weight: .semibold)
                 .foregroundStyle(storeManager.hasActiveSubscription ? Color.astralGold : Color.astralTextMuted)
 
             Text(storeManager.subscriptionDisplayName)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .scaledFont(size: 12, relativeTo: .caption, weight: .semibold, design: .rounded)
                 .foregroundStyle(storeManager.hasActiveSubscription ? Color.astralGold : Color.astralTextMuted)
 
             if !storeManager.hasActiveSubscription {
                 Button("Upgrade") { showingUpgradeView = true }
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .scaledFont(size: 11, relativeTo: .caption2, weight: .bold, design: .rounded)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 3)
                     .background(Color.astralGold)
@@ -135,12 +135,12 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: AstralTheme.Spacing.sm) {
                 HStack {
                     Text("WEEKLY REFLECTION")
-                        .font(.system(size: 10, weight: .bold))
+                        .scaledFont(size: 10, relativeTo: .caption2, weight: .bold)
                         .foregroundStyle(Color.astralRose)
                         .tracking(1.2)
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
+                        .scaledFont(size: 12, relativeTo: .caption, weight: .semibold)
                         .foregroundStyle(Color.astralTextDim)
                 }
 
@@ -199,7 +199,7 @@ struct HomeView: View {
                 .font(.system(.title2, design: .rounded, weight: .bold))
                 .foregroundStyle(Color.astralText)
             Text(label)
-                .font(.system(size: 10, weight: .semibold))
+                .scaledFont(size: 10, relativeTo: .caption2, weight: .semibold)
                 .foregroundStyle(Color.astralTextMuted)
                 .textCase(.uppercase)
                 .tracking(0.8)
@@ -220,12 +220,12 @@ struct HomeView: View {
         return VStack(alignment: .leading, spacing: AstralTheme.Spacing.sm) {
             HStack(spacing: 6) {
                 Text("TODAY'S AFFIRMATION")
-                    .font(.system(size: 10, weight: .bold))
+                    .scaledFont(size: 10, relativeTo: .caption2, weight: .bold)
                     .foregroundStyle(Color.astralGold)
                     .tracking(1.2)
                 Spacer()
                 Text(Date(), format: .dateTime.month(.abbreviated).day())
-                    .font(.system(size: 10, weight: .medium))
+                    .scaledFont(size: 10, relativeTo: .caption2, weight: .medium)
                     .foregroundStyle(Color.astralTextDim)
             }
 
@@ -312,7 +312,7 @@ struct HomeView: View {
             } label: {
                 HStack(spacing: AstralTheme.Spacing.sm) {
                     Image(systemName: "camera.fill")
-                        .font(.system(size: 14, weight: .semibold))
+                        .scaledFont(size: 14, relativeTo: .footnote, weight: .semibold)
                     Text("Create Your Vision Board")
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                 }
@@ -381,7 +381,7 @@ struct HomeView: View {
                                 .overlay {
                                     VStack(spacing: AstralTheme.Spacing.sm) {
                                         Image(systemName: "plus.circle")
-                                            .font(.system(size: 26, weight: .medium))
+                                            .scaledFont(size: 26, relativeTo: .title3, weight: .medium)
                                             .foregroundStyle(Color.astralViolet)
                                         Text("New Board")
                                             .font(.system(.caption, design: .rounded, weight: .semibold))
@@ -459,14 +459,14 @@ struct VisionBoardCard: View {
 
                 HStack(spacing: 6) {
                     Image(systemName: "eye.fill")
-                        .font(.system(size: 10))
+                        .scaledFont(size: 10, relativeTo: .caption2)
                         .foregroundStyle(Color.astralIndigo.opacity(0.8))
                     Text("\(visionBoard.viewCount)")
-                        .font(.system(size: 11, design: .rounded))
+                        .scaledFont(size: 11, relativeTo: .caption2, design: .rounded)
                         .foregroundStyle(Color.astralTextMuted)
                     Spacer()
                     Text(visionBoard.formattedCreatedDate)
-                        .font(.system(size: 11, design: .rounded))
+                        .scaledFont(size: 11, relativeTo: .caption2, design: .rounded)
                         .foregroundStyle(Color.astralTextDim)
                 }
             }
@@ -517,7 +517,7 @@ struct IconRow: View {
                     .fill(iconColor.opacity(0.18))
                     .frame(width: 36, height: 36)
                 Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
+                    .scaledFont(size: 16, relativeTo: .subheadline, weight: .semibold)
                     .foregroundStyle(iconColor)
             }
 

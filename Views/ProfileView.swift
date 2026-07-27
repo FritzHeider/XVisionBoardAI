@@ -125,11 +125,11 @@ struct ProfileView: View {
                 // Tier badge
                 HStack(spacing: 6) {
                     Image(systemName: storeManager.hasActiveSubscription ? "crown.fill" : "sparkle")
-                        .font(.system(size: 12, weight: .semibold))
+                        .scaledFont(size: 12, relativeTo: .caption, weight: .semibold)
                         .foregroundStyle(storeManager.hasActiveSubscription ? Color.astralGold : Color.astralTextMuted)
 
                     Text(storeManager.subscriptionDisplayName)
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .scaledFont(size: 13, relativeTo: .caption, weight: .semibold, design: .rounded)
                         .foregroundStyle(storeManager.hasActiveSubscription ? Color.astralGold : Color.astralTextMuted)
                 }
                 .padding(.horizontal, AstralTheme.Spacing.md)
@@ -204,7 +204,7 @@ struct ProfileView: View {
                                 .font(.caption)
                                 .foregroundStyle(Color.astralTextMuted)
                             Text(productID.capitalized + " plan")
-                                .font(.system(size: 12, design: .rounded))
+                                .scaledFont(size: 12, relativeTo: .caption, design: .rounded)
                                 .foregroundStyle(Color.astralTextMuted)
                         }
                     }
@@ -407,7 +407,7 @@ struct SettingsRow: View {
                         .fill(iconColor.opacity(0.18))
                         .frame(width: 34, height: 34)
                     Image(systemName: icon)
-                        .font(.system(size: 15, weight: .semibold))
+                        .scaledFont(size: 15, relativeTo: .footnote, weight: .semibold)
                         .foregroundStyle(iconColor)
                 }
 
@@ -424,11 +424,11 @@ struct SettingsRow: View {
 
                 if isEnabled {
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
+                        .scaledFont(size: 12, relativeTo: .caption, weight: .semibold)
                         .foregroundStyle(Color.astralTextDim)
                 } else {
                     Text("Coming soon")
-                        .font(.system(size: 11, design: .rounded))
+                        .scaledFont(size: 11, relativeTo: .caption2, design: .rounded)
                         .foregroundStyle(Color.astralTextDim)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)

@@ -389,7 +389,7 @@ struct CreateVisionBoardView: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("LAYOUT")
-                    .font(.system(size: 11, weight: .bold))
+                    .scaledFont(size: 11, relativeTo: .caption2, weight: .bold)
                     .foregroundStyle(Color.astralGold)
                     .tracking(1.5)
 
@@ -404,7 +404,7 @@ struct CreateVisionBoardView: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("STYLE")
-                    .font(.system(size: 11, weight: .bold))
+                    .scaledFont(size: 11, relativeTo: .caption2, weight: .bold)
                     .foregroundStyle(Color.astralGold)
                     .tracking(1.5)
 

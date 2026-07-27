@@ -13,7 +13,7 @@ struct StatCard: View {
                     .fill(color.opacity(0.18))
                     .frame(width: 44, height: 44)
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .semibold))
+                    .scaledFont(size: 18, relativeTo: .body, weight: .semibold)
                     .foregroundStyle(
                         LinearGradient(
                             colors: [color, color.opacity(0.7)],
@@ -28,7 +28,7 @@ struct StatCard: View {
                 .foregroundStyle(Color.astralText)
 
             Text(title)
-                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .scaledFont(size: 11, relativeTo: .caption2, weight: .medium, design: .rounded)
                 .foregroundStyle(Color.astralTextMuted)
                 .multilineTextAlignment(.center)
         }

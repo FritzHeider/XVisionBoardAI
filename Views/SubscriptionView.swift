@@ -275,7 +275,7 @@ private struct FallbackPaywallView: View {
         } label: {
             HStack(spacing: AstralTheme.Spacing.md) {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                    .font(.system(size: 20))
+                    .scaledFont(size: 20, relativeTo: .body)
                     .foregroundStyle(isSelected ? Color.astralViolet : Color.astralTextMuted)
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -324,7 +324,7 @@ private struct FallbackPaywallView: View {
                     .fill(color.opacity(0.18))
                     .frame(width: 36, height: 36)
                 Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
+                    .scaledFont(size: 16, relativeTo: .subheadline, weight: .semibold)
                     .foregroundStyle(color)
             }
             Text(title)
@@ -332,7 +332,7 @@ private struct FallbackPaywallView: View {
                 .foregroundStyle(Color.astralText)
             Spacer()
             Image(systemName: "checkmark")
-                .font(.system(size: 13, weight: .bold))
+                .scaledFont(size: 13, relativeTo: .caption, weight: .bold)
                 .foregroundStyle(Color.astralSuccess)
         }
     }

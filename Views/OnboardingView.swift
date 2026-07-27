@@ -6,6 +6,7 @@ struct OnboardingView: View {
     @Binding var showOnboarding: Bool
     @Environment(UserManager.self) var userManager
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @State private var step = 0
     @State private var appeared = false
@@ -25,8 +26,19 @@ struct OnboardingView: View {
             ambientGlow
 
             VStack(spacing: 0) {
-                stepContent
+                // At the accessibility text sizes the step content grows past the
+                // screen and pushes the bottom bar off, leaving Continue clipped and
+                // Skip unreachable. Scrolling only kicks in there, so the default
+                // layout (which relies on Spacers filling the height) is unchanged.
+                if dynamicTypeSize.isAccessibilitySize {
+                    ScrollView {
+                        stepContent
+                    }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    stepContent
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
 
                 bottomBar
                     .padding(.bottom, 48)
@@ -154,6 +166,7 @@ struct OnboardingView: View {
 private struct WelcomeStep: View {
     let appeared: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         VStack(spacing: AstralTheme.Spacing.xl) {
@@ -203,18 +216,27 @@ private struct WelcomeStep: View {
 
             // Text
             VStack(spacing: AstralTheme.Spacing.md) {
-                Text("Your Vision,\nRealized")
+                // Keep the designed two-line break at normal sizes, but drop it at
+                // the accessibility sizes: there a forced line is too wide to wrap
+                // and gets truncated to "Your Vision,…", losing content outright.
+                Text(dynamicTypeSize.isAccessibilitySize ? "Your Vision, Realized" : "Your Vision,\nRealized")
                     .font(.system(.largeTitle, design: .rounded, weight: .bold))
                     .foregroundStyle(Color.astralText)
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                Text("In the next two steps, you'll set your intentions.\nOur AI will turn them into your first vision board.")
+                Text(dynamicTypeSize.isAccessibilitySize
+                     ? "In the next two steps, you'll set your intentions. Our AI will turn them into your first vision board."
+                     : "In the next two steps, you'll set your intentions.\nOur AI will turn them into your first vision board.")
                     .font(.system(.body, design: .rounded))
                     .foregroundStyle(Color.astralTextMuted)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, AstralTheme.Spacing.xl)
+                    .padding(.horizontal, dynamicTypeSize.isAccessibilitySize
+                             ? AstralTheme.Spacing.md
+                             : AstralTheme.Spacing.xl)
                     .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .opacity(appeared ? 1 : 0)
             .offset(y: appeared ? 0 : 16)
@@ -350,7 +372,7 @@ private struct LifeAreaChip: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Image(systemName: area.icon)
-                    .font(.system(size: 14, weight: .semibold))
+                    .scaledFont(size: 14, relativeTo: .footnote, weight: .semibold)
                     .foregroundStyle(isSelected ? .white : area.color)
 
                 Text(area.displayName)
@@ -389,7 +411,7 @@ private struct TimelineChip: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: option.icon)
-                    .font(.system(size: 16, weight: .semibold))
+                    .scaledFont(size: 16, relativeTo: .subheadline, weight: .semibold)
                     .foregroundStyle(isSelected ? Color.astralViolet : Color.astralTextMuted)
                 Text(option.displayName)
                     .font(.system(.caption2, design: .rounded, weight: .semibold))
@@ -486,7 +508,7 @@ private struct SummaryStep: View {
                             ForEach(Array(selectedAreas)) { area in
                                 HStack(spacing: 5) {
                                     Image(systemName: area.icon)
-                                        .font(.system(size: 11, weight: .semibold))
+                                        .scaledFont(size: 11, relativeTo: .caption2, weight: .semibold)
                                     Text(area.displayName)
                                         .font(.system(.caption, design: .rounded, weight: .semibold))
                                 }
@@ -569,7 +591,7 @@ struct CoachingCard: View {
     var body: some View {
         HStack(alignment: .top, spacing: AstralTheme.Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 18, weight: .semibold))
+                .scaledFont(size: 18, relativeTo: .body, weight: .semibold)
                 .foregroundStyle(color)
                 .frame(width: 28)
 

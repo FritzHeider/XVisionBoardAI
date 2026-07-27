@@ -87,7 +87,7 @@ struct SignUpView: View {
                                 HStack(spacing: AstralTheme.Spacing.sm) {
                                     Image(systemName: agreeToTerms ? "checkmark.square.fill" : "square")
                                         .foregroundStyle(agreeToTerms ? Color.astralViolet : Color.astralTextDim)
-                                        .font(.system(size: 18))
+                                        .scaledFont(size: 18, relativeTo: .body)
 
                                     Text("I agree to the Terms of Service and Privacy Policy")
                                         .font(.system(.caption, design: .rounded))

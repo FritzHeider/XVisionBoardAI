@@ -193,7 +193,7 @@ struct FilterButton: View {
         Button(action: action) {
             HStack(spacing: 5) {
                 Image(systemName: filter.systemImage)
-                    .font(.system(size: 11, weight: .semibold))
+                    .scaledFont(size: 11, relativeTo: .caption2, weight: .semibold)
                 Text(filter.rawValue)
                     .font(.system(.caption, design: .rounded, weight: .semibold))
             }
@@ -311,7 +311,7 @@ struct VisionBoardGridItem: View {
 struct PersonalizedBadge: View {
     var body: some View {
         Text("YOU")
-            .font(.system(size: 10, weight: .bold, design: .rounded))
+            .scaledFont(size: 10, relativeTo: .caption2, weight: .bold, design: .rounded)
             .foregroundStyle(Color.black)
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
@@ -345,7 +345,7 @@ struct StyleBadge: View {
 
     var body: some View {
         Text(style.displayName)
-            .font(.system(size: 10, weight: .semibold, design: .rounded))
+            .scaledFont(size: 10, relativeTo: .caption2, weight: .semibold, design: .rounded)
             .foregroundStyle(Color.astralText)
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
@@ -361,8 +361,8 @@ struct ViewCountBadge: View {
 
     var body: some View {
         HStack(spacing: 3) {
-            Image(systemName: "eye.fill").font(.system(size: 9))
-            Text("\(count)").font(.system(size: 10, design: .rounded))
+            Image(systemName: "eye.fill").scaledFont(size: 9, relativeTo: .caption2)
+            Text("\(count)").scaledFont(size: 10, relativeTo: .caption2, design: .rounded)
         }
         .foregroundStyle(Color.astralText)
         .padding(.horizontal, 7)

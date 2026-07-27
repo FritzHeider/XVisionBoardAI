@@ -160,11 +160,11 @@ struct WelcomeFeaturePill: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.system(size: 13, weight: .semibold))
+                .scaledFont(size: 13, relativeTo: .caption, weight: .semibold)
                 .foregroundStyle(color)
 
             Text(text)
-                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .scaledFont(size: 12, relativeTo: .caption, weight: .medium, design: .rounded)
                 .foregroundStyle(Color.astralText)
         }
         .padding(.horizontal, 12)

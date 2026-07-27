@@ -275,7 +275,7 @@ struct VisionBoardDetailView: View {
                     // Current affirmation hero card
                     VStack(spacing: 12) {
                         Image(systemName: "sparkles")
-                            .font(.system(size: 20, weight: .semibold))
+                            .scaledFont(size: 20, relativeTo: .body, weight: .semibold)
                             .foregroundStyle(
                                 LinearGradient(colors: [.cosmicGold, .cosmicPurple], startPoint: .leading, endPoint: .trailing)
                             )
@@ -412,7 +412,7 @@ struct VisionBoardDetailView: View {
                         .fill(iconColor.opacity(0.18))
                         .frame(width: 40, height: 40)
                     Image(systemName: icon)
-                        .font(.system(size: 17, weight: .semibold))
+                        .scaledFont(size: 17, relativeTo: .subheadline, weight: .semibold)
                         .foregroundStyle(iconColor)
                 }
 
@@ -428,7 +428,7 @@ struct VisionBoardDetailView: View {
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
+                    .scaledFont(size: 12, relativeTo: .caption, weight: .semibold)
                     .foregroundStyle(Color.astralText.opacity(0.3))
             }
             .padding(.horizontal, 16)
@@ -714,7 +714,7 @@ struct VisionBoardImageView: View {
                         ProgressView().progressViewStyle(.circular).tint(.astralViolet)
                     } else {
                         Image(systemName: "arrow.clockwise.circle.fill")
-                            .font(.system(size: 26))
+                            .scaledFont(size: 26, relativeTo: .title3)
                             .foregroundStyle(Color.astralViolet)
                         Text("Retry")
                             .font(.system(.caption, design: .rounded, weight: .semibold))
@@ -737,7 +737,7 @@ struct GoalCard: View {
                 Spacer()
                 if isAchieved {
                     Text("Done")
-                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .scaledFont(size: 10, relativeTo: .caption2, weight: .bold, design: .rounded)
                         .foregroundStyle(Color.black)
                         .padding(.horizontal, 7)
                         .padding(.vertical, 3)

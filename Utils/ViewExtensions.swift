@@ -8,11 +8,50 @@
 
 import SwiftUI
 
+// MARK: - Dynamic Type
+
+/// Applies a system font at a fixed point size that still scales with Dynamic Type.
+///
+/// `Font.system(size:)` is pixel-locked: at the Accessibility text sizes the app's
+/// headlines grow (they use semantic styles) while badges, dates and counts stay
+/// put, which breaks hierarchy and leaves meta text unreadable — WCAG 1.4.4.
+/// Anchoring the size to a text style via `@ScaledMetric` keeps the design identical
+/// at the default setting while letting it scale from there.
+private struct ScaledSystemFont: ViewModifier {
+    @ScaledMetric private var size: CGFloat
+    private let weight: Font.Weight
+    private let design: Font.Design
+
+    init(size: CGFloat, relativeTo style: Font.TextStyle, weight: Font.Weight, design: Font.Design) {
+        _size = ScaledMetric(wrappedValue: size, relativeTo: style)
+        self.weight = weight
+        self.design = design
+    }
+
+    func body(content: Content) -> some View {
+        content.font(.system(size: size, weight: weight, design: design))
+    }
+}
+
+extension View {
+    /// Drop-in replacement for `.font(.system(size:weight:design:))` that scales.
+    /// Pick `relativeTo` to match the role: `.caption2` for ~10-11pt meta text,
+    /// `.caption` for ~12-13pt, `.footnote` for ~14-15pt.
+    func scaledFont(
+        size: CGFloat,
+        relativeTo style: Font.TextStyle = .body,
+        weight: Font.Weight = .regular,
+        design: Font.Design = .default
+    ) -> some View {
+        modifier(ScaledSystemFont(size: size, relativeTo: style, weight: weight, design: design))
+    }
+}
+
 // MARK: - View Extensions
 
 extension View {
     // MARK: - Cosmic Styling
-    
+
 
     
     // MARK: - Animations
