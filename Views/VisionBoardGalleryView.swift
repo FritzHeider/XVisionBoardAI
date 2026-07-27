@@ -291,7 +291,17 @@ struct VisionBoardGridItem: View {
             }
         }
         .astralCard()
-        .accessibilityLabel("\(visionBoard.title), created \(visionBoard.formattedCreatedDate)")
+        // Include what the generated image depicts — otherwise VoiceOver users get
+        // the title and date but never the imagery, which is the app's whole point.
+        .accessibilityLabel(
+            [
+                visionBoard.title,
+                "created \(visionBoard.formattedCreatedDate)",
+                visionBoard.images.first?.prompt
+            ]
+            .compactMap { $0 }
+            .joined(separator: ", ")
+        )
         .accessibilityHint("Opens the vision board")
     }
 }

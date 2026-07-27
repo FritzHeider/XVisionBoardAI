@@ -16,9 +16,16 @@ extension Color {
     static let astralMint   = Color(red: 0.565, green: 0.749, blue: 0.627)     // #90BFA0 light sage
 
     // Text
-    static let astralText        = Color(red: 0.941, green: 0.902, blue: 0.824) // #F0E6D2 warm cream
-    static let astralTextMuted   = Color(red: 0.549, green: 0.471, blue: 0.376) // #8C7860 warm stone
-    static let astralTextDim     = Color(red: 0.290, green: 0.227, blue: 0.157) // #4A3A28 dark warm
+    //
+    // Contrast ratios are measured against astralSurface2 (#281E14), the lightest
+    // surface these sit on, so they hold everywhere in the app. WCAG AA needs
+    // 4.5:1 for body text. The previous values failed: astralTextMuted was 3.87:1
+    // on cards and astralTextDim was 1.78:1 on the app background — effectively
+    // invisible to low-vision users, on real content (dates, "Coming soon" pills,
+    // unachieved-goal state icons), not just decoration.
+    static let astralText        = Color(red: 0.941, green: 0.902, blue: 0.824) // #F0E6D2 warm cream   13.17:1
+    static let astralTextMuted   = Color(red: 0.699, green: 0.599, blue: 0.478) // #B2997A warm stone    6.00:1
+    static let astralTextDim     = Color(red: 0.641, green: 0.502, blue: 0.347) // #A38058 dark warm     4.50:1
 
     // Semantic
     static let astralError   = Color(red: 0.878, green: 0.439, blue: 0.420)    // #E07060 warm red

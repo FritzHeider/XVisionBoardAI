@@ -844,6 +844,10 @@ private struct PinchToZoom: ViewModifier {
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
 
+    private static let minScale: CGFloat = 1.0
+    private static let maxScale: CGFloat = 5.0
+    private static let step: CGFloat = 1.5
+
     func body(content: Content) -> some View {
         content
             .scaleEffect(scale)
@@ -852,12 +856,29 @@ private struct PinchToZoom: ViewModifier {
                     .onChanged { value in
                         let delta = value / lastScale
                         lastScale = value
-                        scale = min(max(scale * delta, 1.0), 5.0)
+                        scale = min(max(scale * delta, Self.minScale), Self.maxScale)
                     }
                     .onEnded { _ in
                         lastScale = 1.0
                     }
             )
+            // Double-tap works for anyone who can't perform a two-finger pinch.
+            .onTapGesture(count: 2) {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    scale = scale > Self.minScale ? Self.minScale : 2.5
+                }
+            }
+            // Zoom was pinch-only, so it was unreachable via VoiceOver and Switch
+            // Control (WCAG 2.5.1). These surface it in the VoiceOver rotor.
+            .accessibilityAction(named: "Zoom In") {
+                scale = min(scale * Self.step, Self.maxScale)
+            }
+            .accessibilityAction(named: "Zoom Out") {
+                scale = max(scale / Self.step, Self.minScale)
+            }
+            .accessibilityAction(named: "Reset Zoom") {
+                scale = Self.minScale
+            }
     }
 }
 

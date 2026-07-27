@@ -25,8 +25,13 @@ extension View {
 
 }
 
+// Both modifiers below use repeatForever. Their counterparts in ColorScheme.swift
+// (AstralShimmerModifier / AstralPulsingModifier) already gate on Reduce Motion;
+// these did not, so reaching for .shimmer()/.floating() instead of .astralShimmer()/
+// .pulsing() would silently ship an unstoppable animation. Now guarded to match.
 private struct ShimmerModifier: ViewModifier {
     @State private var offset: CGFloat = -200
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
@@ -38,8 +43,11 @@ private struct ShimmerModifier: ViewModifier {
                     ))
                     .rotationEffect(.degrees(-45))
                     .offset(x: offset)
-                    .animation(.linear(duration: 1.5).repeatForever(autoreverses: false), value: offset)
-                    .onAppear { offset = 200 }
+                    .animation(
+                        reduceMotion ? nil : .linear(duration: 1.5).repeatForever(autoreverses: false),
+                        value: offset
+                    )
+                    .onAppear { if !reduceMotion { offset = 200 } }
             )
             .clipped()
     }
@@ -47,12 +55,16 @@ private struct ShimmerModifier: ViewModifier {
 
 private struct FloatingModifier: ViewModifier {
     @State private var isUp = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
             .offset(y: isUp ? -6 : 0)
-            .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: isUp)
-            .onAppear { isUp = true }
+            .animation(
+                reduceMotion ? nil : .easeInOut(duration: 2.0).repeatForever(autoreverses: true),
+                value: isUp
+            )
+            .onAppear { if !reduceMotion { isUp = true } }
     }
 }
 

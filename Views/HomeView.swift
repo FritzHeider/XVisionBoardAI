@@ -486,7 +486,15 @@ struct VisionBoardCard: View {
         // opened from Home at all. Merge into one button-like element.
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
-        .accessibilityLabel("\(visionBoard.title), created \(visionBoard.formattedCreatedDate)")
+        .accessibilityLabel(
+            [
+                visionBoard.title,
+                "created \(visionBoard.formattedCreatedDate)",
+                visionBoard.images.first?.prompt
+            ]
+            .compactMap { $0 }
+            .joined(separator: ", ")
+        )
         .accessibilityHint("Opens the vision board")
         .sheet(isPresented: $showingDetail) {
             VisionBoardDetailView(visionBoard: visionBoard)

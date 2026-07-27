@@ -13,7 +13,12 @@ struct CameraView: View {
     @StateObject private var cameraManager = CameraManager()
     @Binding var capturedImage: UIImage?
     @Binding var isPresented: Bool
-    
+
+    /// Every other animated surface in the app honours Reduce Motion; the live
+    /// camera preview was the one screen that did not, and its face-guide pulses
+    /// on every frame update — the worst case for vestibular sensitivity.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     @State private var showingImagePicker = false
     @State private var showingPermissionAlert = false
     
@@ -119,7 +124,7 @@ var body: some View {
                 .frame(width: 200, height: 200)
                 .scaleEffect(cameraManager.faceDetected ? 1.0 : 1.1)
                 .opacity(cameraManager.faceDetected ? 1.0 : 0.6)
-                .animation(.easeInOut(duration: 0.3), value: cameraManager.faceDetected)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: cameraManager.faceDetected)
             
             // Quality indicator
             VStack {
@@ -246,7 +251,7 @@ var body: some View {
                 }
                 .disabled(cameraManager.isCapturing || cameraManager.faceQuality == .poor)
                 .scaleEffect(cameraManager.faceQuality == .excellent ? 1.1 : 1.0)
-                .animation(.easeInOut(duration: 0.2), value: cameraManager.faceQuality)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: cameraManager.faceQuality)
                 .accessibilityLabel("Take photo")
                 .accessibilityHint(cameraManager.faceQuality.description)
             }
