@@ -350,6 +350,25 @@ class VisionBoardManager {
         visionBoards.removeAll { $0.id == visionBoard.id }
     }
 
+    /// Removes every board and all of its on-disk assets.
+    ///
+    /// Backs the "Delete Account" promise in ProfileView: boards are stored in a
+    /// single device-wide directory, not namespaced per account, so without this
+    /// a deleted account's boards reappear for the next account on the device.
+    func deleteAllVisionBoards() {
+        for board in visionBoards {
+            ImageStore.delete(board.userImageFilename)
+            for image in board.images {
+                if let filename = image.imageFilename { ImageStore.delete(filename) }
+                BoardImageCache.shared.removeObject(forKey: image.id.uuidString as NSString)
+            }
+        }
+        visionBoards.removeAll()
+        // Remove the whole directory (including any quarantined/corrupt files)
+        // rather than deleting file-by-file, so nothing survives the wipe.
+        try? FileManager.default.removeItem(at: Self.boardsDirectory)
+    }
+
     func toggleFavorite(_ visionBoard: VisionBoard) {
         if let index = visionBoards.firstIndex(where: { $0.id == visionBoard.id }) {
             visionBoards[index].toggleFavorite()

@@ -160,7 +160,14 @@ struct EditVisionBoardView: View {
     }
 
     private func save() {
-        var updated = visionBoard
+        // Start from the CURRENT stored board, not the snapshot captured when this
+        // sheet opened. updateVisionBoard replaces the whole record, so editing from
+        // the stale copy would silently revert anything that changed while the sheet
+        // was open (regenerated images, favorite, view count, achieved goals).
+        guard var updated = visionBoardManager.visionBoards.first(where: { $0.id == visionBoard.id }) else {
+            dismiss()
+            return
+        }
         updated.title = title
         updated.description = description
         updated.manifestationGoals = goals

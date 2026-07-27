@@ -250,12 +250,17 @@ class CameraManager: NSObject, ObservableObject {
     
     // MARK: - Face Detection
     
-    private func detectFaces(in sampleBuffer: CMSampleBuffer) {
+    /// Runs on the AVFoundation sample-buffer queue, never on the main actor.
+    /// Must stay `nonisolated`: AVFoundation invokes the delegate that calls this
+    /// from `sessionQueue`, and a MainActor-isolated body would trip the Swift 6
+    /// runtime isolation check on every frame.
+    nonisolated private func detectFaces(in sampleBuffer: CMSampleBuffer) {
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        
+
         let request = VNDetectFaceRectanglesRequest { [weak self] request, error in
-            DispatchQueue.main.async {
-                self?.processFaceDetectionResults(request.results)
+            let results = request.results
+            Task { @MainActor in
+                self?.processFaceDetectionResults(results)
             }
         }
         
@@ -304,33 +309,37 @@ class CameraManager: NSObject, ObservableObject {
 
 // MARK: - AVCapturePhotoCaptureDelegate
 
-extension CameraManager: @preconcurrency AVCapturePhotoCaptureDelegate {
-    func photoOutput(
+extension CameraManager: AVCapturePhotoCaptureDelegate {
+    /// AVCapturePhotoOutput delivers this on an internal queue, not guaranteed main.
+    /// `nonisolated` keeps the method entry off the main actor; every state mutation
+    /// below hops back explicitly.
+    nonisolated func photoOutput(
         _ output: AVCapturePhotoOutput,
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?
     ) {
         if let error = error {
-            DispatchQueue.main.async {
-                self.errorMessage = "Photo capture failed: \(error.localizedDescription)"
+            let message = "Photo capture failed: \(error.localizedDescription)"
+            Task { @MainActor in
+                self.errorMessage = message
                 self.isCapturing = false
             }
             return
         }
-        
+
         guard let imageData = photo.fileDataRepresentation(),
               let image = UIImage(data: imageData) else {
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 self.errorMessage = "Failed to process captured image"
                 self.isCapturing = false
             }
             return
         }
-        
+
         // Mirror the image for selfie (since front camera is mirrored)
         let mirroredImage = image.withHorizontallyFlippedOrientation()
-        
-        DispatchQueue.main.async {
+
+        Task { @MainActor in
             self.capturedImage = mirroredImage
             self.isCapturing = false
         }
@@ -339,8 +348,9 @@ extension CameraManager: @preconcurrency AVCapturePhotoCaptureDelegate {
 
 // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
 
-extension CameraManager: @preconcurrency AVCaptureVideoDataOutputSampleBufferDelegate {
-    func captureOutput(
+extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
+    /// AVFoundation delivers this on `sessionQueue`, not main — see `detectFaces`.
+    nonisolated func captureOutput(
         _ output: AVCaptureOutput,
         didOutput sampleBuffer: CMSampleBuffer,
         from connection: AVCaptureConnection

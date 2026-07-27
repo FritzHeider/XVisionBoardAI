@@ -62,7 +62,7 @@ struct ProfileView: View {
         }
         .alert("Delete Account", isPresented: $showingDeleteAccountAlert) {
             Button("Delete", role: .destructive) {
-                Task { await userManager.deleteAccount() }
+                Task { await userManager.deleteAccount(boardManager: visionBoardManager) }
             }
             Button("Cancel", role: .cancel) { }
         } message: {

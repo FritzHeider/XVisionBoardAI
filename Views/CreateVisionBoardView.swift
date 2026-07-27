@@ -105,6 +105,12 @@ struct CreateVisionBoardView: View {
                 }
             }
         }
+        // Swipe-to-dismiss bypasses the Cancel button, so without this the generation
+        // Task keeps running after the sheet is gone — still issuing billed fal.ai
+        // requests and mutating the shared VisionBoardManager the user can no longer see.
+        .onDisappear {
+            generationTask?.cancel()
+        }
         .sheet(isPresented: $showingCamera) {
             CameraView(capturedImage: $capturedSelfie, isPresented: $showingCamera)
         }

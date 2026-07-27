@@ -164,12 +164,19 @@ class UserManager {
         clearUserData()
     }
     
-    func deleteAccount() async -> Bool {
+    /// Deletes the account and every artifact it produced.
+    ///
+    /// `boardManager` is required, not optional: the Delete Account alert tells the
+    /// user this "will permanently delete your account and all vision boards," and
+    /// boards live in a device-wide directory that survives sign-out. Without
+    /// wiping them here, the next account created on this device inherits them.
+    func deleteAccount(boardManager: VisionBoardManager) async -> Bool {
         isLoading = true
-        
+
         // Simulate API call
         try? await Task.sleep(nanoseconds: 1_000_000_000)
-        
+
+        boardManager.deleteAllVisionBoards()
         signOut()
         isLoading = false
         return true
