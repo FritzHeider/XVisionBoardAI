@@ -323,6 +323,10 @@ struct PersonalizedBadge: View {
 struct FavoriteButton: View {
     let visionBoard: VisionBoard
     @Environment(VisionBoardManager.self) var visionBoardManager
+    /// Mirrors the stored state so the haptic fires on the actual change.
+    private var isFavorite: Bool {
+        visionBoardManager.visionBoards.first { $0.id == visionBoard.id }?.isFavorite ?? visionBoard.isFavorite
+    }
 
     var body: some View {
         Button {
@@ -337,6 +341,7 @@ struct FavoriteButton: View {
                 .contentShape(Rectangle())
         }
         .accessibilityLabel(visionBoard.isFavorite ? "Remove from favorites" : "Add to favorites")
+        .sensoryFeedback(.impact(weight: .light), trigger: isFavorite)
     }
 }
 

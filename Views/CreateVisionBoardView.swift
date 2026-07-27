@@ -139,6 +139,10 @@ struct CreateVisionBoardView: View {
         } message: {
             Text(generationError ?? "")
         }
+        // The app had no haptics at all. Finishing a board is its defining moment
+        // and can take minutes, so it's exactly where a success tap belongs.
+        .sensoryFeedback(.success, trigger: createdVisionBoard?.id)
+        .sensoryFeedback(.error, trigger: generationError)
     }
     
     // MARK: - Limit Reached View

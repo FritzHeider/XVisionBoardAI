@@ -18,11 +18,11 @@ To enable auto-login in debug builds, set the environment variable `DEBUG_AUTO_L
 
 ## Architecture
 
-MVVM with three `@MainActor ObservableObject` view models injected app-wide via `environmentObject`:
+MVVM with three `@Observable` view models injected app-wide via `.environment(_:)` and read with `@Environment(Type.self)`. (`CameraManager` is the one deliberate holdout: still `ObservableObject` + `@StateObject`, because it owns an AVFoundation session tied to the view's lifetime.)
 
 - **`StoreManager`** — RevenueCat wrapper (`import RevenueCat`); owns offering/product loading, purchase flow, and entitlement checks via the `"XVisionBoardAI Pro"` entitlement. Source of truth for `SubscriptionType`.
 - **`UserManager`** — Auth state, user profile, onboarding flag. Persists the `User` (email, goals, journal insights) to `KeychainStore` (production) — migrated off UserDefaults for PII safety — and the auth token in `KeychainTokenStore`; both use `InMemoryTokenStore` under DEBUG auto-login.
-- **`VisionBoardManager`** — CRUD for `VisionBoard` objects; drives the async AI-generation flow (currently simulated). Persists boards via `JSONEncoder` → `UserDefaults`.
+- **`VisionBoardManager`** — CRUD for `VisionBoard` objects; drives the real async AI-generation pipeline (Gemini text + parallel `FalAIService` image generation via `TaskGroup`, with cancellation cleanup and corrupt-file quarantine). Persists boards as JSON files in `Documents/VisionBoards`, one per board. Concurrent generations are rejected while `isGenerating` is true.
 
 ### Navigation flow
 
@@ -33,9 +33,9 @@ MVVM with three `@MainActor ObservableObject` view models injected app-wide via 
 
 ### Key patterns
 
-- `@AppStorage("isLoggedIn")` is the shared auth gate; both `ContentView` and `UserManager` bind to it.
+- `UserManager.isLoggedIn` is the single auth gate. It is a plain `@Observable` property that mirrors itself into `UserDefaults` via `didSet`; `ContentView` reads it through `@Environment(UserManager.self)`. There is no `@AppStorage` anywhere in the app — do not reintroduce a second binding to the same key.
 - All view models are `@MainActor`; async work uses `Task {}` / `await`.
-- Dark-only UI — `preferredColorScheme(.dark)` set at the root, tab bar and nav bar painted `UIColor.black` via `UIAppearance`.
+- Dark-only UI — `preferredColorScheme(.dark)` is set on the root `Group` in `ContentView`. This is load-bearing, not cosmetic: the palette is hardcoded dark, so without it the status bar draws dark glyphs on a near-black background and all system chrome (alerts, keyboard, share sheet, date pickers) renders light over dark content. There is no `UIAppearance` styling; the tab and nav bars are unstyled system chrome.
 
 ### Design system (`Utils/ColorScheme.swift`)
 
@@ -46,9 +46,22 @@ All colors are in the "cosmic" palette (`Color.cosmicPurple`, `.cosmicBlack`, `.
 - `VisionBoard` — `Codable/Identifiable` struct; contains `[VisionBoardImage]`, `[String]` affirmations, `VisionBoardLayout` (grid3x3/collage/singlePoster), `VisionBoardStyle` (cinematic/luxurious/minimalist/natural/futuristic/artistic).
 - `User` — `Codable/Identifiable` struct; owns `SubscriptionType` (.free / .pro) and `UserPreferences`.
 
-### AI generation (stub)
+### AI generation
 
-`VisionBoardManager.createVisionBoard(...)` simulates multi-step generation with `Task.sleep`. Image URLs are currently hardcoded to `picsum.photos` placeholders. Affirmations are generated locally from templates. Replacing these with real API calls is the main integration gap.
+`VisionBoardManager.createVisionBoard(...)` runs a real pipeline, not a stub:
+affirmations from `GeminiTextService`, then images from `FalAIService` generated
+in parallel with `withTaskGroup`, downloaded, written via `ImageStore`, and
+persisted as JSON. It honours `Task.checkCancellation()` and cleans up written
+files on cancel.
+
+Requests route through a Cloudflare Worker proxy (`proxy/`, `APIConfig.usesProxy`)
+authenticated with App Attest, so provider keys do not ship in the binary.
+`Services/GeminiImageService.swift` is currently dead code and is the one path
+that still expects a direct in-binary key.
+
+Generation realistically takes 30s-3min, so `CreateVisionBoardView` holds a
+`UIApplication` background-task assertion for the duration and cancels its
+`generationTask` in `.onDisappear`.
 
 ### Subscription products (RevenueCat)
 

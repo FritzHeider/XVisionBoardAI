@@ -24,6 +24,12 @@ struct ContentView: View {
                 WelcomeView()
             }
         }
+        // The whole palette is hardcoded dark (astralBlack surfaces, cream text),
+        // but nothing locked the color scheme. In Light Mode the status bar drew
+        // dark glyphs on the near-black background and every piece of system
+        // chrome — alerts, keyboard, share sheet, context menus, date pickers —
+        // rendered light over dark content.
+        .preferredColorScheme(.dark)
     }
 }
 

@@ -344,7 +344,8 @@ struct ProfileView: View {
                     DatePicker("Reminder Time", selection: $reminderTime, displayedComponents: .hourAndMinute)
                         .datePickerStyle(.wheel)
                         .labelsHidden()
-                        .colorScheme(.dark)
+                        // .colorScheme(.dark) removed: the root now locks the
+                        // scheme, so this local workaround is redundant.
                         .padding(AstralTheme.Spacing.lg)
                         .astralCard()
                         .padding(.horizontal, AstralTheme.Spacing.lg)
