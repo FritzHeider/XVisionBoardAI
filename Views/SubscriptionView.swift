@@ -17,6 +17,7 @@ import RevenueCatUI
 struct SubscriptionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(StoreManager.self) var storeManager
+    @State private var restoreMessage: String?
 
     var body: some View {
         if let offering = storeManager.currentOffering {
@@ -27,10 +28,31 @@ struct SubscriptionView: View {
                 }
                 .onRestoreCompleted { customerInfo in
                     storeManager.customerInfo = customerInfo
-                    dismiss()
+                    // onRestoreCompleted fires when the restore *call* succeeds, not
+                    // when an entitlement was found. Dismissing unconditionally makes
+                    // a no-op restore look like the paywall closed for no reason.
+                    if customerInfo.entitlements[StoreManager.entitlementID]?.isActive == true {
+                        dismiss()
+                    } else {
+                        restoreMessage = "No previous purchases were found for this Apple Account."
+                    }
                 }
-                .onPurchaseCancelled {
-                    dismiss()
+                // Deliberately no dismiss() on cancel: tapping Cancel on the system
+                // sheet should return the user to the paywall to pick another plan,
+                // not close the whole upgrade flow.
+                .onPurchaseFailure { error in
+                    storeManager.errorMessage = error.localizedDescription
+                }
+                .onRestoreFailure { error in
+                    storeManager.errorMessage = "Restore failed: \(error.localizedDescription)"
+                }
+                .alert("Restore Purchases", isPresented: Binding<Bool>(
+                    get: { restoreMessage != nil },
+                    set: { if !$0 { restoreMessage = nil } }
+                )) {
+                    Button("OK") { restoreMessage = nil }
+                } message: {
+                    Text(restoreMessage ?? "")
                 }
         } else {
             // Fallback: no offering configured yet (SDK still loading)

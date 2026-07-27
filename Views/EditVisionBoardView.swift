@@ -139,6 +139,15 @@ struct EditVisionBoardView: View {
                             .foregroundStyle(goals[i].isAchieved ? Color.astralGold : Color.astralTextDim)
                             .font(.title3)
                     }
+                    // Without a label every row announces just "circle, button",
+                    // so a list of goals is indistinguishable under VoiceOver.
+                    .accessibilityLabel(
+                        goals[i].isAchieved
+                            ? "Mark \(goals[i].title) as not achieved"
+                            : "Mark \(goals[i].title) as achieved"
+                    )
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
 
                     Text(goals[i].title)
                         .foregroundStyle(Color.astralText)
@@ -152,6 +161,9 @@ struct EditVisionBoardView: View {
                         Image(systemName: "trash")
                             .foregroundStyle(Color.astralError.opacity(0.7))
                     }
+                    .accessibilityLabel("Delete goal: \(goals[i].title)")
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
                 }
                 .padding(AstralTheme.Spacing.md)
                 .astralCard()

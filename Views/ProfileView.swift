@@ -47,7 +47,11 @@ struct ProfileView: View {
             .navigationBarTitleDisplayMode(.large)
         }
         .sheet(isPresented: $showingSubscriptionView) { SubscriptionView() }
-        .sheet(isPresented: $showingCustomerCenter) { CustomerCenterView() }
+        // Customer Center is where users cancel, change plan, or request refunds,
+        // so entitlement state is stale the moment it closes.
+        .sheet(isPresented: $showingCustomerCenter, onDismiss: {
+            Task { await storeManager.refreshCustomerInfo() }
+        }) { CustomerCenterView() }
         .sheet(isPresented: $showingNotificationSettings) { notificationSettingsSheet }
         .alert("Sign Out", isPresented: $showingSignOutAlert) {
             Button("Sign Out", role: .destructive) {

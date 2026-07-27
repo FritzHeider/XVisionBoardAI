@@ -11,6 +11,7 @@ import RevenueCat
 
 @main
 struct XVisionBoardAIApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     @State private var storeManager = StoreManager()
     @State private var userManager = UserManager()
     @State private var visionBoardManager = VisionBoardManager()
@@ -48,10 +49,17 @@ struct XVisionBoardAIApp: App {
                         await storeManager.login(userID: user.id.uuidString)
                     }
                 }
-                // Keep CustomerInfo fresh after the app returns to foreground.
+                // Initial load at cold launch.
                 .task {
                     await storeManager.refreshCustomerInfo()
                     await storeManager.fetchCurrentOffering()
+                }
+                // Actually keep CustomerInfo fresh on foreground. A bare .task runs
+                // once when the root view appears, so without this a renewal, refund,
+                // or purchase made elsewhere never lands until the process restarts.
+                .onChange(of: scenePhase) { _, newPhase in
+                    guard newPhase == .active else { return }
+                    Task { await storeManager.refreshCustomerInfo() }
                 }
                 // Register an App Attest key with the proxy (no-op unless the
                 // proxy is configured and the device supports App Attest).

@@ -467,6 +467,10 @@ struct CreateVisionBoardView: View {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundStyle(.red)
                             }
+                            // Otherwise every row is just "xmark circle fill, button".
+                            .accessibilityLabel("Remove goal: \(manifestationGoals[index])")
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
                         }
                         .padding()
                         .cosmicCard()

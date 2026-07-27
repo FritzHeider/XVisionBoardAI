@@ -66,7 +66,9 @@ actor AppAttestManager {
         // 1. One-time challenge from the proxy.
         var challengeReq = URLRequest(url: base.appendingPathComponent("attest/challenge"))
         challengeReq.httpMethod = "POST"
-        let (cData, _) = try await URLSession.shared.data(for: challengeReq)
+        challengeReq.timeoutInterval = 30
+        let (cData, cResp) = try await URLSession.shared.data(for: challengeReq)
+        try Self.ensureSuccess(cResp, body: cData, step: "challenge")
         guard let cJSON = try? JSONSerialization.jsonObject(with: cData) as? [String: Any],
               let challenge = cJSON["challenge"] as? String,
               let challengeData = Data(base64Encoded: challenge) else {
@@ -80,13 +82,36 @@ actor AppAttestManager {
         var verifyReq = URLRequest(url: base.appendingPathComponent("attest/verify"))
         verifyReq.httpMethod = "POST"
         verifyReq.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        verifyReq.timeoutInterval = 30
         verifyReq.httpBody = try JSONSerialization.data(withJSONObject: [
             "keyId": keyId,
             "attestation": attestation.base64EncodedString(),
             "challenge": challenge
         ])
-        _ = try await URLSession.shared.data(for: verifyReq)
+        // Must throw on a rejected attestation. If this is ignored, prepare()
+        // still persists keyId to the Keychain and its `storedKeyId == nil` guard
+        // means the device never re-attests — every later request then carries an
+        // assertion the proxy never validated, surfacing as opaque 401s elsewhere.
+        let (vData, vResp) = try await URLSession.shared.data(for: verifyReq)
+        try Self.ensureSuccess(vResp, body: vData, step: "verify")
     }
 
-    enum AppAttestError: Error { case badChallenge }
+    /// Throws unless the response carries a 2xx status.
+    private static func ensureSuccess(_ response: URLResponse, body: Data, step: String) throws {
+        guard let http = response as? HTTPURLResponse else {
+            throw AppAttestError.verificationFailed(step: step, status: -1, body: "non-HTTP response")
+        }
+        guard (200..<300).contains(http.statusCode) else {
+            throw AppAttestError.verificationFailed(
+                step: step,
+                status: http.statusCode,
+                body: String(data: body, encoding: .utf8) ?? "<unreadable>"
+            )
+        }
+    }
+
+    enum AppAttestError: Error {
+        case badChallenge
+        case verificationFailed(step: String, status: Int, body: String)
+    }
 }

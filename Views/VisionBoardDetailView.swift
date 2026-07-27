@@ -81,10 +81,14 @@ struct VisionBoardDetailView: View {
                     Menu("Options", systemImage: "ellipsis.circle") {
                         Button("Edit Vision Board", systemImage: "pencil", action: { showingEditView = true })
 
+                        // Read through currentBoard, not the `visionBoard` snapshot:
+                        // toggleFavorite mutates the stored copy, so a snapshot-driven
+                        // label never updates and the button reads "Add to Favorites"
+                        // even after the board has been favorited.
                         Button(
-                            visionBoard.isFavorite ? "Remove from Favorites" : "Add to Favorites",
-                            systemImage: visionBoard.isFavorite ? "heart.slash" : "heart",
-                            action: { visionBoardManager.toggleFavorite(visionBoard) }
+                            currentBoard.isFavorite ? "Remove from Favorites" : "Add to Favorites",
+                            systemImage: currentBoard.isFavorite ? "heart.slash" : "heart",
+                            action: { visionBoardManager.toggleFavorite(currentBoard) }
                         )
 
                         Button("Share", systemImage: "square.and.arrow.up", action: { showingShareSheet = true })
@@ -160,10 +164,10 @@ struct VisionBoardDetailView: View {
                         
                         InfoBadge(
                             icon: "eye.fill",
-                            text: "\(visionBoard.viewCount) views"
+                            text: "\(currentBoard.viewCount) views"
                         )
-                        
-                        if visionBoard.isFavorite {
+
+                        if currentBoard.isFavorite {
                             InfoBadge(
                                 icon: "heart.fill",
                                 text: "Favorite"
@@ -518,11 +522,34 @@ struct VisionBoardDetailView: View {
         }
         let printInfo = UIPrintInfo(dictionary: nil)
         printInfo.outputType = .photo
-        printInfo.jobName = visionBoard.title
+        printInfo.jobName = currentBoard.title
         let controller = UIPrintInteractionController.shared
         controller.printInfo = printInfo
         controller.printingItem = img
-        controller.present(animated: true)
+
+        let completion: UIPrintInteractionController.CompletionHandler = { _, completed, error in
+            if let error, !completed {
+                actionFeedback = "Couldn't print: \(error.localizedDescription)"
+            }
+        }
+
+        // On iPad the print controller must be presented as a popover from an
+        // anchor; the iPhone-style present() throws NSInternalInconsistencyException.
+        if UIDevice.current.userInterfaceIdiom == .pad,
+           let anchorView = Self.keyWindow {
+            let bounds = anchorView.bounds
+            let anchor = CGRect(x: bounds.midX, y: bounds.midY, width: 1, height: 1)
+            controller.present(from: anchor, in: anchorView, animated: true, completionHandler: completion)
+        } else {
+            controller.present(animated: true, completionHandler: completion)
+        }
+    }
+
+    private static var keyWindow: UIWindow? {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow)
     }
 
     private func scheduleDailyReminder() {

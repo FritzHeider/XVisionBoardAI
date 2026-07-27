@@ -476,10 +476,18 @@ struct VisionBoardCard: View {
         }
         .padding(AstralTheme.Spacing.sm)
         .astralCard()
+        .contentShape(Rectangle())
         .onTapGesture {
             visionBoardManager.incrementViewCount(visionBoard)
             showingDetail = true
         }
+        // A bare onTapGesture on a VStack is invisible to VoiceOver: the card was
+        // announced as loose fragments with no action, so a board could not be
+        // opened from Home at all. Merge into one button-like element.
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel("\(visionBoard.title), created \(visionBoard.formattedCreatedDate)")
+        .accessibilityHint("Opens the vision board")
         .sheet(isPresented: $showingDetail) {
             VisionBoardDetailView(visionBoard: visionBoard)
         }
