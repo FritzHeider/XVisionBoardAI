@@ -43,6 +43,9 @@
 		9E86F9132FC97C5600510CC9 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 9E86F9112FC97C5600510CC9 /* RevenueCat */; };
 		9E86F9142FC97C5600510CC9 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 9E86F9122FC97C5600510CC9 /* RevenueCatUI */; };
 		B21BEFA02E43409E00EDBF92 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */; };
+		910 /* ColorContrastTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 900 /* Tests/ColorContrastTests.swift */; };
+		911 /* ReminderScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901 /* Tests/ReminderScheduleTests.swift */; };
+		912 /* GenerationConcurrencyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 902 /* Tests/GenerationConcurrencyTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -83,6 +86,10 @@
 		7 /* XVisionBoardAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = XVisionBoardAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B21BEF9E2E4338C700EDBF92 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SpeechManager.swift; path = Services/SpeechManager.swift; sourceTree = "<group>"; };
+		900 /* Tests/ColorContrastTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/ColorContrastTests.swift; sourceTree = "<group>"; };
+		901 /* Tests/ReminderScheduleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/ReminderScheduleTests.swift; sourceTree = "<group>"; };
+		902 /* Tests/GenerationConcurrencyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/GenerationConcurrencyTests.swift; sourceTree = "<group>"; };
+		903 /* XVisionBoardAITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = XVisionBoardAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +99,13 @@
 			files = (
 				9E86F9132FC97C5600510CC9 /* RevenueCat in Frameworks */,
 				9E86F9142FC97C5600510CC9 /* RevenueCatUI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		932 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,6 +151,7 @@
 				200 /* Secrets.xcconfig */,
 				300 /* Assets.xcassets */,
 				310 /* PrivacyInfo.xcprivacy */,
+				920 /* Tests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -144,8 +159,19 @@
 			isa = PBXGroup;
 			children = (
 				7 /* XVisionBoardAI.app */,
+				903 /* XVisionBoardAITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		920 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				900 /* Tests/ColorContrastTests.swift */,
+				901 /* Tests/ReminderScheduleTests.swift */,
+				902 /* Tests/GenerationConcurrencyTests.swift */,
+			);
+			name = Tests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -172,7 +198,43 @@
 			productReference = 7 /* XVisionBoardAI.app */;
 			productType = "com.apple.product-type.application";
 		};
+		930 /* XVisionBoardAITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 940 /* Build configuration list for PBXNativeTarget "XVisionBoardAITests" */;
+			buildPhases = (
+				931 /* Sources */,
+				932 /* Frameworks */,
+				933 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				950 /* PBXTargetDependency */,
+			);
+			name = XVisionBoardAITests;
+			productName = XVisionBoardAITests;
+			productReference = 903 /* XVisionBoardAITests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
+
+/* Begin PBXContainerItemProxy section */
+		951 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5;
+			remoteInfo = XVisionBoardAI;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		950 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5 /* XVisionBoardAI */;
+			targetProxy = 951 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXProject section */
 		1 /* Project object */ = {
@@ -198,6 +260,7 @@
 			projectRoot = "";
 			targets = (
 				5 /* XVisionBoardAI */,
+				930 /* XVisionBoardAITests */,
 			);
 		};
 /* End PBXProject section */
@@ -209,6 +272,13 @@
 			files = (
 				301 /* Assets.xcassets in Resources */,
 				311 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		933 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -251,6 +321,16 @@
 				351 /* GeminiTextService.swift in Sources */,
 				149 /* Views/EditVisionBoardView.swift in Sources */,
 				151 /* Views/OnboardingView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		931 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				910 /* ColorContrastTests.swift in Sources */,
+				911 /* ReminderScheduleTests.swift in Sources */,
+				912 /* GenerationConcurrencyTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -356,6 +436,46 @@
 			};
 			name = Release;
 		};
+		941 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = CCK3M3DML9;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xvisionboardai.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/XVisionBoardAI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/XVisionBoardAI";
+			};
+			name = Debug;
+		};
+		942 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = CCK3M3DML9;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xvisionboardai.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/XVisionBoardAI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/XVisionBoardAI";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -364,6 +484,15 @@
 			buildConfigurations = (
 				21 /* Debug */,
 				22 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		940 /* Build configuration list for PBXNativeTarget "XVisionBoardAITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				941 /* Debug */,
+				942 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
