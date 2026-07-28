@@ -10,7 +10,7 @@ This is an Xcode project targeting iOS 26+. There is no separate build script �
 # Build for simulator
 xcodebuild -project XVisionBoardAI.xcodeproj -scheme XVisionBoardAI -destination 'platform=iOS Simulator,name=iPhone 17' build
 
-# Run tests (no test targets currently exist)
+# Run tests — XVisionBoardAITests (Swift Testing, hosted by the app target)
 xcodebuild test -project XVisionBoardAI.xcodeproj -scheme XVisionBoardAI -destination 'platform=iOS Simulator,name=iPhone 17'
 ```
 
@@ -119,3 +119,26 @@ The correct pattern:
 3. `Secrets.xcconfig.template` (committed) shows contributors what keys are needed
 
 If a new API key is required, add it to `Secrets.xcconfig` and `Secrets.xcconfig.template`, then reference it as `$(KEY_NAME)` in Info.plist or Swift via `Bundle.main.infoDictionary`.
+
+## Tests
+
+`XVisionBoardAITests` is a Swift Testing unit bundle hosted by the app target,
+run via the shared `XVisionBoardAI` scheme. Coverage is deliberately narrow: the
+units that are fast and network-free.
+
+- `ColorContrastTests` computes WCAG 2.1 relative luminance from the real token
+  values and asserts every text token clears 4.5:1 on every surface. If you
+  retune the palette and drop below AA, this fails.
+- `ReminderScheduleTests` asserts the user's picked reminder time reaches the
+  notification trigger.
+- `GenerationConcurrencyTests` asserts a second concurrent `createVisionBoard`
+  is rejected and does not disturb the in-flight run's state.
+
+**`GenerationConcurrencyTests` has a `.timeLimit` for a reason.** With the
+`isGenerating` guard in place these tests return in milliseconds because
+`createVisionBoard` bails out before doing work. Remove the guard and they run a
+real fal.ai generation instead — minutes per test, billed to your account. Don't
+strip the time limit.
+
+Not covered (needs UI automation this project doesn't have): the launch path,
+IAP flows, App Attest, and Dynamic Type layout at accessibility sizes.
