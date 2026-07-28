@@ -46,6 +46,7 @@
 		910 /* ColorContrastTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 900 /* Tests/ColorContrastTests.swift */; };
 		911 /* ReminderScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901 /* Tests/ReminderScheduleTests.swift */; };
 		912 /* GenerationConcurrencyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 902 /* Tests/GenerationConcurrencyTests.swift */; };
+		913 /* AccountDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904 /* Tests/AccountDeletionTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -90,6 +91,7 @@
 		901 /* Tests/ReminderScheduleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/ReminderScheduleTests.swift; sourceTree = "<group>"; };
 		902 /* Tests/GenerationConcurrencyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/GenerationConcurrencyTests.swift; sourceTree = "<group>"; };
 		903 /* XVisionBoardAITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = XVisionBoardAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		904 /* Tests/AccountDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/AccountDeletionTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -170,6 +172,7 @@
 				900 /* Tests/ColorContrastTests.swift */,
 				901 /* Tests/ReminderScheduleTests.swift */,
 				902 /* Tests/GenerationConcurrencyTests.swift */,
+				904 /* Tests/AccountDeletionTests.swift */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -331,6 +334,7 @@
 				910 /* ColorContrastTests.swift in Sources */,
 				911 /* ReminderScheduleTests.swift in Sources */,
 				912 /* GenerationConcurrencyTests.swift in Sources */,
+				913 /* AccountDeletionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
