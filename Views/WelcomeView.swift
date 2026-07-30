@@ -146,6 +146,16 @@ struct WelcomeView: View {
             }
             .font(.system(.subheadline, design: .rounded))
             .foregroundStyle(Color.astralTextMuted)
+
+            // Nothing here needs an account — boards are stored on the device and
+            // subscriptions bill the Apple Account — so requiring signup just to
+            // look around was friction with no purpose (Guideline 5.1.1(ii)).
+            Button("Continue without an account") {
+                userManager.continueAsGuest()
+            }
+            .font(.system(.footnote, design: .rounded))
+            .foregroundStyle(Color.astralTextDim)
+            .padding(.top, AstralTheme.Spacing.xs)
         }
     }
 }

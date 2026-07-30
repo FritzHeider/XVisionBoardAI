@@ -48,6 +48,25 @@ class UserManager {
 
     static let aiConsentKey = "hasConsentedToAIProcessing"
 
+    /// `true` when the session was started via "Continue without an account".
+    ///
+    /// Nothing in this app needs an account: boards are device-local JSON, the
+    /// profile never leaves the Keychain, and subscriptions are billed to the
+    /// buyer's Apple Account (RevenueCat runs anonymous — see `StoreManager`).
+    /// Requiring signup to get in was therefore a Guideline 5.1.1(ii) risk with
+    /// no upside, so guests get the full app.
+    ///
+    /// This lives on `UserManager` rather than on `User` deliberately: `User` is
+    /// `Codable` and persisted to the Keychain, and Swift's synthesized
+    /// `init(from:)` does not fall back to default values for missing keys, so a
+    /// new non-optional property there would fail to decode every already-stored
+    /// user and drop existing testers to the auth wall.
+    var isGuest = false {
+        didSet { UserDefaults.standard.set(isGuest, forKey: Self.guestKey) }
+    }
+
+    static let guestKey = "isGuestSession"
+
     /// 8:00 AM, matching the previously hardcoded schedule.
     static var defaultReminderTime: Date {
         Calendar.current.date(from: DateComponents(hour: 8, minute: 0)) ?? Date()
@@ -127,10 +146,31 @@ class UserManager {
         lastInsightDate = userDefaults.object(forKey: "lastInsightDate") as? Date
         reminderTime = (userDefaults.object(forKey: "reminderTime") as? Date) ?? Self.defaultReminderTime
         hasConsentedToAIProcessing = userDefaults.bool(forKey: Self.aiConsentKey)
+        isGuest = userDefaults.bool(forKey: Self.guestKey)
     }
     
     // MARK: - User Authentication
-    
+
+    /// Enters the app with no credentials, from "Continue without an account".
+    ///
+    /// Persists a token *and* a Keychain user on purpose: `loadUserData()` treats
+    /// a missing token as a dead session and resets to the auth wall, so a guest
+    /// without one would be signed out on next launch.
+    func continueAsGuest() {
+        errorMessage = nil
+
+        let guest = User(email: "", username: "Dreamer")
+        currentUser = guest
+        isGuest = true
+        isLoggedIn = true
+
+        let token = UUID().uuidString
+        authToken = token
+        tokenStore.save(token)
+
+        saveUserData()
+    }
+
     func signUp(email: String, username: String, password: String) async -> Bool {
         isLoading = true
         errorMessage = nil
@@ -157,6 +197,8 @@ class UserManager {
         // Create new user
         let newUser = User(email: email, username: username)
         currentUser = newUser
+        // A guest who signs up has converted to a real account.
+        isGuest = false
         isLoggedIn = true
 
         let token = UUID().uuidString
@@ -189,6 +231,7 @@ class UserManager {
         // Mock successful login
         let user = User(email: email, username: email.components(separatedBy: "@").first ?? "User")
         currentUser = user
+        isGuest = false
         isLoggedIn = true
 
         let token = UUID().uuidString
@@ -202,6 +245,7 @@ class UserManager {
 
     func signOut() {
         currentUser = nil
+        isGuest = false
         isLoggedIn = false
         authToken = nil
         tokenStore.clear()

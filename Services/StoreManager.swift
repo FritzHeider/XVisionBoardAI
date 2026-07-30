@@ -180,6 +180,24 @@ class StoreManager {
 
     // MARK: - User Identity
 
+    /// ⚠️ BOTH METHODS BELOW ARE INTENTIONALLY UNUSED. Do not wire them up
+    /// without reading this.
+    ///
+    /// RevenueCat runs with an anonymous app user ID and that is correct here.
+    /// Entitlement is derived from the buyer's **Apple Account** receipt, not
+    /// from our app account — which is just as well, because our accounts are
+    /// device-local with no backend, and users can now enter as guests with no
+    /// account at all (`UserManager.isGuest`).
+    ///
+    /// Calling `logOut()` without ever calling `logIn` is actively harmful: it
+    /// rotates to a *new* anonymous ID, so a paying user can show as non-Pro
+    /// until `customerInfo()` refreshes or they tap Restore. That was happening
+    /// on every sign-out until it was removed from `ProfileView`.
+    ///
+    /// These become useful only if a real backend with stable server-side user
+    /// IDs is introduced — at which point call `login(userID:)` on sign-in *and*
+    /// `logout()` on sign-out, as a matched pair, never one alone.
+
     /// Associates RevenueCat with a specific app user. Call after login.
     func login(userID: String) async {
         do {

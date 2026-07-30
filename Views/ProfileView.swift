@@ -14,6 +14,7 @@ struct ProfileView: View {
     @State private var showingSignOutAlert = false
     @State private var showingDeleteAccountAlert = false
     @State private var showingNotificationSettings = false
+    @State private var showingSignUp = false
     /// Working copy for the picker; committed to UserManager on Save so that
     /// cancelling the sheet doesn't silently change the schedule.
     @State private var reminderTime: Date = UserManager.defaultReminderTime
@@ -48,6 +49,7 @@ struct ProfileView: View {
             .navigationBarTitleDisplayMode(.large)
         }
         .sheet(isPresented: $showingSubscriptionView) { SubscriptionView() }
+        .sheet(isPresented: $showingSignUp) { SignUpView() }
         // Customer Center is where users cancel, change plan, or request refunds,
         // so entitlement state is stale the moment it closes.
         .sheet(isPresented: $showingCustomerCenter, onDismiss: {
@@ -60,22 +62,26 @@ struct ProfileView: View {
         }
         .alert("Sign Out", isPresented: $showingSignOutAlert) {
             Button("Sign Out", role: .destructive) {
-                Task {
-                    await storeManager.logout()
-                    userManager.signOut()
-                }
+                // Deliberately does NOT call Purchases.logOut(): nothing ever
+                // calls logIn, so RevenueCat runs anonymous and logging out just
+                // rotates to a fresh anonymous ID, briefly showing a paying user
+                // as non-Pro. The entitlement comes from the Apple Account
+                // receipt, which is unchanged by signing out of our own app.
+                userManager.signOut()
             }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Are you sure you want to sign out?")
+            Text("Are you sure you want to sign out? Your vision boards stay on this device.")
         }
-        .alert("Delete Account", isPresented: $showingDeleteAccountAlert) {
+        .alert(destructiveActionTitle, isPresented: $showingDeleteAccountAlert) {
             Button("Delete", role: .destructive) {
                 Task { await userManager.deleteAccount(boardManager: visionBoardManager) }
             }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("This will permanently delete your account and all vision boards. This action cannot be undone.")
+            Text(userManager.isGuest
+                 ? "This will permanently delete all your vision boards and reset the app. This action cannot be undone."
+                 : "This will permanently delete your account and all vision boards. This action cannot be undone.")
         }
     }
 
@@ -123,7 +129,10 @@ struct ProfileView: View {
                     .font(.system(.title2, design: .rounded, weight: .bold))
                     .foregroundStyle(Color.astralText)
 
-                Text(userManager.currentUser?.email ?? "")
+                // A guest has no email, so the line would otherwise render blank.
+                Text(userManager.isGuest
+                     ? "Guest · saved on this device"
+                     : (userManager.currentUser?.email ?? ""))
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(Color.astralTextMuted)
 
@@ -316,11 +325,19 @@ struct ProfileView: View {
             sectionHeader("Account")
 
             VStack(spacing: AstralTheme.Spacing.sm) {
+                // Guests can claim an account without signing out first, so the
+                // guest path isn't a one-way door.
+                if userManager.isGuest {
+                    Button("Create an Account") { showingSignUp = true }
+                        .astralButton(.primary)
+                        .frame(maxWidth: .infinity)
+                }
+
                 Button("Sign Out") { showingSignOutAlert = true }
                     .astralButton(.secondary)
                     .frame(maxWidth: .infinity)
 
-                Button("Delete Account") { showingDeleteAccountAlert = true }
+                Button(destructiveActionTitle) { showingDeleteAccountAlert = true }
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, AstralTheme.Spacing.xl)
                     .padding(.vertical, AstralTheme.Spacing.md)
@@ -338,6 +355,11 @@ struct ProfileView: View {
     }
 
     // MARK: - Helpers
+
+    /// A guest has no account to delete, but the data wipe is still offered.
+    private var destructiveActionTitle: String {
+        userManager.isGuest ? "Delete All My Data" : "Delete Account"
+    }
 
     private var formattedReminderTime: String { userManager.formattedReminderTime }
 

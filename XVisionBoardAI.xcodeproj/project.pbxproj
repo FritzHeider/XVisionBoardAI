@@ -48,6 +48,7 @@
 		912 /* GenerationConcurrencyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 902 /* Tests/GenerationConcurrencyTests.swift */; };
 		913 /* AccountDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904 /* Tests/AccountDeletionTests.swift */; };
 		914 /* AIConsentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 905 /* Tests/AIConsentTests.swift */; };
+		915 /* GuestModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 906 /* Tests/GuestModeTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -94,6 +95,7 @@
 		903 /* XVisionBoardAITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = XVisionBoardAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		904 /* Tests/AccountDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/AccountDeletionTests.swift; sourceTree = "<group>"; };
 		905 /* Tests/AIConsentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/AIConsentTests.swift; sourceTree = "<group>"; };
+		906 /* Tests/GuestModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/GuestModeTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -176,6 +178,7 @@
 				902 /* Tests/GenerationConcurrencyTests.swift */,
 				904 /* Tests/AccountDeletionTests.swift */,
 				905 /* Tests/AIConsentTests.swift */,
+				906 /* Tests/GuestModeTests.swift */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -339,6 +342,7 @@
 				912 /* GenerationConcurrencyTests.swift in Sources */,
 				913 /* AccountDeletionTests.swift in Sources */,
 				914 /* AIConsentTests.swift in Sources */,
+				915 /* GuestModeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -28,7 +28,12 @@ MVVM with three `@Observable` view models injected app-wide via `.environment(_:
 
 `ContentView` is the root router:
 1. Onboarding (`OnboardingView`) — shown first run until `UserManager.hasCompletedOnboarding`
-2. Auth wall (`WelcomeView` / `AuthViews`) — shown when `isLoggedIn == false`
+2. Auth wall (`WelcomeView` / `AuthViews`) — shown when `isLoggedIn == false`.
+   Not actually a wall: "Continue without an account" calls
+   `UserManager.continueAsGuest()`, which sets `isLoggedIn` with no credentials
+   and flags `isGuest`. Nothing in the app needs an account (boards are
+   device-local, subscriptions bill the Apple Account), and requiring signup was
+   a Guideline 5.1.1(ii) risk. Guests convert via Profile → Create an Account.
 3. Main app (`MainTabView`) — four tabs: Home, Create, Gallery, Profile
 
 ### Key patterns
@@ -133,6 +138,23 @@ units that are fast and network-free.
   notification trigger.
 - `GenerationConcurrencyTests` asserts a second concurrent `createVisionBoard`
   is rejected and does not disturb the in-flight run's state.
+- `AccountDeletionTests` asserts `deleteAccount` actually wipes boards, so a
+  deleted account's boards can't reappear for the next account on the device
+  (Guideline 5.1.1(v)).
+- `AIConsentTests` pins the third-party AI consent gate: denied by default,
+  persisted across launch, **not** granted as a side effect of signing up, and
+  withdrawn on account deletion (Guideline 5.1.2(i)).
+- `GuestModeTests` pins the guest path (Guideline 5.1.1(ii)). The load-bearing
+  case is "A guest session survives relaunch": `loadUserData()` treats a missing
+  token as a dead session, so `continueAsGuest()` must store one even though a
+  guest has nothing to authenticate. Without it, guests are silently returned to
+  the welcome screen on the *next* launch — invisible in a single session.
+
+**Three of these suites are destructive.** `AccountDeletionTests` and
+`GuestModeTests` wipe `Documents/VisionBoards`, and `AIConsentTests` /
+`GuestModeTests` mutate the real `UserDefaults` suite and Keychain (they save and
+restore the keys they touch). Fine on a simulator; don't run them against a
+device holding real data.
 
 **`GenerationConcurrencyTests` has a `.timeLimit` for a reason.** With the
 `isGenerating` guard in place these tests return in milliseconds because

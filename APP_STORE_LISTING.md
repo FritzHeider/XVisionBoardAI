@@ -111,8 +111,11 @@ Everything else: not collected. No third-party advertising, no tracking.
 ---
 
 ## App Review notes (paste into "Notes" for the reviewer)
-- Create an account in-app with any email/password (accounts are stored locally on
-  the device — there is no server, so no demo credentials are needed and any values work).
+- **No sign-in is required.** Tap "Continue without an account" on the welcome
+  screen to use the full app. No demo credentials are needed.
+- If you'd rather test the account path, any email/password works: accounts are
+  stored locally on the device and there is no server behind them. A guest can
+  also convert later via Profile → Create an Account.
 - To see the core feature: allow camera or pick a photo, enter a goal, tap generate.
   A one-time consent screen explains that the selfie goes to fal.ai and the goal
   text to Google Gemini; tap "I Agree" to proceed. Generation takes 30s–3min and
