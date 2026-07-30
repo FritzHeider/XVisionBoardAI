@@ -128,8 +128,12 @@ Everything else: not collected. No third-party advertising, no tracking.
 
 ## Assets you still need to produce
 - App preview screenshots: **6.9"/6.7" iPhone required** (1290×2796 or 1320×2868). 3–10 shots: onboarding, a finished vision board, the styles picker, affirmations, the paywall.
-- **iPad 13" screenshots are also required while `TARGETED_DEVICE_FAMILY = "1,2"`.**
-  If you don't intend to support iPad at launch, set it to `1` (iPhone only) and
-  this requirement — plus the Guideline 4.0 risk of a phone layout on a 13" canvas —
-  goes away.
+- **No iPad screenshots needed.** The app target is `TARGETED_DEVICE_FAMILY = 1`
+  and the built binary declares `UIDeviceFamily = [1]`, so this ships iPhone-only.
+  It still installs on iPad in scaled compatibility mode, but iPad support is not
+  advertised and review won't hold it to an iPad-native standard.
+  If you ever go universal, budget for it first: only 3 of 12 view files respond
+  to `horizontalSizeClass`, there are ~48 hardcoded pixel widths in Views and no
+  `maxWidth` caps, and no orientation keys are declared anywhere. A phone layout
+  stranded on a 13" canvas is what Guideline 4.0 gets cited for.
 - (Optional) an app preview video.
