@@ -143,14 +143,16 @@ private struct FallbackPaywallView: View {
                             }
                         }
 
-                        // Feature highlights
+                        // Feature highlights.
+                        //
+                        // Every row must correspond to a gate that actually
+                        // exists in StoreManager — see the note on
+                        // `SubscriptionType.features`. Do not add aspirational
+                        // rows here; App Review verifies these in sandbox.
                         VStack(spacing: AstralTheme.Spacing.md) {
-                            featureRow("Unlimited Vision Boards",      icon: "infinity",              color: .astralViolet)
-                            featureRow("HD Export & Wallpaper",        icon: "photo.fill",            color: .astralIndigo)
-                            featureRow("AI-Generated Affirmations",    icon: "sparkles",              color: .astralGold)
-                            featureRow("Offline Image Caching",        icon: "icloud.and.arrow.down", color: .astralRose)
-                            featureRow("Daily Reminder Notifications", icon: "bell.badge.fill",       color: .astralViolet)
-                            featureRow("Priority Support",             icon: "headphones",            color: .astralIndigo)
+                            featureRow("Unlimited Vision Boards",       icon: "infinity",   color: .astralViolet)
+                            featureRow("HD, Watermark-Free Exports",    icon: "photo.fill", color: .astralIndigo)
+                            featureRow("Audio Affirmations (Read Aloud)", icon: "speaker.wave.2.fill", color: .astralGold)
                         }
                         .padding(AstralTheme.Spacing.lg)
                         .astralGlass(tint: .astralViolet)

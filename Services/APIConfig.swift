@@ -10,8 +10,10 @@ import Foundation
 /// rotate the old keys.
 enum APIConfig {
 
-    // TODO(manifestme): set to your deployed Worker URL, e.g.
-    // URL(string: "https://manifestme-proxy.<subdomain>.workers.dev")
+    // Deployed Worker (proxy/). Provider keys live server-side as Worker
+    // secrets, so no `$(…)_API_KEY` entries belong in Info.plist while this is
+    // non-nil. Setting it back to nil re-enables direct mode, which needs those
+    // keys restored — see Secrets.xcconfig.template.
     static let proxyBaseURL: URL? = URL(string: "https://manifestme-proxy.blueloke.workers.dev")
     static var usesProxy: Bool { proxyBaseURL != nil }
 

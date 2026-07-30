@@ -17,9 +17,12 @@ struct VisionBoardDetailView: View {
     @Environment(VisionBoardManager.self) var visionBoardManager
     /// Needed for the user's chosen daily-reminder time.
     @Environment(UserManager.self) var userManager
+    /// Gates the two Pro export/audio promises made on the paywall.
+    @Environment(StoreManager.self) var storeManager
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var speechManager = SpeechManager()
+    @State private var showingUpgrade = false
     @State private var showingEditView = false
     @State private var showingShareSheet = false
     @State private var showingDeleteAlert = false
@@ -135,6 +138,7 @@ struct VisionBoardDetailView: View {
         } message: {
             Text(actionFeedback ?? "")
         }
+        .sheet(isPresented: $showingUpgrade) { SubscriptionView() }
         .onAppear {
             startAffirmationCycle()
         }
@@ -264,9 +268,24 @@ struct VisionBoardDetailView: View {
                 
                 Spacer()
 
-                Button("Read Aloud") {
+                // "Audio affirmations" is sold as a Pro feature, so it is gated
+                // here rather than being silently free.
+                Button {
                     guard !visionBoard.affirmations.isEmpty else { return }
+                    guard storeManager.canUseAudioAffirmations() else {
+                        showingUpgrade = true
+                        return
+                    }
                     speechManager.speak(visionBoard.affirmations[currentAffirmationIndex])
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("Read Aloud")
+                        if !storeManager.canUseAudioAffirmations() {
+                            Image(systemName: "crown.fill")
+                                .scaledFont(size: 9, relativeTo: .caption2)
+                                .foregroundStyle(Color.astralGold)
+                        }
+                    }
                 }
                 .font(.caption)
                 .foregroundStyle(Color.astralViolet)
@@ -485,19 +504,69 @@ struct VisionBoardDetailView: View {
         return content
     }
 
+    /// The single render path behind Share, Set as Wallpaper, and Print.
+    ///
+    /// The paywall promises Pro users "HD Export" and free users "Watermarked
+    /// exports" at "Standard resolution". Both halves of that promise are
+    /// enforced here, so App Review can verify the difference by purchasing in
+    /// sandbox and exporting the same board twice.
+    ///
+    /// Rows are built with a plain VStack/HStack rather than LazyVGrid: at HD
+    /// size most tiles sit outside the visible bounds, and `ImageRenderer` is
+    /// not guaranteed to materialize lazy content it thinks is offscreen.
     @MainActor
     private func renderBoardImage() -> UIImage? {
-        let gridView = LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 4) {
-            ForEach(visionBoard.images.prefix(9)) { img in
-                VisionBoardImageView(image: img) { }
-                    .frame(height: 120)
+        let isHD = storeManager.canExportHD()
+        let width: CGFloat = isHD ? 1200 : 400
+        let spacing: CGFloat = isHD ? 12 : 4
+        let tileHeight: CGFloat = isHD ? 360 : 120
+        let tiles = Array(visionBoard.images.prefix(9))
+        let rows = stride(from: 0, to: tiles.count, by: 3).map { start in
+            Array(tiles[start..<min(start + 3, tiles.count)])
+        }
+
+        let boardView = VStack(spacing: spacing) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                HStack(spacing: spacing) {
+                    ForEach(row) { img in
+                        VisionBoardImageView(image: img) { }
+                            .frame(height: tileHeight)
+                    }
+                    // Keep a short final row left-aligned instead of stretched.
+                    if row.count < 3 {
+                        ForEach(0..<(3 - row.count), id: \.self) { _ in
+                            Color.clear.frame(height: tileHeight)
+                        }
+                    }
+                }
             }
         }
-        .frame(width: 400)
+        .frame(width: width)
         .background(Color.cosmicBlack)
-        let renderer = ImageRenderer(content: gridView)
+        .overlay(alignment: .bottom) {
+            if !isHD { exportWatermark(width: width) }
+        }
+
+        let renderer = ImageRenderer(content: boardView)
         renderer.scale = UITraitCollection.current.displayScale
         return renderer.uiImage
+    }
+
+    /// Burned into free-tier exports. Sized relative to the render width so it
+    /// stays legible at whatever resolution the tier renders at.
+    private func exportWatermark(width: CGFloat) -> some View {
+        HStack(spacing: width * 0.015) {
+            Image(systemName: "sparkles")
+            Text("Made with ManifestMe")
+        }
+        // Deliberately a fixed size, not `scaledFont`: an exported image must
+        // not change dimensions with the reader's Dynamic Type setting.
+        .font(.system(size: width * 0.034, weight: .semibold, design: .rounded))
+        .foregroundStyle(Color.white.opacity(0.92))
+        .padding(.horizontal, width * 0.032)
+        .padding(.vertical, width * 0.018)
+        .background(Capsule().fill(Color.black.opacity(0.55)))
+        .padding(.bottom, width * 0.03)
     }
 
     private func saveWallpaperToPhotos() {

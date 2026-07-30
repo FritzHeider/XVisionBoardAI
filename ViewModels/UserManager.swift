@@ -32,6 +32,22 @@ class UserManager {
         didSet { UserDefaults.standard.set(reminderTime, forKey: "reminderTime") }
     }
 
+    /// Whether the user has explicitly agreed to their selfie and goal text
+    /// being sent to third-party AI providers (fal.ai for imagery, Google Gemini
+    /// for affirmations).
+    ///
+    /// Guideline 5.1.2(i) requires explicit permission before sharing personal
+    /// data with third parties, and a face photo is about as personal as it
+    /// gets. This gate is checked in `CreateVisionBoardView` before generation
+    /// starts — do not bypass it or default it to `true`. It intentionally
+    /// survives sign-out (it is a device-level disclosure acknowledgement, not
+    /// account state) but is cleared by `deleteAccount()`.
+    var hasConsentedToAIProcessing = false {
+        didSet { UserDefaults.standard.set(hasConsentedToAIProcessing, forKey: Self.aiConsentKey) }
+    }
+
+    static let aiConsentKey = "hasConsentedToAIProcessing"
+
     /// 8:00 AM, matching the previously hardcoded schedule.
     static var defaultReminderTime: Date {
         Calendar.current.date(from: DateComponents(hour: 8, minute: 0)) ?? Date()
@@ -110,6 +126,7 @@ class UserManager {
         lastStreakDate = userDefaults.object(forKey: "lastStreakDate") as? Date
         lastInsightDate = userDefaults.object(forKey: "lastInsightDate") as? Date
         reminderTime = (userDefaults.object(forKey: "reminderTime") as? Date) ?? Self.defaultReminderTime
+        hasConsentedToAIProcessing = userDefaults.bool(forKey: Self.aiConsentKey)
     }
     
     // MARK: - User Authentication
@@ -204,6 +221,9 @@ class UserManager {
         try? await Task.sleep(nanoseconds: 1_000_000_000)
 
         boardManager.deleteAllVisionBoards()
+        // Deleting the account withdraws the third-party AI consent too, so the
+        // next user of this device is asked again rather than inheriting it.
+        hasConsentedToAIProcessing = false
         signOut()
         isLoading = false
         return true

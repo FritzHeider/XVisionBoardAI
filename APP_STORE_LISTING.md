@@ -38,7 +38,13 @@ FEATURES
 • Multiple layouts — 3×3 grid, collage, or single poster
 • Daily visualization reminders to keep your vision front of mind
 • Save your board as wallpaper or share it for accountability
-• Your data stays on your device
+• Your boards and profile are stored on your device, not on our servers
+
+HOW YOUR DATA IS USED
+Generating a board sends your selfie to fal.ai (for the imagery) and your goals to
+Google Gemini (for the affirmations). ManifestMe asks for your explicit permission
+before this happens the first time. Nothing is sold or used for advertising, and
+your email, profile, and finished boards never leave your device.
 
 WHY IT WORKS
 Visualization is one of the most powerful tools for manifestation. When you can actually see yourself living your dream life — not a stranger, not a stock photo, but you — your goals become real, emotional, and achievable. ManifestMe makes that vision vivid every single day.
@@ -48,7 +54,8 @@ Start manifesting the life you deserve. Your future self is waiting.
 —
 
 ManifestMe Pro
-Unlock unlimited vision boards, HD watermark-free exports, advanced AI personalization, and daily reminders.
+Unlock unlimited vision boards, HD watermark-free exports, and audio affirmations.
+(Free includes one vision board with standard-resolution, watermarked exports.)
 • Weekly — $4.99/week
 • Monthly — $9.99/month
 • Yearly — $39.99/year (with a 3-day free trial)
@@ -104,12 +111,25 @@ Everything else: not collected. No third-party advertising, no tracking.
 ---
 
 ## App Review notes (paste into "Notes" for the reviewer)
-- Create an account in-app with any email/password (account is stored locally on device).
-- To see the core feature: allow camera or pick a photo, enter a goal, tap generate — the app calls our image/affirmation services and produces a personalized vision board (requires network).
-- Subscriptions unlock unlimited boards; the paywall shows weekly/monthly/yearly with a 3-day trial on the yearly plan.
+- Create an account in-app with any email/password (accounts are stored locally on
+  the device — there is no server, so no demo credentials are needed and any values work).
+- To see the core feature: allow camera or pick a photo, enter a goal, tap generate.
+  A one-time consent screen explains that the selfie goes to fal.ai and the goal
+  text to Google Gemini; tap "I Agree" to proceed. Generation takes 30s–3min and
+  requires network.
+- Free tier includes 1 vision board so the full flow can be exercised without purchasing.
+- Pro unlocks exactly three things, each verifiable in sandbox: unlimited boards,
+  HD watermark-free exports (free exports are watermarked "Made with ManifestMe"
+  at standard resolution — export the same board before and after purchase to compare),
+  and audio affirmations ("Read Aloud" on a board's detail screen).
+- Privacy Policy and Terms of Use are linked in-app at Profile → Legal, and on the paywall.
 - Account deletion is available in Profile → Delete Account.
 - Contact: support@fritzthatcat.com
 
 ## Assets you still need to produce
 - App preview screenshots: **6.9"/6.7" iPhone required** (1290×2796 or 1320×2868). 3–10 shots: onboarding, a finished vision board, the styles picker, affirmations, the paywall.
+- **iPad 13" screenshots are also required while `TARGETED_DEVICE_FAMILY = "1,2"`.**
+  If you don't intend to support iPad at launch, set it to `1` (iPhone only) and
+  this requirement — plus the Guideline 4.0 risk of a phone layout on a 13" canvas —
+  goes away.
 - (Optional) an app preview video.

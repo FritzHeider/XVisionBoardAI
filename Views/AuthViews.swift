@@ -80,22 +80,32 @@ struct SignUpView: View {
                             AstralTextField(title: "Password", text: $password, isSecure: true)
                             AstralTextField(title: "Confirm Password", text: $confirmPassword, isSecure: true)
 
-                            // Terms
-                            Button {
-                                agreeToTerms.toggle()
-                            } label: {
-                                HStack(spacing: AstralTheme.Spacing.sm) {
+                            // Terms.
+                            //
+                            // The checkbox and the two legal links have separate
+                            // hit areas: previously the whole row was one
+                            // toggle button, so the "Terms of Service and
+                            // Privacy Policy" text was not actually reachable.
+                            // Guideline 5.1.1(i) expects the policy to be
+                            // openable from inside the app.
+                            HStack(alignment: .firstTextBaseline, spacing: AstralTheme.Spacing.sm) {
+                                Button {
+                                    agreeToTerms.toggle()
+                                } label: {
                                     Image(systemName: agreeToTerms ? "checkmark.square.fill" : "square")
                                         .foregroundStyle(agreeToTerms ? Color.astralViolet : Color.astralTextDim)
                                         .scaledFont(size: 18, relativeTo: .body)
-
-                                    Text("I agree to the Terms of Service and Privacy Policy")
-                                        .font(.system(.caption, design: .rounded))
-                                        .foregroundStyle(Color.astralTextMuted)
-                                        .multilineTextAlignment(.leading)
-
-                                    Spacer()
                                 }
+                                .accessibilityLabel("I agree to the Terms of Service and Privacy Policy")
+                                .accessibilityAddTraits(agreeToTerms ? [.isSelected] : [])
+
+                                Text("I agree to the [Terms of Service](\(AppLinks.termsOfUse.absoluteString)) and [Privacy Policy](\(AppLinks.privacyPolicy.absoluteString))")
+                                    .font(.system(.caption, design: .rounded))
+                                    .foregroundStyle(Color.astralTextMuted)
+                                    .tint(Color.astralViolet)
+                                    .multilineTextAlignment(.leading)
+
+                                Spacer()
                             }
                         }
                         .padding(.horizontal, AstralTheme.Spacing.lg)
@@ -239,13 +249,18 @@ struct SignInView: View {
                             ProgressView().tint(Color.astralViolet)
                         }
 
-                        Button("Forgot Password?") { showingForgotPassword = true }
+                        // Accounts and boards live only on this device — there is
+                        // no server holding a password to reset. Saying so is
+                        // both accurate and more useful than the previous
+                        // "reset is coming soon" copy, which described a feature
+                        // this architecture will never need.
+                        Button("Trouble signing in?") { showingForgotPassword = true }
                             .font(.system(.subheadline, design: .rounded))
                             .foregroundStyle(Color.astralViolet)
-                            .alert("Reset Password", isPresented: $showingForgotPassword) {
+                            .alert("Trouble signing in?", isPresented: $showingForgotPassword) {
                                 Button("OK", role: .cancel) {}
                             } message: {
-                                Text("In-app password reset is coming soon. Email \(AppLinks.supportEmail) from your account address and we'll reset it for you.")
+                                Text("ManifestMe keeps your account and boards on this device, so there's no password to recover. Sign in with the email you used here, or create a new account. Need a hand? Email \(AppLinks.supportEmail).")
                             }
                     }
                     .opacity(appeared ? 1 : 0)

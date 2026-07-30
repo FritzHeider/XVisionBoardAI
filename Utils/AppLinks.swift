@@ -2,9 +2,11 @@ import Foundation
 
 /// Centralized external links and contact info.
 ///
-/// ⚠️ SUBMISSION BLOCKERS: the two TODO values below must be real before App
-/// Store review. The paywall requires a working Privacy Policy link, and the
-/// support email is shown on the paywall and the Forgot Password flow.
+/// Every URL here is user-reachable from inside the app and is checked by App
+/// Review: the privacy policy and terms are linked from both the paywall and
+/// Profile → Legal, and the support address backs Profile → Contact Support and
+/// the Forgot Password flow. If any of these stops resolving, that is a
+/// Guideline 5.1.1(i) / 2.1 finding — verify them before each submission.
 enum AppLinks {
 
     // MARK: - Legal
@@ -16,14 +18,24 @@ enum AppLinks {
     // manifestme.fritzthatcat.com (see docs/CNAME + Cloudflare DNS).
     static let privacyPolicy = URL(string: "https://manifestme.fritzthatcat.com/privacy-policy.html")!
 
+    // MARK: - Marketing
+
+    /// Doubles as the App Store Connect Support/Marketing URL and the payload
+    /// for Profile → Share App. Replace with the App Store product URL once the
+    /// app is live if you'd rather share the listing directly.
+    static let marketingSite = URL(string: "https://manifestme.fritzthatcat.com/")!
+
     // MARK: - Contact
 
     static let supportEmail = "support@fritzthatcat.com"
 
-    /// `true` while the placeholders above are still unset — used to hide/guard
-    /// UI that would otherwise point users at a dead link in the meantime.
-    static var legalLinksConfigured: Bool {
-        !privacyPolicy.absoluteString.contains("example.com") &&
-        !supportEmail.contains("example.com")
+    /// Pre-addressed support mail, subject included so inbound mail is
+    /// attributable to the app rather than arriving blank.
+    static var supportMailto: URL {
+        var comps = URLComponents()
+        comps.scheme = "mailto"
+        comps.path = supportEmail
+        comps.queryItems = [URLQueryItem(name: "subject", value: "ManifestMe Support")]
+        return comps.url ?? URL(string: "mailto:\(supportEmail)")!
     }
 }

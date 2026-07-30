@@ -31,6 +31,7 @@ struct CreateVisionBoardView: View {
     @State private var generationError: String?
     @State private var showingBoardDetail = false
     @State private var generationTask: Task<Void, Never>?
+    @State private var showingAIConsent = false
     
     enum CreationStep: CaseIterable {
         case selfie, details, customize, goals, generate, complete
@@ -116,6 +117,18 @@ struct CreateVisionBoardView: View {
         }
         .sheet(isPresented: $showingUpgrade) {
             SubscriptionView()
+        }
+        // Resume generation only if consent was actually granted; dismissing
+        // without agreeing leaves the user on the goals step with nothing sent.
+        .sheet(isPresented: $showingAIConsent, onDismiss: {
+            if userManager.hasConsentedToAIProcessing {
+                generateVisionBoard()
+            }
+        }) {
+            AIProcessingConsentView {
+                userManager.hasConsentedToAIProcessing = true
+                showingAIConsent = false
+            }
         }
         .sheet(isPresented: $showingBoardDetail, onDismiss: { dismiss() }) {
             if let board = createdVisionBoard {
@@ -265,7 +278,22 @@ struct CreateVisionBoardView: View {
                 FeatureBadge(icon: "camera.fill", text: "Face Integration", color: .astralIndigo)
                 FeatureBadge(icon: "heart.fill", text: "Dream Visualization", color: .astralRose)
             }
-            
+
+            // Standing disclosure, shown every time rather than only in the
+            // one-time consent sheet: the user is about to hand over a photo of
+            // their face and should be able to see where it goes at the moment
+            // they choose it, not just the first time.
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "info.circle")
+                    .scaledFont(size: 12, relativeTo: .caption2)
+                Text("Your photo is sent to fal.ai to generate your images. [Privacy Policy](\(AppLinks.privacyPolicy.absoluteString))")
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .font(.system(.caption2, design: .rounded))
+            .foregroundStyle(Color.astralTextMuted)
+            .tint(Color.astralViolet)
+            .padding(.horizontal, 4)
+
             // Selfie preview or capture
             if let selfie = capturedSelfie {
                 VStack(spacing: 16) {
@@ -754,6 +782,15 @@ struct CreateVisionBoardView: View {
     private func generateVisionBoard() {
         guard let selfie = capturedSelfie else { return }
 
+        // Nothing leaves the device until the user has explicitly agreed to
+        // third-party AI processing. This is the single chokepoint in front of
+        // both providers, so the guard lives here rather than in the button
+        // handler — any future caller inherits it. Guideline 5.1.2(i).
+        guard userManager.hasConsentedToAIProcessing else {
+            showingAIConsent = true
+            return
+        }
+
         currentStep = .generate
 
         // Generation realistically runs 30s-3min (fal.ai polls up to ~60 attempts
@@ -810,6 +847,119 @@ struct CreateVisionBoardView: View {
         manifestationGoals = []
         newGoal = ""
         createdVisionBoard = nil
+    }
+}
+
+// MARK: - AI Processing Consent
+
+/// Explicit opt-in shown once, immediately before the first generation run.
+///
+/// App Review Guideline 5.1.2(i) requires clear disclosure and explicit
+/// permission before personal data is shared with third parties, and this app
+/// sends the user's face. The copy here must stay factually accurate about what
+/// is transmitted and to whom — if the provider list in `FalAIService` or
+/// `GeminiTextService` changes, update this screen in the same commit.
+struct AIProcessingConsentView: View {
+    @Environment(\.dismiss) private var dismiss
+    let onAgree: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.astralBlack.ignoresSafeArea()
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: AstralTheme.Spacing.lg) {
+                        VStack(spacing: AstralTheme.Spacing.sm) {
+                            Image(systemName: "hand.raised.fill")
+                                .font(.system(size: 40))
+                                .foregroundStyle(Color.auroraGradient)
+
+                            Text("Before we generate")
+                                .font(.system(.title2, design: .rounded, weight: .bold))
+                                .foregroundStyle(Color.astralText)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, AstralTheme.Spacing.lg)
+
+                        Text("Creating your board means sending some of what you entered to AI services outside this app. Here's exactly what leaves your device:")
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(Color.astralTextMuted)
+
+                        VStack(alignment: .leading, spacing: AstralTheme.Spacing.md) {
+                            disclosureItem(
+                                icon: "person.crop.square.fill",
+                                title: "Your photo → fal.ai",
+                                detail: "The selfie you chose is sent to fal.ai, which generates the images of you in your dream scenes."
+                            )
+                            disclosureItem(
+                                icon: "text.alignleft",
+                                title: "Your goals → Google Gemini",
+                                detail: "Your vision description, goals, and chosen style are sent to Google Gemini, which writes your affirmations."
+                            )
+                            disclosureItem(
+                                icon: "iphone",
+                                title: "Everything else stays here",
+                                detail: "Your email, username, and finished boards are stored on this device only. We don't sell your data or use it for advertising."
+                            )
+                        }
+                        .padding(AstralTheme.Spacing.lg)
+                        .astralCard()
+
+                        Text("You can't create a vision board without this — it's how the images and affirmations are made. Full details are in our [Privacy Policy](\(AppLinks.privacyPolicy.absoluteString)).")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(Color.astralTextMuted)
+                            .tint(Color.astralViolet)
+
+                        VStack(spacing: AstralTheme.Spacing.sm) {
+                            Button("I Agree — Generate My Board") {
+                                onAgree()
+                            }
+                            .astralButton(.primary)
+                            .frame(maxWidth: .infinity)
+
+                            Button("Not Now") { dismiss() }
+                                .font(.system(.subheadline, design: .rounded))
+                                .foregroundStyle(Color.astralTextMuted)
+                        }
+
+                        Spacer(minLength: AstralTheme.Spacing.xl)
+                    }
+                    .padding(.horizontal, AstralTheme.Spacing.lg)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundStyle(Color.astralTextMuted)
+                }
+            }
+        }
+        // Declining must be possible, but not by accident — an interactive
+        // dismiss that skipped the decision would leave the user stuck on the
+        // goals step with no explanation.
+        .interactiveDismissDisabled()
+    }
+
+    private func disclosureItem(icon: String, title: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: AstralTheme.Spacing.md) {
+            Image(systemName: icon)
+                .scaledFont(size: 16, relativeTo: .subheadline, weight: .semibold)
+                .foregroundStyle(Color.astralViolet)
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(Color.astralText)
+                Text(detail)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Color.astralTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 }
 

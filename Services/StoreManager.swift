@@ -205,8 +205,13 @@ class StoreManager {
         hasActiveSubscription || currentCount < 1
     }
 
+    /// Pro exports render at HD width with no watermark; free exports are
+    /// standard resolution and watermarked. Enforced in
+    /// `VisionBoardDetailView.renderBoardImage()`.
     func canExportHD() -> Bool { hasActiveSubscription }
-    func canUseAdvancedAI() -> Bool { hasActiveSubscription }
+
+    /// Spoken affirmations ("Read Aloud"). Enforced in `VisionBoardDetailView`.
+    func canUseAudioAffirmations() -> Bool { hasActiveSubscription }
 
     func maxVisionBoards() -> Int {
         hasActiveSubscription ? -1 : 1

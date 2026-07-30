@@ -151,23 +151,26 @@ enum SubscriptionType: String, Codable, CaseIterable {
         }
     }
 
+    /// Only list what the app actually enforces. Every entry here must map to a
+    /// real gate (see `StoreManager` "Feature Gating"), because App Review
+    /// buys the subscription in sandbox and checks that the promised
+    /// differences appear. Claims that were listed but never implemented
+    /// ("Advanced AI personalization", "Priority processing", "Offline image
+    /// caching", "Priority support") were removed rather than faked.
     var features: [String] {
         switch self {
         case .free:
             return [
                 "1 personalized vision board",
-                "Basic AI affirmations",
-                "Standard resolution",
+                "AI-written affirmations",
+                "Standard resolution exports",
                 "Watermarked exports"
             ]
         case .pro:
             return [
                 "Unlimited vision boards",
-                "Advanced AI personalization",
                 "HD exports without watermarks",
-                "Priority processing",
-                "Audio affirmations",
-                "Daily reminder notifications"
+                "Audio affirmations (Read Aloud)"
             ]
         }
     }

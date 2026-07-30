@@ -1,10 +1,13 @@
 import SwiftUI
 import RevenueCatUI
+import StoreKit
 
 struct ProfileView: View {
     @Environment(UserManager.self) var userManager
     @Environment(StoreManager.self) var storeManager
     @Environment(VisionBoardManager.self) var visionBoardManager
+    @Environment(\.openURL) private var openURL
+    @Environment(\.requestReview) private var requestReview
 
     @State private var showingSubscriptionView = false
     @State private var showingCustomerCenter = false
@@ -34,6 +37,7 @@ struct ProfileView: View {
                         subscriptionSection
                         settingsSection
                         supportSection
+                        legalSection
                         accountActionsSection
                         Spacer(minLength: 100)
                     }
@@ -248,21 +252,16 @@ struct ProfileView: View {
 
     // MARK: - Settings
 
+    /// Every row in this screen must do something. Rows that were previously
+    /// rendered disabled with a "Coming soon" pill were removed — App Review
+    /// opens Settings and taps each one, and a screen of inert rows reads as an
+    /// incomplete app under Guideline 2.1.
     private var settingsSection: some View {
         profileListSection("Settings") {
             SettingsRow(icon: "bell.fill", iconColor: .astralViolet,
                         title: "Notifications", subtitle: "Daily reminder at \(formattedReminderTime)") {
                 showingNotificationSettings = true
             }
-            SettingsRow(icon: "photo.fill", iconColor: .astralIndigo,
-                        title: "Photo Quality", subtitle: "Choose image generation quality",
-                        isEnabled: false) { }
-            SettingsRow(icon: "speaker.wave.2.fill", iconColor: .astralRose,
-                        title: "Audio Settings", subtitle: "Configure affirmation audio",
-                        isEnabled: false) { }
-            SettingsRow(icon: "lock.fill", iconColor: .astralTextMuted,
-                        title: "Privacy", subtitle: "Manage your privacy settings",
-                        isEnabled: false) { }
         }
     }
 
@@ -275,18 +274,38 @@ struct ProfileView: View {
                         subtitle: "Manage billing, cancellations & refunds") {
                 showingCustomerCenter = true
             }
-            SettingsRow(icon: "questionmark.circle.fill", iconColor: .astralIndigo,
-                        title: "Help Center", subtitle: "Get answers to common questions",
-                        isEnabled: false) { }
             SettingsRow(icon: "envelope.fill", iconColor: .astralRose,
-                        title: "Contact Support", subtitle: "Get help from our support team",
-                        isEnabled: false) { }
+                        title: "Contact Support", subtitle: AppLinks.supportEmail) {
+                openURL(AppLinks.supportMailto)
+            }
             SettingsRow(icon: "star.fill", iconColor: .astralGold,
-                        title: "Rate the App", subtitle: "Share your experience on the App Store",
-                        isEnabled: false) { }
-            SettingsRow(icon: "square.and.arrow.up.fill", iconColor: .astralIndigo,
-                        title: "Share App", subtitle: "Tell your friends about ManifestMe",
-                        isEnabled: false) { }
+                        title: "Rate the App", subtitle: "Share your experience on the App Store") {
+                requestReview()
+            }
+            ShareLink(item: AppLinks.marketingSite,
+                      subject: Text("ManifestMe"),
+                      message: Text("I'm using ManifestMe to build AI vision boards of my dream life.")) {
+                SettingsRowLabel(icon: "square.and.arrow.up.fill", iconColor: .astralIndigo,
+                                 title: "Share App", subtitle: "Tell your friends about ManifestMe")
+            }
+        }
+    }
+
+    // MARK: - Legal
+
+    /// Guideline 5.1.1(i) requires the privacy policy to be reachable inside
+    /// the app, not only from App Store Connect metadata. It is also linked on
+    /// the paywall, but a user who never opens the paywall must still find it.
+    private var legalSection: some View {
+        profileListSection("Legal") {
+            SettingsRow(icon: "lock.fill", iconColor: .astralTextMuted,
+                        title: "Privacy Policy", subtitle: "How your data is used and shared") {
+                openURL(AppLinks.privacyPolicy)
+            }
+            SettingsRow(icon: "doc.text.fill", iconColor: .astralTextMuted,
+                        title: "Terms of Use", subtitle: "Standard Apple EULA") {
+                openURL(AppLinks.termsOfUse)
+            }
         }
     }
 
@@ -389,59 +408,65 @@ struct ProfileView: View {
 
 // MARK: - SettingsRow
 
-struct SettingsRow: View {
+/// The row chrome, without any tap behavior. Split out from `SettingsRow` so a
+/// `ShareLink` can present an identical-looking row.
+///
+/// There is deliberately no disabled/"Coming soon" variant: a settings row that
+/// does nothing is a Guideline 2.1 completeness finding, so unfinished features
+/// are omitted from the screen instead of shown greyed out.
+struct SettingsRowLabel: View {
     let icon: String
     var iconColor: Color = .astralViolet
     let title: String
     let subtitle: String
-    var isEnabled: Bool = true
-    let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: AstralTheme.Spacing.md) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 9)
-                        .fill(iconColor.opacity(0.18))
-                        .frame(width: 34, height: 34)
-                    Image(systemName: icon)
-                        .scaledFont(size: 15, relativeTo: .footnote, weight: .semibold)
-                        .foregroundStyle(iconColor)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                        .foregroundStyle(isEnabled ? Color.astralText : Color.astralTextDim)
-                    Text(subtitle)
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(Color.astralTextMuted)
-                }
-
-                Spacer()
-
-                if isEnabled {
-                    Image(systemName: "chevron.right")
-                        .scaledFont(size: 12, relativeTo: .caption, weight: .semibold)
-                        .foregroundStyle(Color.astralTextDim)
-                } else {
-                    Text("Coming soon")
-                        .scaledFont(size: 11, relativeTo: .caption2, design: .rounded)
-                        .foregroundStyle(Color.astralTextDim)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Capsule().fill(Color.astralSurface2))
-                }
+        HStack(spacing: AstralTheme.Spacing.md) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 9)
+                    .fill(iconColor.opacity(0.18))
+                    .frame(width: 34, height: 34)
+                Image(systemName: icon)
+                    .scaledFont(size: 15, relativeTo: .footnote, weight: .semibold)
+                    .foregroundStyle(iconColor)
             }
-            .padding(.horizontal, AstralTheme.Spacing.md)
-            .padding(.vertical, AstralTheme.Spacing.md)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(Color.astralText)
+                Text(subtitle)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Color.astralTextMuted)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .scaledFont(size: 12, relativeTo: .caption, weight: .semibold)
+                .foregroundStyle(Color.astralTextDim)
         }
-        .disabled(!isEnabled)
+        .padding(.horizontal, AstralTheme.Spacing.md)
+        .padding(.vertical, AstralTheme.Spacing.md)
         .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(Color.white.opacity(0.06))
                 .frame(height: 0.5)
                 .padding(.leading, 64)
+        }
+    }
+}
+
+struct SettingsRow: View {
+    let icon: String
+    var iconColor: Color = .astralViolet
+    let title: String
+    let subtitle: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            SettingsRowLabel(icon: icon, iconColor: iconColor, title: title, subtitle: subtitle)
         }
     }
 }
