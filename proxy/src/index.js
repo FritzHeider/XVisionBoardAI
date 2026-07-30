@@ -11,6 +11,9 @@
 //   ANY  /fal/<path>                  -> https://queue.fal.run/<path>      (+ Authorization: Key)
 //   ANY  /gemini/<path>               -> https://generativelanguage.googleapis.com/<path> (+ ?key=)
 //
+// Provider paths are allowlisted (see ALLOWED_PATHS) to the exact models the app
+// calls. Anything else 404s before the key is attached.
+//
 // Provider routes carry these headers when ATTEST_MODE != "off":
 //   X-Attest-Key-Id   : the DCAppAttestService key id registered via /attest/verify
 //   X-Attest-Assertion: base64 assertion over SHA256(rawBody)
@@ -24,8 +27,67 @@
 // Full validation lives in appattest.js. It is written to Apple's spec but was
 // NOT runtime-tested (a valid attestation needs a real device), so ship in
 // "monitor" first and read the logs before switching to "enforce".
+//
+// ⚠️ "monitor" is NOT a security posture — it forwards failed requests. Until
+// you have confirmed clean attestation logs from a physical device and set
+// ATTEST_MODE = "enforce", the only protections in place are the path allowlist
+// below and whatever spend caps you have set at fal.ai and Google. Set those
+// caps; do not rely on the proxy URL staying secret, because it ships in the app
+// binary as a plaintext string.
 
 import { verifyAttestation, verifyAssertion } from "./appattest.js";
+
+// Per-provider path allowlists.
+//
+// This is defence in depth, and right now it is the ONLY thing standing between
+// a leaked proxy URL and an unbounded provider bill: ATTEST_MODE defaults to
+// "monitor", which logs attestation failures and forwards anyway, and the
+// Worker URL ships inside the app binary as a plaintext string that anyone can
+// recover with `strings`.
+//
+// Without an allowlist the proxy is a general-purpose relay: an attacker could
+// point it at any fal.ai model — including video and other far more expensive
+// endpoints — or any Gemini model, on your key. With it, the worst they can do
+// is generate the same thing the app generates.
+//
+// Keep these in sync with FalAIService (nanoBanana2 / nanoBanana2Edit) and
+// GeminiTextService (model). Adding a model to the app means adding it here, or
+// requests 404 at the proxy.
+const ALLOWED_PATHS = {
+  fal: [
+    // Submit: fal-ai/nano-banana-2 and .../edit
+    /^fal-ai\/nano-banana-2(\/edit)?$/,
+    // Queue polling: .../requests/<id>[/status|/cancel]
+    /^fal-ai\/nano-banana-2(\/edit)?\/requests\/[A-Za-z0-9_-]+(\/status|\/cancel)?$/,
+  ],
+  gemini: [
+    /^v1beta\/models\/gemini-flash-latest:generateContent$/,
+  ],
+};
+
+function pathAllowed(providerName, path) {
+  const patterns = ALLOWED_PATHS[providerName];
+  if (!patterns) return false;
+
+  // Match on the decoded path: the Gemini route contains a literal ":" and
+  // Foundation's appendingPathComponent may deliver it percent-encoded as %3A
+  // depending on how the URL was built. Matching the raw form only would 404 a
+  // legitimate affirmations request.
+  //
+  // Decoding is safe here because every pattern is fully anchored and permits no
+  // "." or "/" beyond the literals it spells out, so "%2e%2e%2f" style traversal
+  // still fails to match. The ORIGINAL, undecoded path is what gets forwarded
+  // upstream — decoding is only ever used for this comparison.
+  let decoded = path;
+  try {
+    decoded = decodeURIComponent(path);
+  } catch {
+    // Malformed escape sequence — fall through and match the raw path, which
+    // will fail the allowlist.
+  }
+
+  return patterns.some((re) => re.test(decoded));
+}
 
 const PROVIDERS = {
   fal: {
@@ -59,6 +121,12 @@ export default {
 
 async function forward(providerName, path, search, request, env) {
   const provider = PROVIDERS[providerName];
+
+  // Reject before reading the body or touching the provider key.
+  if (!pathAllowed(providerName, path)) {
+    console.warn(`[proxy] blocked non-allowlisted path ${providerName}/${path}`);
+    return json({ error: "not found" }, 404);
+  }
 
   const bodyBuf = request.method === "GET" || request.method === "HEAD"
     ? null
