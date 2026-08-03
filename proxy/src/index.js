@@ -57,7 +57,10 @@ const ALLOWED_PATHS = {
   fal: [
     // Submit: fal-ai/nano-banana-2 and .../edit
     /^fal-ai\/nano-banana-2(\/edit)?$/,
-    // Queue polling: .../requests/<id>[/status|/cancel]
+    // Queue polling: .../requests/<id>[/status|/cancel]. fal only serves these
+    // under the base app id — ".../nano-banana-2/edit/requests/..." answers 405 —
+    // so the app strips "/edit" when polling (FalAIService.queueAppID). The
+    // "(/edit)?" here is tolerated, not used.
     /^fal-ai\/nano-banana-2(\/edit)?\/requests\/[A-Za-z0-9_-]+(\/status|\/cancel)?$/,
   ],
   gemini: [

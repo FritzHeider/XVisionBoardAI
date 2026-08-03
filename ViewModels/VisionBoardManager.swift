@@ -153,8 +153,14 @@ class VisionBoardManager {
     
     private func generatePersonalizedImages(for visionBoard: VisionBoard, userImage: UIImage) async throws -> [VisionBoardImage] {
         let imageCount = visionBoard.layout.imageCount
-        let referenceData = userImage.resized(maxDimension: 512).jpegData(compressionQuality: 0.75)
-        let hasSelfie = referenceData != nil
+
+        // The board is built around the user's photo, so an unusable photo fails
+        // the whole run. Encoding it away and generating a board of strangers
+        // reads as "my upload was ignored".
+        guard let referenceData = userImage.resized(maxDimension: 512).jpegData(compressionQuality: 0.75) else {
+            throw FalAIError.generationFailed("Couldn't read your photo. Please pick or take another one.")
+        }
+        let hasSelfie = true
 
         let prompts = generateImagePrompts(
             description: visionBoard.description,
@@ -223,6 +229,14 @@ class VisionBoardManager {
 
         var finalImages = images
         for (i, img) in results { finalImages[i] = img }
+
+        // Individual tiles are allowed to fail — they render with a Retry button,
+        // which regenerates from the photo. A board where *nothing* generated is
+        // not worth saving, so fail the run and let the user try again.
+        try Task.checkCancellation()
+        guard finalImages.contains(where: { $0.imageFilename != nil || $0.imageData != nil }) else {
+            throw FalAIError.generationFailed("No images could be generated from your photo. Please try again.")
+        }
         return finalImages
     }
 
@@ -309,6 +323,13 @@ class VisionBoardManager {
         let board = visionBoards[boardIndex]
         var image = board.images[imageIndex]
         let refData = board.userImage?.resized(maxDimension: 512).jpegData(compressionQuality: 0.75)
+
+        // Retrying a personalized tile must go through the photo. Passing nil here
+        // would quietly generate a text-to-image stranger into a board of the user.
+        if refData == nil, board.isPersonalized || image.isPersonalized {
+            errorMessage = "The photo this board was created from is no longer available, so this image can't be regenerated from it."
+            return
+        }
 
         do {
             let url = try await FalAIService.generateImage(

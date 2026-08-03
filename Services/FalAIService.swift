@@ -37,7 +37,14 @@ struct FalAIService {
 
     // MARK: - Public API
 
-    /// Generate one image. Uses Nano Banana 2 edit when referenceImageData is provided, text-to-image otherwise.
+    /// Generate one image. Uses Nano Banana 2 edit when referenceImageData is
+    /// provided, text-to-image otherwise.
+    ///
+    /// When a reference photo is supplied it is never optional: a failing edit
+    /// throws rather than quietly producing a text-to-image result. A generic
+    /// stranger's face in a board the user built from their own selfie is worse
+    /// than an empty tile with a Retry button, and it looks like the upload was
+    /// ignored — which is exactly how the silent fallback presented in practice.
     static func generateImage(
         prompt: String,
         referenceImageData: Data? = nil,
@@ -97,17 +104,41 @@ struct FalAIService {
             "aspect_ratio": imageSize.aspectRatio,
             "num_images": 1
         ]
-        // Edit falls back to text-to-image on non-cancellation errors only
-        do {
-            return try await submitAndPoll(model: nanoBanana2Edit, body: body, apiKey: apiKey)
-        } catch is CancellationError {
-            throw CancellationError()
-        } catch {
-            return try await generateTextToImage(prompt: prompt, imageSize: imageSize, apiKey: apiKey)
+        // No text-to-image fallback: the caller asked for this face. Retry the
+        // edit endpoint a couple of times to ride out transient queue/network
+        // failures, then surface the error so the tile shows Retry.
+        var lastError: Error?
+        for attempt in 0..<3 {
+            if attempt > 0 {
+                try await Task.sleep(nanoseconds: UInt64(attempt) * 2_000_000_000)
+            }
+            do {
+                return try await submitAndPoll(model: nanoBanana2Edit, body: body, apiKey: apiKey)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                lastError = error
+                print("[FalAIService] face-consistent edit attempt \(attempt + 1)/3 failed: \(error)")
+            }
         }
+        throw FalAIError.generationFailed(
+            "Couldn't generate this image from your photo. \(lastError?.localizedDescription ?? "Please try again.")"
+        )
     }
 
     // MARK: - Queue Submit + Poll
+
+    /// fal's queue *submit* route is the full model path ("fal-ai/nano-banana-2/edit"),
+    /// but status/result/cancel live only under the base app id. Polling
+    /// ".../nano-banana-2/edit/requests/<id>/status" returns HTTP 405, not JSON —
+    /// which `poll` reads as "no status yet" and retries until it times out, after
+    /// which the selfie path falls back to text-to-image and the user's photo is
+    /// silently dropped. Strip the sub-path before building any polling URL.
+    private static func queueAppID(for model: String) -> String {
+        let parts = model.split(separator: "/")
+        guard parts.count > 2 else { return model }
+        return parts.prefix(2).joined(separator: "/")
+    }
 
     private static func submitAndPoll(
         model: String,
@@ -147,23 +178,25 @@ struct FalAIService {
 
         // Status/result/cancel URLs. In proxy mode the absolute *.fal.run URLs
         // from the submit response would bypass the proxy (and lack the key), so
-        // build proxy-relative paths from model + requestID instead.
+        // build proxy-relative paths from model + requestID instead — using the
+        // *base* app id, never the submit path (see queueAppID).
+        let queueModel = queueAppID(for: model)
         let statusURL: URL
         let resultURL: URL
         let cancelURLString: String?
         if APIConfig.usesProxy {
-            let direct = URL(string: "\(queueBase)/\(model)/requests/\(requestID)")!
-            statusURL = APIConfig.url(provider: "fal", directURL: direct, proxyPath: "\(model)/requests/\(requestID)/status")
-            resultURL = APIConfig.url(provider: "fal", directURL: direct, proxyPath: "\(model)/requests/\(requestID)")
-            cancelURLString = APIConfig.url(provider: "fal", directURL: direct, proxyPath: "\(model)/requests/\(requestID)/cancel").absoluteString
+            let direct = URL(string: "\(queueBase)/\(queueModel)/requests/\(requestID)")!
+            statusURL = APIConfig.url(provider: "fal", directURL: direct, proxyPath: "\(queueModel)/requests/\(requestID)/status")
+            resultURL = APIConfig.url(provider: "fal", directURL: direct, proxyPath: "\(queueModel)/requests/\(requestID)")
+            cancelURLString = APIConfig.url(provider: "fal", directURL: direct, proxyPath: "\(queueModel)/requests/\(requestID)/cancel").absoluteString
         } else if let statusStr = submitJSON["status_url"] as? String, let parsedStatus = URL(string: statusStr),
                   let responseStr = submitJSON["response_url"] as? String, let parsedResult = URL(string: responseStr) {
             statusURL = parsedStatus
             resultURL = parsedResult
             cancelURLString = submitJSON["cancel_url"] as? String
         } else {
-            statusURL = URL(string: "\(queueBase)/\(model)/requests/\(requestID)/status")!
-            resultURL = URL(string: "\(queueBase)/\(model)/requests/\(requestID)")!
+            statusURL = URL(string: "\(queueBase)/\(queueModel)/requests/\(requestID)/status")!
+            resultURL = URL(string: "\(queueBase)/\(queueModel)/requests/\(requestID)")!
             cancelURLString = submitJSON["cancel_url"] as? String
         }
 
@@ -204,13 +237,29 @@ struct FalAIService {
         apiKey: String
     ) async throws -> String {
         let usesProxy = APIConfig.usesProxy
+        var consecutiveClientErrors = 0
         for attempt in 0..<60 {
             let delay: UInt64 = attempt < 5 ? 2_000_000_000 : 3_000_000_000
             try await Task.sleep(nanoseconds: delay)
 
             var statusReq = URLRequest(url: statusURL)
             await authorize(&statusReq, apiKey: apiKey, usesProxy: usesProxy, body: Data())
-            guard let (statusData, _) = try? await URLSession.shared.data(for: statusReq),
+            let attemptResult = try? await URLSession.shared.data(for: statusReq)
+
+            // A wrong route or bad auth never becomes valid by waiting. Allow a
+            // few retries for queue eventual-consistency, then surface it rather
+            // than burning the full ~3 minute timeout on a permanent failure.
+            if let http = attemptResult?.1 as? HTTPURLResponse,
+               (400..<500).contains(http.statusCode), http.statusCode != 408, http.statusCode != 429 {
+                consecutiveClientErrors += 1
+                if consecutiveClientErrors >= 3 {
+                    throw FalAIError.requestFailed("status poll returned HTTP \(http.statusCode) for \(statusURL.path)")
+                }
+                continue
+            }
+            consecutiveClientErrors = 0
+
+            guard let (statusData, _) = attemptResult,
                   let statusJSON = try? JSONSerialization.jsonObject(with: statusData) as? [String: Any],
                   let status = statusJSON["status"] as? String else {
                 continue
