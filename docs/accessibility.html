@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ManifestMe — Accessibility</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem 4rem;
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1c1c1e; background: #fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { color: #e5e5ea; background: #1c1c1e; }
+    a { color: #7d8cff; }
+  }
+  h1 { font-size: 1.9rem; margin-bottom: .25rem; }
+  h2 { font-size: 1.2rem; margin-top: 2rem; }
+  .muted { opacity: .7; font-size: .95rem; }
+  .note { border-left: 3px solid #7d8cff; padding: .5rem .9rem; background: rgba(125,140,255,.08); border-radius: 6px; }
+  ul { padding-left: 1.2rem; }
+  table { border-collapse: collapse; width: 100%; margin-top: .5rem; }
+  th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid rgba(128,128,128,.25); vertical-align: top; }
+  th { font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; opacity: .75; }
+</style>
+</head>
+<body>
+
+<h1>ManifestMe Accessibility</h1>
+<p class="muted">Last updated: <strong>August 4, 2026</strong></p>
+
+<p>
+  This page describes what ManifestMe currently supports for accessibility, and — just as
+  importantly — what it does not yet support. We would rather tell you plainly than have you
+  download the app and find out.
+</p>
+
+<h2>What ManifestMe supports today</h2>
+
+<table>
+  <tr><th>Feature</th><th>Status</th></tr>
+  <tr>
+    <td><strong>Sufficient contrast</strong></td>
+    <td>Supported. Every text colour in the app is checked against every background it appears
+        on, and each combination meets or exceeds the WCAG 2.1 AA ratio of 4.5:1. This is
+        enforced by an automated test that fails the build if a colour change drops below it.</td>
+  </tr>
+  <tr>
+    <td><strong>Reduced Motion</strong></td>
+    <td>Supported. Turning on Reduce Motion in iOS Settings disables the app's animated
+        transitions and the looping "breathing" glow effects.</td>
+  </tr>
+  <tr>
+    <td><strong>Dark interface</strong></td>
+    <td>Supported. ManifestMe uses a dark interface throughout.</td>
+  </tr>
+</table>
+
+<h2>What is not supported yet</h2>
+
+<table>
+  <tr><th>Feature</th><th>Status</th></tr>
+  <tr>
+    <td><strong>Larger Text (Dynamic Type)</strong></td>
+    <td>Not supported yet. Text does grow when you increase the system text size, but at the
+        largest accessibility sizes some labels on the Home screen wrap or get clipped. We are
+        fixing the layouts and will update this page when it is reliable end to end.</td>
+  </tr>
+  <tr>
+    <td><strong>VoiceOver</strong></td>
+    <td>Partial, and therefore not claimed. Key items are labelled — including each generated
+        vision-board image, which is described using the prompt that produced it — but we have
+        not yet verified that every control in every screen is reachable and correctly labelled.</td>
+  </tr>
+  <tr>
+    <td><strong>Voice Control</strong></td>
+    <td>Not supported yet. It depends on the same complete labelling work as VoiceOver.</td>
+  </tr>
+</table>
+
+<h2>Captions and audio descriptions</h2>
+<p>
+  Not applicable. ManifestMe contains no pre-recorded video or audio. The optional
+  "Read Aloud" feature uses the system speech synthesiser to read affirmations that are already
+  displayed on screen as text, so there is no audio-only content to caption.
+</p>
+
+<h2>Tell us what is broken</h2>
+<p class="note">
+  If something in ManifestMe does not work with the assistive technology you use, please email
+  <a href="mailto:support@fritzthatcat.com">support@fritzthatcat.com</a> and describe what you
+  were trying to do. Accessibility reports are treated as bugs, not feature requests.
+</p>
+
+<p class="muted"><a href="./">← Back to ManifestMe</a></p>
+
+</body>
+</html>
