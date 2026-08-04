@@ -4,7 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Run
 
-This is an Xcode project targeting iOS 26+. There is no separate build script — use Xcode 26+ or `xcodebuild` from the command line:
+This is an Xcode project with a deployment target of **iOS 18.0**, built with Xcode 26+.
+iOS 18 is the floor because `ContentView` uses the iOS 18 `TabView(selection:)` + `Tab`
+builder and `.sidebarAdaptable`; dropping to iOS 17 means rewriting the tab bar against
+the legacy `TabView`/`.tabItem` API. iOS 26-only Liquid Glass (`glassEffect`) is used in
+four places, each already behind `#available(iOS 26, *)` with a `.ultraThinMaterial`
+fallback — keep that pattern when adding new iOS 26 APIs.
+
+There is no separate build script — use Xcode 26+ or `xcodebuild` from the command line:
 
 ```bash
 # Build for simulator
@@ -77,7 +84,7 @@ Offering in the RevenueCat dashboard. IDs are defined in `StoreManager`:
 ```
 com.xvisionboardai.pro.weekly    — $4.99/wk
 com.xvisionboardai.pro.monthly   — $9.99/mo
-com.xvisionboardai.pro.yearly    — $39.99/yr, 3-day free trial
+com.xvisionboardai.pro.yearly    — $49.99/yr, 3-day free trial
 ```
 
 ## Swift Concurrency Patterns

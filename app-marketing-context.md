@@ -6,7 +6,7 @@
 - **Display Name (home screen):** ManifestMe
 - **Bundle ID:** com.xvisionboardai.app
 - **Category:** Lifestyle (primary) / Health & Fitness (secondary — change from Productivity)
-- **Platform:** iOS 17+
+- **Platform:** iOS 18+
 - **Apple ID:** 6751253658
 - **SKU:** xvisiondboardai001
 - **Version:** 1.0 (pre-launch)

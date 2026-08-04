@@ -5,19 +5,43 @@ and tweak the voice before submitting.
 
 ---
 
-## App Name (30 chars)
-Primary choice: **ManifestMe: AI Vision Board** (27)
-Alternatives: `ManifestMe — Vision Boards` (26) · `ManifestMe` (10)
+> **ASO strategy: dual-locale. Read this before editing any field below.**
+> Apple indexes the Spanish (Mexico) localization for *US* App Store search. The US
+> and ES-MX fields below are chosen to have **zero overlapping terms**, which buys
+> roughly +260 indexed characters. If you edit one locale, check the other for
+> duplication — a term repeated across locales is a wasted term.
+> `app-marketing-context.md` is the source of truth for these values.
 
-## Subtitle (30 chars)
-**Manifest with AI vision boards** (30)
-Alt: `AI vision boards & affirmations` (30) · `See your dream life` (19)
+## App Name (30 chars) — English (U.S.)
+**ManifestMe: AI Future Self** (26) — decided, and already the name on the App
+Store Connect record (Apple ID 6751253658). Do **not** rename this to a
+vision-board title: "vision board" is deliberately captured by the ES-MX title
+instead, and duplicating it here would forfeit "future self" for nothing.
+
+## Subtitle (30 chars) — English (U.S.)
+**Visualize Wealth & Abundance** (28)
+
+## Spanish (Mexico) localization — indexes for US search
+This localization is **load-bearing for ASO, not a translation**. Fields are in
+English on purpose. Without it, "vision board" and "manifestation" go uncaptured.
+- ES-MX Name (27): **Vision Board: Manifestation**
+- ES-MX Subtitle (30): **Daily Motivation & Inspiration**
+- ES-MX Keywords (100): `positive,meditation,success,creator,maker,wallpaper,spiritual,wellness,intention,attract,habit,focus`
+- ES-MX Description: reuse the US description below.
 
 ## Promotional Text (170 chars — updatable anytime without review)
 Turn a selfie into a stunning AI vision board and see yourself already living your dream life. New styles and daily manifestation reminders to keep you inspired.
 
-## Keywords (100 chars, comma-separated, no spaces between)
-vision board,manifestation,affirmations,AI,dream life,goals,manifest,gratitude,visualize,law of attraction
+## Keywords (100 chars, comma-separated, no spaces between) — English (U.S.)
+```
+law,of,attraction,money,loa,mindset,affirmations,gratitude,journal,goals,dream,collage,photo,visual
+```
+(99/100). Deliberately contains **no** term already in the US name/subtitle or in
+the ES-MX fields — Apple recombines terms across all of them, so repeating any of
+`AI`, `future`, `self`, `visualize`, `wealth`, `abundance`, `vision`, `board`,
+`manifestation`, `daily`, `motivation`, `inspiration` here would waste characters.
+Phrases are split on commas (`law,of,attraction`) because Apple recombines tokens;
+that is intentional, not a typo.
 
 ## Description (4000 chars)
 See yourself already living the life you're manifesting.
@@ -58,7 +82,7 @@ Unlock unlimited vision boards, HD watermark-free exports, and audio affirmation
 (Free includes one vision board with standard-resolution, watermarked exports.)
 • Weekly — $4.99/week
 • Monthly — $9.99/month
-• Yearly — $39.99/year (with a 3-day free trial)
+• Yearly — $49.99/year (with a 3-day free trial)
 
 Subscriptions auto-renew unless cancelled at least 24 hours before the end of the period. Manage or cancel anytime in your App Store account settings.
 Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
@@ -94,7 +118,7 @@ answer accurately based on the constrained, personal (non-social) nature of the 
 |---|---|---|---|---|---|
 | com.xvisionboardai.pro.weekly | Pro Weekly | 1 week | $4.99 | Weekly | Unlimited AI vision boards and HD exports, billed weekly. |
 | com.xvisionboardai.pro.monthly | Pro Monthly | 1 month | $9.99 | Monthly | Unlimited AI vision boards and HD exports, billed monthly. |
-| com.xvisionboardai.pro.yearly | Pro Yearly | 1 year | $39.99 | Yearly (3-Day Free Trial) | Best value. Unlimited AI vision boards and HD exports, billed yearly. Includes a 3-day free trial. |
+| com.xvisionboardai.pro.yearly | Pro Yearly | 1 year | $49.99 | ManifestMe Pro — Annual | Unlimited boards, HD export & AI affirmations. Save 58% |
 
 **Yearly introductory offer:** Free trial · 3 days · New subscribers.
 
