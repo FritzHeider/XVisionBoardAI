@@ -32,7 +32,6 @@
 		149 /* Views/EditVisionBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148 /* Views/EditVisionBoardView.swift */; };
 		151 /* Views/OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150 /* Views/OnboardingView.swift */; };
 		153 /* Services/FalAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 152 /* Services/FalAIService.swift */; };
-		155 /* Services/GeminiImageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 154 /* Services/GeminiImageService.swift */; };
 		301 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 300 /* Assets.xcassets */; };
 		311 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 310 /* PrivacyInfo.xcprivacy */; };
 		321 /* Utils/AppLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320 /* Utils/AppLinks.swift */; };
@@ -77,7 +76,6 @@
 		148 /* Views/EditVisionBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/EditVisionBoardView.swift; sourceTree = "<group>"; };
 		150 /* Views/OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/OnboardingView.swift; sourceTree = "<group>"; };
 		152 /* Services/FalAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/FalAIService.swift; sourceTree = "<group>"; };
-		154 /* Services/GeminiImageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/GeminiImageService.swift; sourceTree = "<group>"; };
 		200 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		300 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		310 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -150,7 +148,6 @@
 				152 /* Services/FalAIService.swift */,
 				342 /* AppAttestManager.swift */,
 				340 /* APIConfig.swift */,
-				154 /* Services/GeminiImageService.swift */,
 				350 /* GeminiTextService.swift */,
 				148 /* Views/EditVisionBoardView.swift */,
 				150 /* Views/OnboardingView.swift */,
@@ -326,7 +323,6 @@
 				153 /* Services/FalAIService.swift in Sources */,
 				343 /* AppAttestManager.swift in Sources */,
 				341 /* APIConfig.swift in Sources */,
-				155 /* Services/GeminiImageService.swift in Sources */,
 				351 /* GeminiTextService.swift in Sources */,
 				149 /* Views/EditVisionBoardView.swift in Sources */,
 				151 /* Views/OnboardingView.swift in Sources */,

@@ -1,5 +1,23 @@
 import Foundation
 
+/// Errors from any Gemini call. Named `GeminiImageError` for historical reasons —
+/// it used to live in `GeminiImageService.swift` alongside a direct-to-Gemini image
+/// path that was deleted once generation moved behind the proxy. The enum outlived
+/// it because `GeminiTextService` and `VisionBoardManager` both throw these.
+enum GeminiImageError: Error, LocalizedError {
+    case missingAPIKey
+    case requestFailed(String)
+    case invalidResponse
+
+    var errorDescription: String? {
+        switch self {
+        case .missingAPIKey:          return "Gemini API key not configured"
+        case .requestFailed(let msg): return "Gemini request failed: \(msg)"
+        case .invalidResponse:        return "Invalid response from Gemini"
+        }
+    }
+}
+
 /// Text generation via Gemini (used for vision-board affirmations), so the app
 /// needs only the fal.ai and Gemini keys — no Anthropic dependency.
 struct GeminiTextService {

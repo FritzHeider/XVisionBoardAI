@@ -8,6 +8,11 @@
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<!-- Required by App Store upload validation (ITMS-90183). Xcode only injects
+	     this automatically when GENERATE_INFOPLIST_FILE is YES; this target uses a
+	     hand-maintained Info.plist, so it has to be declared explicitly. -->
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>CFBundleVersion</key>

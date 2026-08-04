@@ -68,8 +68,11 @@ files on cancel.
 
 Requests route through a Cloudflare Worker proxy (`proxy/`, `APIConfig.usesProxy`)
 authenticated with App Attest, so provider keys do not ship in the binary.
-`Services/GeminiImageService.swift` is currently dead code and is the one path
-that still expects a direct in-binary key.
+`Services/GeminiImageService.swift` used to be the one path that still expected a
+direct in-binary key; it was dead code and has been deleted. Its `GeminiImageError`
+enum was **not** dead — `GeminiTextService` and `VisionBoardManager` both throw it —
+so it now lives at the top of `Services/GeminiTextService.swift` under its original
+name. Don't be fooled by the "Image" in the name when grepping.
 
 Generation realistically takes 30s-3min, so `CreateVisionBoardView` holds a
 `UIApplication` background-task assertion for the duration and cancels its
