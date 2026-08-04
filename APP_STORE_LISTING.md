@@ -30,7 +30,14 @@ English on purpose. Without it, "vision board" and "manifestation" go uncaptured
 - ES-MX Description: reuse the US description below.
 
 ## Promotional Text (170 chars — updatable anytime without review)
-Turn a selfie into a stunning AI vision board and see yourself already living your dream life. New styles and daily manifestation reminders to keep you inspired.
+Not a stock photo. Not a stranger. You. ManifestMe turns one selfie into an AI vision board of the life you're calling in — and affirmations to match.
+
+(150/170.) Unlike the name, subtitle, and keyword fields, promotional text is
+**not indexed for App Store search** — so it carries no ASO weight and the
+no-overlap rule above does not apply to it. Spend it purely on conversion.
+Because it can be changed without submitting a build, this is the field to use
+later for genuinely time-bound news (a new style pack, a seasonal promo). Avoid
+"new ..." phrasing at launch, when nothing is new yet.
 
 ## Keywords (100 chars, comma-separated, no spaces between) — English (U.S.)
 ```
@@ -153,8 +160,30 @@ Everything else: not collected. No third-party advertising, no tracking.
 - Account deletion is available in Profile → Delete Account.
 - Contact: support@fritzthatcat.com
 
+## Copyright (required for submission)
+**2026 Fritz Heider** — Apple's format is year + rights holder, no `©` symbol.
+Change this to the legal entity name if the app is owned by an LLC rather than
+an individual.
+
+## App preview video (optional, currently 0 of 3)
+Not required; the listing can ship without it. If you make one, the **only slot
+you need is 6.9"** — 6.5"/6.3"/6.1" all auto-scale from it. Upload spec is
+**886×1920** portrait (note: far smaller than the screenshot resolution),
+15–30s, **30 fps max**, H.264 at 10–12 Mbps, `.mp4`/`.mov`/`.m4v`, ≤500 MB.
+iPhone screen recordings default to 60 fps and get rejected — conform first:
+```bash
+ffmpeg -i input.mov -vf "scale=886:1920" -r 30 \
+  -c:v libx264 -profile:v high -level 4.0 -b:v 11M \
+  -c:a aac -b:a 256k -ar 48000 -ac 2 preview-6.9.mp4
+```
+
 ## Assets you still need to produce
-- App preview screenshots: **6.9"/6.7" iPhone required** (1290×2796 or 1320×2868). 3–10 shots: onboarding, a finished vision board, the styles picker, affirmations, the paywall.
+- ~~App preview screenshots~~ **DONE** — 10 shots uploaded to the 6.9" slot on
+  2026-08-04. Source set: `~/Desktop/ManifestMe-Upload-10/`, named `01`–`10` in
+  display order, all 1320×2868. Do **not** put anything in the 6.5" slot; it
+  only accepts 1242×2688 / 1284×2778 and auto-derives from 6.9" when left empty
+  (uploading 6.9"-sized files there is what threw the "dimensions are wrong"
+  error).
 - **No iPad screenshots needed.** The app target is `TARGETED_DEVICE_FAMILY = 1`
   and the built binary declares `UIDeviceFamily = [1]`, so this ships iPhone-only.
   It still installs on iPad in scaled compatibility mode, but iPad support is not

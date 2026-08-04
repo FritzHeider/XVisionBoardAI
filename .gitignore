@@ -38,6 +38,12 @@ Carthage/Checkouts/
 # API keys — never commit
 Secrets.xcconfig
 
+# App Store Connect API private keys. Apple lets you download a .p8 exactly
+# once, and it authenticates as your account — committing one is unrecoverable.
+# Real copies live in ~/.appstoreconnect/private_keys/ (chmod 600).
+*.p8
+AuthKey_*.p8
+
 # Playgrounds
 timeline.xctimeline
 playground.xcworkspace
