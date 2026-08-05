@@ -207,6 +207,10 @@ struct FilterButton: View {
                           : AnyShapeStyle(Color.astralSurface))
             }
         }
+        // Selection here is carried entirely by fill colour, which VoiceOver
+        // cannot see and which is invisible to anyone using Differentiate
+        // Without Colour. The trait makes the state audible ("selected").
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }
 

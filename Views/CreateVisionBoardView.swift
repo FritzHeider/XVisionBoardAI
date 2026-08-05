@@ -1017,6 +1017,10 @@ struct LayoutOption: View {
                     )
             )
         }
+        // Read as one control ("3x3 Grid, 9 personalized images…, selected")
+        // rather than three separate fragments.
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }
 
@@ -1041,21 +1045,38 @@ struct StyleOption: View {
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(isSelected ? Color.cosmicGold : Color.clear, lineWidth: 3)
                     )
-                
+                    .overlay(alignment: .topTrailing) {
+                        // Selection was signalled by the gold stroke alone.
+                        // A checkmark gives a shape cue as well, so the state
+                        // survives Differentiate Without Colour and any form
+                        // of colour blindness. Matches LayoutOption.
+                        if isSelected {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(Color.cosmicGold)
+                                .padding(6)
+                        }
+                    }
+
                 VStack(spacing: 4) {
                     Text(style.displayName)
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundStyle(Color.astralText)
-                    
+
                     Text(style.description)
                         .font(.caption)
                         .foregroundStyle(Color.astralText.opacity(0.8))
                         .multilineTextAlignment(.center)
-                        .lineLimit(2)
+                        // Was lineLimit(2): the descriptions run to two lines
+                        // already at the default size, so any scaling clipped
+                        // them. Let the card grow instead.
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }
 

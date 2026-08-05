@@ -378,8 +378,10 @@ private struct LifeAreaChip: View {
                 Text(area.displayName)
                     .font(.system(.caption, design: .rounded, weight: .semibold))
                     .foregroundStyle(isSelected ? .white : Color.astralText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    // Was lineLimit(1) + minimumScaleFactor, which shrank the
+                    // label back down at the accessibility sizes — undoing the
+                    // size the user asked for. Let it wrap instead.
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
@@ -399,6 +401,7 @@ private struct LifeAreaChip: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }
 
@@ -434,6 +437,7 @@ private struct TimelineChip: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }
 

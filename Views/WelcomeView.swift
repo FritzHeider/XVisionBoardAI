@@ -6,6 +6,7 @@ struct WelcomeView: View {
     @State private var showingSignIn = false
     @State private var appeared = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         ZStack {
@@ -34,33 +35,47 @@ struct WelcomeView: View {
             }
             .ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                Spacer()
+            // This was a bare VStack of Spacer-separated sections. At the
+            // accessibility text sizes the content is taller than the screen,
+            // and with nowhere to overflow SwiftUI compressed every child until
+            // the labels truncated — the whole screen read as "See Yourse…",
+            // "Start Your…", "Continue without…". A ScrollView whose content is
+            // at least one screen tall keeps the Spacer-balanced composition at
+            // the default sizes and simply scrolls once it stops fitting.
+            GeometryReader { geo in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        Spacer(minLength: AstralTheme.Spacing.lg)
 
-                // Hero
-                heroSection
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 24)
-                    .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.1), value: appeared)
+                        // Hero
+                        heroSection
+                            .opacity(appeared ? 1 : 0)
+                            .offset(y: appeared ? 0 : 24)
+                            .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.1), value: appeared)
 
-                Spacer()
+                        Spacer(minLength: AstralTheme.Spacing.lg)
 
-                // Feature pills
-                featurePills
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 16)
-                    .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.25), value: appeared)
+                        // Feature pills
+                        featurePills
+                            .opacity(appeared ? 1 : 0)
+                            .offset(y: appeared ? 0 : 16)
+                            .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.25), value: appeared)
 
-                Spacer()
+                        Spacer(minLength: AstralTheme.Spacing.lg)
 
-                // CTAs
-                ctaSection
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 20)
-                    .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.4), value: appeared)
-                    .padding(.bottom, 48)
+                        // CTAs
+                        ctaSection
+                            .opacity(appeared ? 1 : 0)
+                            .offset(y: appeared ? 0 : 20)
+                            .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.4), value: appeared)
+                            .padding(.bottom, 48)
+                    }
+                    .padding(.horizontal, AstralTheme.Spacing.lg)
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: geo.size.height)
+                }
+                .scrollBounceBehavior(.basedOnSize)
             }
-            .padding(.horizontal, AstralTheme.Spacing.lg)
         }
         .onAppear { appeared = true }
         .sheet(isPresented: $showingSignUp) { SignUpView() }
@@ -102,16 +117,23 @@ struct WelcomeView: View {
 
             // Main hook
             VStack(spacing: AstralTheme.Spacing.sm) {
-                Text("See Yourself\nLiving Your Dreams")
+                // The hard newline is a nicety at the default size; once the
+                // type is scaled up it wastes a line the screen cannot spare,
+                // so let the text find its own breaks.
+                Text(typeSize.isAccessibilitySize
+                     ? "See Yourself Living Your Dreams"
+                     : "See Yourself\nLiving Your Dreams")
                     .font(.system(.title, design: .rounded, weight: .bold))
                     .foregroundStyle(Color.astralText)
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text("AI-powered vision boards personalized to your face, goals, and future self.")
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(Color.astralTextMuted)
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -119,14 +141,24 @@ struct WelcomeView: View {
     // MARK: - Feature Pills
 
     private var featurePills: some View {
+        // Two pills to a row leaves each about half the width, which is not
+        // enough for "Your Face in Every Board" once scaled. One per row at
+        // the accessibility sizes.
         VStack(spacing: AstralTheme.Spacing.sm) {
-            HStack(spacing: AstralTheme.Spacing.sm) {
+            if typeSize.isAccessibilitySize {
                 WelcomeFeaturePill(icon: "person.fill.viewfinder", text: "Your Face in Every Board", color: .astralViolet)
                 WelcomeFeaturePill(icon: "sparkles", text: "AI Affirmations", color: .astralGold)
-            }
-            HStack(spacing: AstralTheme.Spacing.sm) {
                 WelcomeFeaturePill(icon: "photo.fill", text: "HD Wallpapers", color: .astralIndigo)
                 WelcomeFeaturePill(icon: "bell.badge.fill", text: "Daily Reminders", color: .astralRose)
+            } else {
+                HStack(spacing: AstralTheme.Spacing.sm) {
+                    WelcomeFeaturePill(icon: "person.fill.viewfinder", text: "Your Face in Every Board", color: .astralViolet)
+                    WelcomeFeaturePill(icon: "sparkles", text: "AI Affirmations", color: .astralGold)
+                }
+                HStack(spacing: AstralTheme.Spacing.sm) {
+                    WelcomeFeaturePill(icon: "photo.fill", text: "HD Wallpapers", color: .astralIndigo)
+                    WelcomeFeaturePill(icon: "bell.badge.fill", text: "Daily Reminders", color: .astralRose)
+                }
             }
         }
     }
@@ -176,6 +208,7 @@ struct WelcomeFeaturePill: View {
             Text(text)
                 .scaledFont(size: 12, relativeTo: .caption, weight: .medium, design: .rounded)
                 .foregroundStyle(Color.astralText)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 9)

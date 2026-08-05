@@ -157,6 +157,11 @@ struct VisionBoardDetailView: View {
                     Text(visionBoard.title)
                         .manifestationTitle()
                         .multilineTextAlignment(.leading)
+                        // The enclosing HStack squeezed this to one line, so a
+                        // board called "My Dream Life by the Ocean" displayed
+                        // as "My Dream Life by the O…" even at the default text
+                        // size. Let it wrap onto as many lines as it needs.
+                        .fixedSize(horizontal: false, vertical: true)
                     
                     Text(visionBoard.description)
                         .manifestationBody()
