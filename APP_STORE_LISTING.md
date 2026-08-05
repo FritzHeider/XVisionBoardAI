@@ -132,12 +132,28 @@ answer accurately based on the constrained, personal (non-social) nature of the 
 ---
 
 ## App Privacy answers (the "nutrition label" questionnaire)
-Declare **Data Not Used to Track You**. Data types collected & linked to the user,
-used for **App Functionality** only:
-- Contact Info → **Email Address** (account)
-- User Content → **Photos** (selfies) and **Other User Content** (goals, reflections, boards)
-- Purchases → **Purchase History** (subscription status via RevenueCat)
-Everything else: not collected. No third-party advertising, no tracking.
+There is **no API for this** — an Admin must fill it in the ASC web UI, and an
+empty questionnaire blocks "Add for Review".
+
+Apple defines *collect* as *transmitted off the device*. On-device-only storage
+is not collection, which is what makes this shorter than you'd expect. Declare
+**Data Not Used to Track You** (verified: no Firebase/Amplitude/Sentry/ATT
+anywhere in the target), and for **App Functionality** only:
+- User Content → **Photos** — the selfie, sent to fal.ai to generate the imagery
+- User Content → **Other User Content** — goals and vision description, sent to
+  Google Gemini to write the affirmations
+- Purchases → **Purchase History** — subscription status via RevenueCat
+
+**Do not declare Email Address.** An earlier draft of this file did, and it was
+wrong: the email never leaves the device (no network path in `Services/` carries
+it) and `StoreManager.swift:47` configures RevenueCat with
+`Purchases.configure(withAPIKey:)` and no `logIn()`, so the app user ID is
+anonymous. Declaring data you don't transmit is still an inaccurate label.
+
+*Linked vs Not Linked* on the two User Content rows is a judgement call: no
+account identifier accompanies those requests (guest mode is the default), which
+argues Not Linked — but a selfie is inherently identifying. Under-declaring is
+the riskier error, so choose **Linked to You** if unsure.
 
 ---
 

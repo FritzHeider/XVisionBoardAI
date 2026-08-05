@@ -102,13 +102,21 @@ def main() -> None:
         locales = [l["attributes"].get("locale") for l in locs.get("data", [])]
         print(f"          localizations: {locales}")
 
-    # Pricing.
-    price = get(f"/v1/apps/{APP_ID}/appPriceSchedule")
-    if price.get("_error"):
-        line(None, "Price schedule", f"could not read (HTTP {price['_error']})")
+    # Pricing. The appPriceSchedule resource always exists, so its presence
+    # proves nothing — an app with no price tier ever chosen still returns one.
+    # The real signal is whether manualPrices has an entry.
+    prices = get(f"/v1/appPriceSchedules/{APP_ID}/manualPrices?include=appPricePoint")
+    if prices.get("_error") or not prices.get("data"):
+        line(False, "Price tier", "NOT SET (no manualPrices entry)")
     else:
-        line(bool(price.get("data")), "Price schedule",
-             "set" if price.get("data") else "NOT SET")
+        amounts = [
+            inc["attributes"].get("customerPrice")
+            for inc in prices.get("included", [])
+            if inc["type"] == "appPricePoints"
+        ]
+        shown = amounts[0] if amounts else "?"
+        label = "Free" if shown in ("0", "0.0", "0.00") else shown
+        line(True, "Price tier", label)
 
     # Subscriptions.
     groups = get(f"/v1/apps/{APP_ID}/subscriptionGroups")

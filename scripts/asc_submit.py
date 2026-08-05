@@ -107,32 +107,15 @@ def main() -> None:
         + (f"error {item['_err']} {item['_detail']}" if item.get("_err") else "added")
     )
 
+    # Subscriptions are NOT addable here. reviewSubmissionItems only accepts
+    # appStoreVersion, appEvent, custom product pages and version experiments;
+    # POSTing a 'subscription' relationship 409s with RELATIONSHIP.UNKNOWN.
+    # App Store Connect attaches READY_TO_SUBMIT subscriptions to the app's
+    # review itself, so just report their state and let the operator confirm.
     gid = call("GET", f"/v1/apps/{APP_ID}/subscriptionGroups")["data"][0]["id"]
     for sub in call("GET", f"/v1/subscriptionGroups/{gid}/subscriptions")["data"]:
-        if sub["attributes"]["state"] != "READY_TO_SUBMIT":
-            continue
-        res = call(
-            "POST",
-            "/v1/reviewSubmissionItems",
-            {
-                "data": {
-                    "type": "reviewSubmissionItems",
-                    "relationships": {
-                        "reviewSubmission": {
-                            "data": {"type": "reviewSubmissions", "id": sid}
-                        },
-                        "subscription": {
-                            "data": {"type": "subscriptions", "id": sub["id"]}
-                        },
-                    },
-                }
-            },
-        )
-        label = sub["attributes"]["productId"]
-        print(
-            f"  {label}: "
-            + (f"error {res['_err']} {res['_detail'][:120]}" if res.get("_err") else "added")
-        )
+        attrs = sub["attributes"]
+        print(f"  subscription {attrs['productId']}: {attrs['state']} (not added here)")
 
     final = call(
         "PATCH",
