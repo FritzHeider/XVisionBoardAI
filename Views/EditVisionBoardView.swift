@@ -125,43 +125,35 @@ struct EditVisionBoardView: View {
                 .disabled(newGoalText.trimmingCharacters(in: .whitespaces).isEmpty)
             }
 
-            ForEach(goals.indices, id: \.self) { i in
+            ForEach($goals) { $goal in
                 HStack(spacing: AstralTheme.Spacing.md) {
-                    Button {
-                        goals[i].isAchieved.toggle()
-                        if goals[i].isAchieved {
-                            goals[i].markAchieved()
+                    Button(
+                        goal.isAchieved ? "Mark \(goal.title) as not achieved" : "Mark \(goal.title) as achieved",
+                        systemImage: goal.isAchieved ? "checkmark.circle.fill" : "circle"
+                    ) {
+                        if goal.isAchieved {
+                            goal.unmarkAchieved()
                         } else {
-                            goals[i].unmarkAchieved()
+                            goal.markAchieved()
                         }
-                    } label: {
-                        Image(systemName: goals[i].isAchieved ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(goals[i].isAchieved ? Color.astralGold : Color.astralTextDim)
-                            .font(.title3)
                     }
-                    // Without a label every row announces just "circle, button",
-                    // so a list of goals is indistinguishable under VoiceOver.
-                    .accessibilityLabel(
-                        goals[i].isAchieved
-                            ? "Mark \(goals[i].title) as not achieved"
-                            : "Mark \(goals[i].title) as achieved"
-                    )
+                    .labelStyle(.iconOnly)
+                    .foregroundStyle(goal.isAchieved ? Color.astralGold : Color.astralTextDim)
+                    .font(.title3)
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
 
-                    Text(goals[i].title)
+                    Text(goal.title)
                         .foregroundStyle(Color.astralText)
-                        .strikethrough(goals[i].isAchieved, color: .astralGold)
+                        .strikethrough(goal.isAchieved, color: .astralGold)
 
                     Spacer()
 
-                    Button {
-                        goals.remove(at: i)
-                    } label: {
-                        Image(systemName: "trash")
-                            .foregroundStyle(Color.astralError.opacity(0.7))
+                    Button("Delete goal: \(goal.title)", systemImage: "trash") {
+                        deleteGoal(id: goal.id)
                     }
-                    .accessibilityLabel("Delete goal: \(goals[i].title)")
+                    .labelStyle(.iconOnly)
+                    .foregroundStyle(Color.astralError.opacity(0.7))
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
                 }
@@ -169,6 +161,10 @@ struct EditVisionBoardView: View {
                 .astralCard()
             }
         }
+    }
+
+    private func deleteGoal(id: UUID) {
+        goals.removeAll { $0.id == id }
     }
 
     private func save() {

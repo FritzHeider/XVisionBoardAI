@@ -152,7 +152,6 @@ struct SignUpView: View {
         }
         .onAppear { appeared = true }
         .alert("Sign Up Failed", isPresented: $showingError) {
-            Button("OK") { }
         } message: {
             Text(userManager.errorMessage ?? "An error occurred during sign up")
         }
@@ -279,7 +278,6 @@ struct SignInView: View {
         }
         .onAppear { appeared = true }
         .alert("Sign In Failed", isPresented: $showingError) {
-            Button("OK") { }
         } message: {
             Text(userManager.errorMessage ?? "Invalid email or password")
         }

@@ -487,21 +487,18 @@ struct CreateVisionBoardView: View {
                         .font(.headline)
                         .foregroundStyle(Color.astralText)
                     
-                    ForEach(manifestationGoals.indices, id: \.self) { index in
+                    ForEach(Array(manifestationGoals.enumerated()), id: \.offset) { index, goal in
                         HStack {
-                            Text("• \(manifestationGoals[index])")
+                            Text("• \(goal)")
                                 .foregroundStyle(Color.astralText)
                             
                             Spacer()
                             
-                            Button(action: {
-                                manifestationGoals.remove(at: index)
-                            }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.red)
+                            Button("Remove goal: \(goal)", systemImage: "xmark.circle.fill") {
+                                removeGoal(at: index)
                             }
-                            // Otherwise every row is just "xmark circle fill, button".
-                            .accessibilityLabel("Remove goal: \(manifestationGoals[index])")
+                            .labelStyle(.iconOnly)
+                            .foregroundStyle(.red)
                             .frame(minWidth: 44, minHeight: 44)
                             .contentShape(Rectangle())
                         }
@@ -779,6 +776,11 @@ struct CreateVisionBoardView: View {
         case .goals:     currentStep = .customize
         default: break
         }
+    }
+    
+    private func removeGoal(at index: Int) {
+        guard manifestationGoals.indices.contains(index) else { return }
+        manifestationGoals.remove(at: index)
     }
     
     private func generateVisionBoard() {

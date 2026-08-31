@@ -76,7 +76,7 @@ struct VisionBoardDetailView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 12) {
                         Button {
                             showingEditSheet = true
@@ -472,8 +472,8 @@ struct VisionBoardDetailView: View {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(5))
                 guard !Task.isCancelled else { break }
-                await MainActor.run {
-                    withAnimation { currentAffirmationIndex = (currentAffirmationIndex + 1) % visionBoard.affirmations.count }
+                withAnimation {
+                    currentAffirmationIndex = (currentAffirmationIndex + 1) % visionBoard.affirmations.count
                 }
             }
         }

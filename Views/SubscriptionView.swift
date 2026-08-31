@@ -18,6 +18,7 @@ struct SubscriptionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(StoreManager.self) var storeManager
     @State private var restoreMessage: String?
+    @State private var showingRestoreAlert = false
 
     var body: some View {
         if let offering = storeManager.currentOffering {
@@ -46,13 +47,13 @@ struct SubscriptionView: View {
                 .onRestoreFailure { error in
                     storeManager.errorMessage = "Restore failed: \(error.localizedDescription)"
                 }
-                .alert("Restore Purchases", isPresented: Binding<Bool>(
-                    get: { restoreMessage != nil },
-                    set: { if !$0 { restoreMessage = nil } }
-                )) {
-                    Button("OK") { restoreMessage = nil }
-                } message: {
-                    Text(restoreMessage ?? "")
+                .alert("Restore Purchases", isPresented: $showingRestoreAlert, presenting: restoreMessage) { _ in
+                    Button("OK", role: .cancel) { restoreMessage = nil }
+                } message: { message in
+                    Text(message)
+                }
+                .onChange(of: restoreMessage) { _, message in
+                    showingRestoreAlert = (message != nil)
                 }
         } else {
             // Fallback: no offering configured yet (SDK still loading)
@@ -70,6 +71,8 @@ private struct FallbackPaywallView: View {
     @Environment(StoreManager.self) var storeManager
     @State private var infoMessage: String?
     @State private var selectedProduct: StoreProduct?
+    @State private var showingErrorAlert = false
+    @State private var showingInfoAlert = false
 
     /// Human-readable billing period suffix, e.g. "week", "month", "year".
     private func periodLabel(_ product: StoreProduct) -> String {
@@ -251,21 +254,21 @@ private struct FallbackPaywallView: View {
                 }
             }
         }
-        .alert("Something Went Wrong", isPresented: Binding(
-            get: { storeManager.errorMessage != nil },
-            set: { if !$0 { storeManager.errorMessage = nil } }
-        )) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(storeManager.errorMessage ?? "")
+        .alert("Something Went Wrong", isPresented: $showingErrorAlert, presenting: storeManager.errorMessage) { _ in
+            Button("OK", role: .cancel) { storeManager.errorMessage = nil }
+        } message: { error in
+            Text(error)
         }
-        .alert("Restore Purchases", isPresented: Binding(
-            get: { infoMessage != nil },
-            set: { if !$0 { infoMessage = nil } }
-        )) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(infoMessage ?? "")
+        .onChange(of: storeManager.errorMessage) { _, error in
+            showingErrorAlert = (error != nil)
+        }
+        .alert("Restore Purchases", isPresented: $showingInfoAlert, presenting: infoMessage) { _ in
+            Button("OK", role: .cancel) { infoMessage = nil }
+        } message: { message in
+            Text(message)
+        }
+        .onChange(of: infoMessage) { _, message in
+            showingInfoAlert = (message != nil)
         }
     }
 

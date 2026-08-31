@@ -134,33 +134,22 @@ struct VisionBoardGalleryView: View {
 
     // MARK: - Empty State
 
+    @ViewBuilder
     private var emptyStateView: some View {
-        VStack(spacing: AstralTheme.Spacing.lg) {
-            Spacer()
-
-            Image(systemName: selectedFilter == .all ? "photo.stack" : selectedFilter.systemImage)
-                .font(.system(size: 56))
-                .foregroundStyle(Color.astralViolet.opacity(0.5))
-
-            VStack(spacing: AstralTheme.Spacing.sm) {
-                Text(emptyStateTitle)
-                    .font(.system(.title2, design: .rounded, weight: .bold))
-                    .foregroundStyle(Color.astralText)
-
+        if !searchText.isEmpty {
+            ContentUnavailableView.search(text: searchText)
+        } else {
+            ContentUnavailableView {
+                Label(emptyStateTitle, systemImage: selectedFilter == .all ? "photo.stack" : selectedFilter.systemImage)
+            } description: {
                 Text(emptyStateMessage)
-                    .font(.system(.body, design: .rounded))
-                    .foregroundStyle(Color.astralTextMuted)
-                    .multilineTextAlignment(.center)
+            } actions: {
+                if selectedFilter == .all {
+                    Button("Create Your First Vision Board") { showingCreateView = true }
+                        .astralButton(.primary)
+                }
             }
-
-            if selectedFilter == .all && searchText.isEmpty {
-                Button("Create Your First Vision Board") { showingCreateView = true }
-                    .astralButton(.primary)
-            }
-
-            Spacer()
         }
-        .padding(AstralTheme.Spacing.xl)
     }
 
     private var emptyStateTitle: String {

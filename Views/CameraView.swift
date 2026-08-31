@@ -21,8 +21,9 @@ struct CameraView: View {
 
     @State private var showingImagePicker = false
     @State private var showingPermissionAlert = false
+    @State private var showingErrorAlert = false
     
-var body: some View {
+    var body: some View {
         ZStack {
             Color.cosmicBlack.ignoresSafeArea()
             
@@ -57,14 +58,14 @@ var body: some View {
         } message: {
             Text("Please enable camera access in Settings to take selfies for your personalized vision boards.")
         }
-        .alert("Camera Error", isPresented: Binding(
-            get: { cameraManager.errorMessage != nil },
-            set: { if !$0 { cameraManager.errorMessage = nil } }
-        )) {
-            Button("OK", role: .cancel) {}
+        .alert("Camera Error", isPresented: $showingErrorAlert, presenting: cameraManager.errorMessage) { _ in
+            Button("OK", role: .cancel) { cameraManager.errorMessage = nil }
             Button("Choose from Photos") { showingImagePicker = true }
-        } message: {
-            Text(cameraManager.errorMessage ?? "")
+        } message: { error in
+            Text(error)
+        }
+        .onChange(of: cameraManager.errorMessage) { _, error in
+            showingErrorAlert = (error != nil)
         }
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(image: $capturedImage) {

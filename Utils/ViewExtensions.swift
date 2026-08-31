@@ -243,10 +243,8 @@ extension UIImage {
     // MARK: - Resizing
     
     func resized(to size: CGSize) -> UIImage? {
-        UIGraphicsBeginImageContextWithOptions(size, false, scale)
-        defer { UIGraphicsEndImageContext() }
-        draw(in: CGRect(origin: .zero, size: size))
-        return UIGraphicsGetImageFromCurrentImageContext()
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { _ in draw(in: CGRect(origin: .zero, size: size)) }
     }
     
     /// Scales image down so its longest edge ≤ maxDimension. Returns self if already smaller.
@@ -276,13 +274,11 @@ extension UIImage {
     // MARK: - Effects
     
     func withTint(_ color: UIColor) -> UIImage? {
-        UIGraphicsBeginImageContextWithOptions(size, false, scale)
-        defer { UIGraphicsEndImageContext() }
-        
-        color.set()
-        withRenderingMode(.alwaysTemplate).draw(in: CGRect(origin: .zero, size: size))
-        
-        return UIGraphicsGetImageFromCurrentImageContext()
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { _ in
+            color.set()
+            withRenderingMode(.alwaysTemplate).draw(in: CGRect(origin: .zero, size: size))
+        }
     }
 }
 

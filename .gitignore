@@ -55,3 +55,4 @@ proxy/.wrangler/
 # Claude Code local settings (machine-specific; may hold permission entries)
 .claude/settings.local.json
 .gstack/
+.gemini/
