@@ -12,24 +12,25 @@ import SwiftUI
 import Vision
 
 @MainActor
-class CameraManager: NSObject, ObservableObject {
-    @Published var isAuthorized = false
+@Observable
+class CameraManager: NSObject {
+    var isAuthorized = false
     /// True when the user has explicitly denied camera access (needs Settings, not a re-prompt).
-    @Published var permissionDenied = false
+    var permissionDenied = false
     /// True while the session is interrupted (phone call, Face ID, another app using the camera).
-    @Published var isInterrupted = false
-    @Published var session = AVCaptureSession()
-    @Published var preview: AVCaptureVideoPreviewLayer?
-    @Published var capturedImage: UIImage?
-    @Published var isCapturing = false
-    @Published var errorMessage: String?
-    @Published var faceDetected = false
-    @Published var faceQuality: FaceQuality = .unknown
+    var isInterrupted = false
+    var session = AVCaptureSession()
+    var preview: AVCaptureVideoPreviewLayer?
+    var capturedImage: UIImage?
+    var isCapturing = false
+    var errorMessage: String?
+    var faceDetected = false
+    var faceQuality: FaceQuality = .unknown
 
-    private var photoOutput = AVCapturePhotoOutput()
-    private var videoOutput = AVCaptureVideoDataOutput()
-    private let sessionQueue = DispatchQueue(label: "camera.session.queue")
-    private var notificationObservers: [NSObjectProtocol] = []
+    @ObservationIgnored private var photoOutput = AVCapturePhotoOutput()
+    @ObservationIgnored private var videoOutput = AVCaptureVideoDataOutput()
+    @ObservationIgnored private let sessionQueue = DispatchQueue(label: "camera.session.queue")
+    @ObservationIgnored nonisolated(unsafe) private var notificationObservers: [NSObjectProtocol] = []
     
     enum FaceQuality {
         case unknown

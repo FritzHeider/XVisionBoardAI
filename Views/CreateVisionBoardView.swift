@@ -29,6 +29,7 @@ struct CreateVisionBoardView: View {
     @State private var showingPhotoPicker = false
     @State private var photoPickerItem: PhotosPickerItem?
     @State private var generationError: String?
+    @State private var showingErrorAlert = false
     @State private var showingBoardDetail = false
     @State private var generationTask: Task<Void, Never>?
     @State private var showingAIConsent = false
@@ -144,13 +145,13 @@ struct CreateVisionBoardView: View {
                 }
             }
         }
-        .alert("Generation Failed", isPresented: Binding<Bool>(
-            get: { generationError != nil },
-            set: { if !$0 { generationError = nil } }
-        )) {
+        .alert("Generation Failed", isPresented: $showingErrorAlert, presenting: generationError) { _ in
             Button("OK") { generationError = nil }
-        } message: {
-            Text(generationError ?? "")
+        } message: { error in
+            Text(error)
+        }
+        .onChange(of: generationError) { _, error in
+            showingErrorAlert = (error != nil)
         }
         // The app had no haptics at all. Finishing a board is its defining moment
         // and can take minutes, so it's exactly where a success tap belongs.
@@ -219,7 +220,8 @@ struct CreateVisionBoardView: View {
                 .scaleEffect(x: 1, y: 2, anchor: .center)
             
             HStack {
-                Text("Step \(CreationStep.allCases.firstIndex(of: currentStep)! + 1) of \(CreationStep.allCases.count - 1)")
+                let stepNumber = (CreationStep.allCases.firstIndex(of: currentStep) ?? 0) + 1
+                Text("Step \(stepNumber) of \(CreationStep.allCases.count - 1)")
                     .font(.caption)
                     .foregroundStyle(Color.astralText.opacity(0.7))
                 
@@ -369,9 +371,8 @@ struct CreateVisionBoardView: View {
                         .fontWeight(.medium)
                         .foregroundStyle(Color.astralText)
                     
-                    TextEditor(text: $description)
-                        .frame(minHeight: 120)
-                        .scrollContentBackground(.hidden)
+                    TextField("Describe your dream vision in detail...", text: $description, axis: .vertical)
+                        .lineLimit(4...8)
                         .padding()
                         .background(
                             RoundedRectangle(cornerRadius: 12)
@@ -566,9 +567,10 @@ struct CreateVisionBoardView: View {
                     ForEach(images) { img in
                         VisionBoardImageView(image: img) { }
                             .frame(height: 90)
-                            .clipShape(RoundedRectangle(cornerRadius: AstralTheme.Radius.sm))
+                            .clipShape(.rect(cornerRadius: AstralTheme.Radius.sm))
                     }
-                    ForEach(images.count..<(visionBoardManager.currentGeneratingBoard!.layout.imageCount), id: \.self) { _ in
+                    let totalCount = visionBoardManager.currentGeneratingBoard?.layout.imageCount ?? selectedLayout.imageCount
+                    ForEach(images.count..<totalCount, id: \.self) { _ in
                         RoundedRectangle(cornerRadius: AstralTheme.Radius.sm)
                             .fill(Color.astralSurface2)
                             .frame(height: 90)

@@ -110,7 +110,7 @@ struct FalAIService {
         var lastError: Error?
         for attempt in 0..<3 {
             if attempt > 0 {
-                try await Task.sleep(nanoseconds: UInt64(attempt) * 2_000_000_000)
+                try await Task.sleep(for: .seconds(attempt * 2))
             }
             do {
                 return try await submitAndPoll(model: nanoBanana2Edit, body: body, apiKey: apiKey)
@@ -239,8 +239,7 @@ struct FalAIService {
         let usesProxy = APIConfig.usesProxy
         var consecutiveClientErrors = 0
         for attempt in 0..<60 {
-            let delay: UInt64 = attempt < 5 ? 2_000_000_000 : 3_000_000_000
-            try await Task.sleep(nanoseconds: delay)
+            try await Task.sleep(for: .seconds(attempt < 5 ? 2 : 3))
 
             var statusReq = URLRequest(url: statusURL)
             await authorize(&statusReq, apiKey: apiKey, usesProxy: usesProxy, body: Data())

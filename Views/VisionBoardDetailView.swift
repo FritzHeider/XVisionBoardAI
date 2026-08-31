@@ -24,15 +24,23 @@ struct VisionBoardDetailView: View {
     @State private var speechManager = SpeechManager()
     @State private var showingUpgrade = false
     @State private var showingEditView = false
+    @State private var showingEditSheet = false
     @State private var showingShareSheet = false
     @State private var showingDeleteAlert = false
+    @State private var renderedBoardImage: UIImage?
+    @State private var renderedSingleImage: UIImage?
     @State private var shareImage: UIImage?
     @State private var showingImageShare = false
     @State private var showingFullScreenImage: VisionBoardImage?
     @State private var currentAffirmationIndex = 0
     @State private var affirmationTask: Task<Void, Never>?
     @State private var actionFeedback: String?
+    @State private var showingActionFeedbackAlert = false
     
+    init(visionBoard: VisionBoard) {
+        self.visionBoard = visionBoard
+    }
+
     private var currentBoard: VisionBoard {
         visionBoardManager.visionBoards.first { $0.id == visionBoard.id } ?? visionBoard
     }
@@ -68,52 +76,40 @@ struct VisionBoardDetailView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") {
-                        dismiss()
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack(spacing: 12) {
+                        Button {
+                            showingEditSheet = true
+                        } label: {
+                            Image(systemName: "pencil")
+                                .font(.body)
+                                .foregroundStyle(Color.astralText)
+                        }
+                        .accessibilityLabel("Edit vision board")
+                        
+                        Button {
+                            showingDeleteAlert = true
+                        } label: {
+                            Image(systemName: "trash")
+                                .font(.body)
+                                .foregroundStyle(Color.astralRose)
+                        }
+                        .accessibilityLabel("Delete vision board")
                     }
-                    .foregroundStyle(Color.astralText)
-                }
-                
-                ToolbarItem(placement: .principal) {
-                    Text(visionBoard.title)
-                        .font(.headline)
-                        .foregroundStyle(Color.astralText)
-                        .lineLimit(1)
-                }
-                
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu("Options", systemImage: "ellipsis.circle") {
-                        Button("Edit Vision Board", systemImage: "pencil", action: { showingEditView = true })
-
-                        // Read through currentBoard, not the `visionBoard` snapshot:
-                        // toggleFavorite mutates the stored copy, so a snapshot-driven
-                        // label never updates and the button reads "Add to Favorites"
-                        // even after the board has been favorited.
-                        Button(
-                            currentBoard.isFavorite ? "Remove from Favorites" : "Add to Favorites",
-                            systemImage: currentBoard.isFavorite ? "heart.slash" : "heart",
-                            action: { visionBoardManager.toggleFavorite(currentBoard) }
-                        )
-
-                        Button("Share", systemImage: "square.and.arrow.up", action: { showingShareSheet = true })
-
-                        Button("Delete", systemImage: "trash", role: .destructive, action: { showingDeleteAlert = true })
-                    }
-                    .labelStyle(.iconOnly)
-                    .foregroundStyle(Color.astralText)
                 }
             }
-        }
-        .sheet(isPresented: $showingEditView) {
-            EditVisionBoardView(visionBoard: visionBoard)
+            .sheet(isPresented: $showingEditSheet) {
+                EditVisionBoardView(visionBoard: currentBoard)
+            }
         }
         .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(items: shareableItems())
+            if let image = renderedBoardImage {
+                ShareSheet(items: [image, "My Vision Board: \(visionBoard.title)"])
+            }
         }
         .sheet(isPresented: $showingImageShare) {
-            if let img = shareImage {
-                ShareSheet(items: [img])
+            if let image = renderedSingleImage {
+                ShareSheet(items: [image, "Manifesting my dream!"])
             }
         }
         .alert("Delete Vision Board", isPresented: $showingDeleteAlert) {
@@ -121,7 +117,7 @@ struct VisionBoardDetailView: View {
                 visionBoardManager.deleteVisionBoard(visionBoard)
                 dismiss()
             }
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) {}
         } message: {
             Text("Are you sure you want to delete this vision board? This action cannot be undone.")
         }
@@ -130,13 +126,13 @@ struct VisionBoardDetailView: View {
                 showingFullScreenImage = nil
             }
         }
-        .alert("Manifestation Actions", isPresented: Binding(
-            get: { actionFeedback != nil },
-            set: { if !$0 { actionFeedback = nil } }
-        )) {
+        .alert("Manifestation Actions", isPresented: $showingActionFeedbackAlert, presenting: actionFeedback) { _ in
             Button("OK", role: .cancel) {}
-        } message: {
-            Text(actionFeedback ?? "")
+        } message: { feedback in
+            Text(feedback)
+        }
+        .onChange(of: actionFeedback) { _, fb in
+            showingActionFeedbackAlert = (fb != nil)
         }
         .sheet(isPresented: $showingUpgrade) { SubscriptionView() }
         .onAppear {
@@ -364,7 +360,7 @@ struct VisionBoardDetailView: View {
 
                 Spacer()
 
-                let achieved = currentBoard.manifestationGoals.filter { $0.isAchieved }.count
+                let achieved = currentBoard.manifestationGoals.count(where: \.isAchieved)
                 let total = currentBoard.manifestationGoals.count
                 if total > 0 {
                     Text("\(achieved)/\(total)")
@@ -522,16 +518,17 @@ struct VisionBoardDetailView: View {
     @MainActor
     private func renderBoardImage() -> UIImage? {
         let isHD = storeManager.canExportHD()
-        let width: CGFloat = isHD ? 1200 : 400
-        let spacing: CGFloat = isHD ? 12 : 4
-        let tileHeight: CGFloat = isHD ? 360 : 120
+        let width: Double = isHD ? 1200 : 400
+        let spacing: Double = isHD ? 12 : 4
+        let tileHeight: Double = isHD ? 360 : 120
         let tiles = Array(visionBoard.images.prefix(9))
         let rows = stride(from: 0, to: tiles.count, by: 3).map { start in
             Array(tiles[start..<min(start + 3, tiles.count)])
         }
 
         let boardView = VStack(spacing: spacing) {
-            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+            ForEach(rows.indices, id: \.self) { rowIndex in
+                let row = rows[rowIndex]
                 HStack(spacing: spacing) {
                     ForEach(row) { img in
                         VisionBoardImageView(image: img) { }
@@ -559,7 +556,7 @@ struct VisionBoardDetailView: View {
 
     /// Burned into free-tier exports. Sized relative to the render width so it
     /// stays legible at whatever resolution the tier renders at.
-    private func exportWatermark(width: CGFloat) -> some View {
+    private func exportWatermark(width: Double) -> some View {
         HStack(spacing: width * 0.015) {
             Image(systemName: "sparkles")
             Text("Made with ManifestMe")

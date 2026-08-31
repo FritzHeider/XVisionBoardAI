@@ -39,9 +39,9 @@ struct EditVisionBoardView: View {
                         .foregroundStyle(Color.astralTextMuted)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
+                    Button("Save", action: save)
                         .foregroundStyle(Color.astralGold)
-                        .fontWeight(.semibold)
+                        .bold()
                 }
             }
         }
@@ -77,8 +77,8 @@ struct EditVisionBoardView: View {
                     .textCase(.uppercase)
                     .kerning(0.5)
 
-                TextEditor(text: $description)
-                    .frame(minHeight: 100)
+                TextField("Description", text: $description, axis: .vertical)
+                    .lineLimit(3...6)
                     .padding(AstralTheme.Spacing.md)
                     .background {
                         RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
@@ -183,7 +183,7 @@ struct EditVisionBoardView: View {
         updated.title = title
         updated.description = description
         updated.manifestationGoals = goals
-        updated.updatedAt = Date()
+        updated.updatedAt = .now
         visionBoardManager.updateVisionBoard(updated)
         dismiss()
     }

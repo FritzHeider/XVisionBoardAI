@@ -25,7 +25,7 @@ struct ManifestationGoal: Codable, Identifiable, Hashable, Equatable {
 
     mutating func markAchieved() {
         isAchieved = true
-        achievedAt = Date()
+        achievedAt = .now
     }
 
     mutating func unmarkAchieved() {
@@ -76,8 +76,8 @@ struct VisionBoard: Codable, Identifiable {
         self.style = style
         self.images = []
         self.affirmations = []
-        self.createdAt = Date()
-        self.updatedAt = Date()
+        self.createdAt = .now
+        self.updatedAt = .now
         self.isPersonalized = true
         self.manifestationGoals = []
         self.viewCount = 0
@@ -105,8 +105,8 @@ struct VisionBoard: Codable, Identifiable {
         style = (try? container.decode(VisionBoardStyle.self, forKey: .style)) ?? .cinematic
         images = try container.decodeIfPresent([VisionBoardImage].self, forKey: .images) ?? []
         affirmations = try container.decodeIfPresent([String].self, forKey: .affirmations) ?? []
-        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
-        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt) ?? Date()
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? .now
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt) ?? .now
         isPersonalized = try container.decodeIfPresent(Bool.self, forKey: .isPersonalized) ?? true
         viewCount = try container.decodeIfPresent(Int.self, forKey: .viewCount) ?? 0
         isFavorite = try container.decodeIfPresent(Bool.self, forKey: .isFavorite) ?? false
@@ -125,24 +125,18 @@ struct VisionBoard: Codable, Identifiable {
         ImageStore.load(userImageFilename)
     }
 
-    private static let dateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateStyle = .medium
-        return f
-    }()
-
     var formattedCreatedDate: String {
-        VisionBoard.dateFormatter.string(from: createdAt)
+        createdAt.formatted(date: .abbreviated, time: .omitted)
     }
 
     mutating func incrementViewCount() {
         viewCount += 1
-        updatedAt = Date()
+        updatedAt = .now
     }
 
     mutating func toggleFavorite() {
         isFavorite.toggle()
-        updatedAt = Date()
+        updatedAt = .now
     }
 }
 

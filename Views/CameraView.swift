@@ -10,7 +10,7 @@ import SwiftUI
 import AVFoundation
 
 struct CameraView: View {
-    @StateObject private var cameraManager = CameraManager()
+    @State private var cameraManager = CameraManager()
     @Binding var capturedImage: UIImage?
     @Binding var isPresented: Bool
 

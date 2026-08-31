@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-01T01:37:42.309Z",
+  "timestamp": "2026-08-04T23:42:24.137Z",
   "projectRoot": "/Users/drop/XVisionBoardAI",
   "structure": {
     "hasPackageJson": false,
@@ -7,5 +7,5 @@
     "hasClaudeConfig": true,
     "hasClaudeFlow": true
   },
-  "scannedAt": 1785548262309
+  "scannedAt": 1785886944137
 }

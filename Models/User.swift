@@ -94,7 +94,7 @@ struct UserInsight: Codable, Identifiable {
         self.id = UUID()
         self.question = question
         self.answer = answer
-        self.answeredAt = Date()
+        self.answeredAt = .now
     }
 }
 
@@ -118,8 +118,8 @@ struct User: Codable, Identifiable {
         self.email = email
         self.username = username
         self.profileImageFilename = profileImageFilename
-        self.createdAt = Date()
-        self.lastLoginAt = Date()
+        self.createdAt = .now
+        self.lastLoginAt = .now
         self.visionBoardCount = 0
         self.manifestationGoals = []
         self.preferences = UserPreferences()

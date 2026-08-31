@@ -349,7 +349,7 @@ class VisionBoardManager {
             guard let idx = visionBoards.firstIndex(where: { $0.id == boardID }),
                   let imgIdx = visionBoards[idx].images.firstIndex(where: { $0.id == imageID }) else { return }
             visionBoards[idx].images[imgIdx] = image
-            visionBoards[idx].updatedAt = Date()
+            visionBoards[idx].updatedAt = .now
             save(visionBoards[idx])
         } catch {
             errorMessage = "Image generation failed: \(error.localizedDescription)"
@@ -368,7 +368,7 @@ class VisionBoardManager {
         } else {
             visionBoards[boardIndex].manifestationGoals[goalIndex].markAchieved()
         }
-        visionBoards[boardIndex].updatedAt = Date()
+        visionBoards[boardIndex].updatedAt = .now
         save(visionBoards[boardIndex])
     }
 
@@ -377,7 +377,7 @@ class VisionBoardManager {
         for image in visionBoard.images {
             if let filename = image.imageFilename { ImageStore.delete(filename) }
         }
-        let file = Self.boardsDirectory.appendingPathComponent("\(visionBoard.id.uuidString).json")
+        let file = Self.boardsDirectory.appending(path: "\(visionBoard.id.uuidString).json")
         try? FileManager.default.removeItem(at: file)
         visionBoards.removeAll { $0.id == visionBoard.id }
     }
@@ -425,15 +425,14 @@ class VisionBoardManager {
     // MARK: - Data Persistence
 
     private static var boardsDirectory: URL {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let dir = docs.appendingPathComponent("VisionBoards", isDirectory: true)
+        let dir = URL.documentsDirectory.appending(path: "VisionBoards", directoryHint: .isDirectory)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }
 
     /// Writes a single board's JSON file, surfacing failures via errorMessage.
     private func save(_ board: VisionBoard) {
-        let file = Self.boardsDirectory.appendingPathComponent("\(board.id.uuidString).json")
+        let file = Self.boardsDirectory.appending(path: "\(board.id.uuidString).json")
         do {
             let data = try JSONEncoder().encode(board)
             try data.write(to: file, options: .atomic)
@@ -452,7 +451,7 @@ class VisionBoardManager {
         guard let files = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { return }
         var loaded: [VisionBoard] = []
         for filename in files where filename.hasSuffix(".json") {
-            let file = dir.appendingPathComponent(filename)
+            let file = dir.appending(path: filename)
             do {
                 let data = try Data(contentsOf: file)
                 loaded.append(try JSONDecoder().decode(VisionBoard.self, from: data))
@@ -467,9 +466,9 @@ class VisionBoardManager {
     }
 
     private func quarantine(_ file: URL) {
-        let dir = Self.boardsDirectory.appendingPathComponent("Corrupted", isDirectory: true)
+        let dir = Self.boardsDirectory.appending(path: "Corrupted", directoryHint: .isDirectory)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        try? FileManager.default.moveItem(at: file, to: dir.appendingPathComponent(file.lastPathComponent))
+        try? FileManager.default.moveItem(at: file, to: dir.appending(path: file.lastPathComponent))
     }
 
     /// One-time migration: boards saved before images moved to disk carry raw

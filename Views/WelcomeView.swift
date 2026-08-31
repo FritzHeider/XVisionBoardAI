@@ -42,40 +42,38 @@ struct WelcomeView: View {
             // "Start Your…", "Continue without…". A ScrollView whose content is
             // at least one screen tall keeps the Spacer-balanced composition at
             // the default sizes and simply scrolls once it stops fitting.
-            GeometryReader { geo in
-                ScrollView {
-                    VStack(spacing: 0) {
-                        Spacer(minLength: AstralTheme.Spacing.lg)
+            ScrollView {
+                VStack(spacing: 0) {
+                    Spacer(minLength: AstralTheme.Spacing.lg)
 
-                        // Hero
-                        heroSection
-                            .opacity(appeared ? 1 : 0)
-                            .offset(y: appeared ? 0 : 24)
-                            .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.1), value: appeared)
+                    // Hero
+                    heroSection
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 24)
+                        .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.1), value: appeared)
 
-                        Spacer(minLength: AstralTheme.Spacing.lg)
+                    Spacer(minLength: AstralTheme.Spacing.lg)
 
-                        // Feature pills
-                        featurePills
-                            .opacity(appeared ? 1 : 0)
-                            .offset(y: appeared ? 0 : 16)
-                            .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.25), value: appeared)
+                    // Feature pills
+                    featurePills
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 16)
+                        .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.25), value: appeared)
 
-                        Spacer(minLength: AstralTheme.Spacing.lg)
+                    Spacer(minLength: AstralTheme.Spacing.lg)
 
-                        // CTAs
-                        ctaSection
-                            .opacity(appeared ? 1 : 0)
-                            .offset(y: appeared ? 0 : 20)
-                            .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.4), value: appeared)
-                            .padding(.bottom, 48)
-                    }
-                    .padding(.horizontal, AstralTheme.Spacing.lg)
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: geo.size.height)
+                    // CTAs
+                    ctaSection
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 20)
+                        .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.4), value: appeared)
+                        .padding(.bottom, 48)
                 }
-                .scrollBounceBehavior(.basedOnSize)
+                .padding(.horizontal, AstralTheme.Spacing.lg)
+                .frame(maxWidth: .infinity)
+                .containerRelativeFrame(.vertical, alignment: .center)
             }
+            .scrollBounceBehavior(.basedOnSize)
         }
         .onAppear { appeared = true }
         .sheet(isPresented: $showingSignUp) { SignUpView() }

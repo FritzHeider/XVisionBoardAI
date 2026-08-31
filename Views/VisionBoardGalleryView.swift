@@ -33,9 +33,9 @@ struct VisionBoardGalleryView: View {
         }
         if !searchText.isEmpty {
             boards = boards.filter { board in
-                board.title.localizedCaseInsensitiveContains(searchText) ||
-                board.description.localizedCaseInsensitiveContains(searchText) ||
-                board.manifestationGoals.contains { $0.title.localizedCaseInsensitiveContains(searchText) }
+                board.title.localizedStandardContains(searchText) ||
+                board.description.localizedStandardContains(searchText) ||
+                board.manifestationGoals.contains { $0.title.localizedStandardContains(searchText) }
             }
         }
         return boards
@@ -66,7 +66,7 @@ struct VisionBoardGalleryView: View {
             }
         }
         .sheet(isPresented: $showingCreateView) { CreateVisionBoardView() }
-        .sheet(item: $selectedVisionBoard) { VisionBoardDetailView(visionBoard: $0) }
+        .sheet(item: $selectedVisionBoard, content: VisionBoardDetailView.init)
     }
 
     // MARK: - Search + Filters
@@ -269,7 +269,7 @@ struct VisionBoardGridItem: View {
                     }
                     .padding(AstralTheme.Spacing.sm)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: AstralTheme.Radius.md, style: .continuous))
+                .clipShape(.rect(cornerRadius: AstralTheme.Radius.md))
                 .overlay(alignment: .topTrailing) {
                     FavoriteButton(visionBoard: visionBoard)
                         .padding(AstralTheme.Spacing.xs)

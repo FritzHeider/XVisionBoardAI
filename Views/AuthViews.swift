@@ -310,8 +310,8 @@ struct AstralTextField: View {
                 }
             }
             .keyboardType(keyboardType)
-            .autocapitalization(.none)
-            .disableAutocorrection(true)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled(true)
             .padding(AstralTheme.Spacing.md)
             .background {
                 RoundedRectangle(cornerRadius: AstralTheme.Radius.md)

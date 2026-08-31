@@ -85,7 +85,7 @@ struct HomeView: View {
     }
 
     private var timeGreeting: String {
-        let hour = Calendar.current.component(.hour, from: Date())
+        let hour = Calendar.current.component(.hour, from: .now)
         switch hour {
         case 5..<12: return "Good morning ✦"
         case 12..<17: return "Good afternoon ✦"
@@ -283,7 +283,7 @@ struct HomeView: View {
                     .tracking(typeSize.isAccessibilitySize ? 0 : 1.2)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Text(Date(), format: .dateTime.month(.abbreviated).day())
+                Text(Date.now, format: .dateTime.month(.abbreviated).day())
                     .scaledFont(size: 10, relativeTo: .caption2, weight: .medium)
                     .foregroundStyle(Color.astralTextDim)
                     .frame(
@@ -300,7 +300,7 @@ struct HomeView: View {
         }
         .padding(AstralTheme.Spacing.md)
         .background {
-            RoundedRectangle(cornerRadius: AstralTheme.Radius.lg, style: .continuous)
+            RoundedRectangle(cornerRadius: AstralTheme.Radius.lg)
                 .fill(Color.astralViolet.opacity(0.12))
                 .overlay(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 2)
@@ -346,7 +346,7 @@ struct HomeView: View {
     ]
 
     private static var dailyAffirmation: String {
-        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1
+        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: .now) ?? 1
         return affirmations[dayOfYear % affirmations.count]
     }
 
@@ -513,7 +513,7 @@ struct VisionBoardCard: View {
                         .padding(8)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: AstralTheme.Radius.md, style: .continuous))
+            .clipShape(.rect(cornerRadius: AstralTheme.Radius.md))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(visionBoard.title)
@@ -631,26 +631,21 @@ struct InsightAnswerSheet: View {
                             .foregroundStyle(Color.astralText)
                             .lineSpacing(3)
 
-                        TextEditor(text: $answer)
-                            .scrollContentBackground(.hidden)
+                        TextField("Write freely — there are no wrong answers.", text: $answer, axis: .vertical)
+                            .lineLimit(5...8)
                             .font(.system(.body, design: .rounded))
                             .foregroundStyle(Color.astralText)
-                            .frame(minHeight: 140)
                             .padding(AstralTheme.Spacing.md)
                             .background(Color.astralSurface2)
-                            .clipShape(RoundedRectangle(cornerRadius: AstralTheme.Radius.md, style: .continuous))
+                            .clipShape(.rect(cornerRadius: AstralTheme.Radius.md))
                             .overlay(
-                                RoundedRectangle(cornerRadius: AstralTheme.Radius.md, style: .continuous)
+                                RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
                                     .strokeBorder(
                                         focused ? Color.astralViolet.opacity(0.6) : Color.clear,
                                         lineWidth: 1
                                     )
                             )
                             .focused($focused)
-
-                        Text("Write freely — there are no wrong answers.")
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(Color.astralTextDim)
                     }
 
                     Button("Save Reflection") {
