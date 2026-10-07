@@ -10,6 +10,7 @@ import SwiftUI
 import RevenueCat
 
 @main
+@MainActor
 struct XVisionBoardAIApp: App {
     @State private var storeManager = StoreManager()
     @State private var userManager = UserManager()

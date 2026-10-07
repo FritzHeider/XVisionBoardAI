@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct EditVisionBoardView: View {
     let visionBoard: VisionBoard
     @Environment(\.dismiss) private var dismiss
@@ -35,13 +36,17 @@ struct EditVisionBoardView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel", action: dismiss.callAsFunction)
                         .foregroundStyle(Color.astralTextMuted)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
+                    Button("Save", action: save)
                         .foregroundStyle(Color.astralGold)
-                        .fontWeight(.semibold)
+                        .bold()
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                 }
             }
         }
@@ -61,13 +66,11 @@ struct EditVisionBoardView: View {
                     .background {
                         RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
                             .fill(Color.astralSurface)
-                            .overlay {
-                                RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
-                                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-                            }
+                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
                     }
                     .foregroundStyle(Color.astralText)
                     .tint(Color.astralViolet)
+                    .accessibilityLabel("Vision board title")
             }
 
             VStack(alignment: .leading, spacing: AstralTheme.Spacing.xs) {
@@ -77,20 +80,17 @@ struct EditVisionBoardView: View {
                     .textCase(.uppercase)
                     .kerning(0.5)
 
-                TextEditor(text: $description)
-                    .frame(minHeight: 100)
+                TextField("Vision board description", text: $description, axis: .vertical)
+                    .lineLimit(4...8)
                     .padding(AstralTheme.Spacing.md)
                     .background {
                         RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
                             .fill(Color.astralSurface)
-                            .overlay {
-                                RoundedRectangle(cornerRadius: AstralTheme.Radius.md)
-                                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-                            }
+                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
                     }
                     .foregroundStyle(Color.astralText)
                     .tint(Color.astralViolet)
-                    .scrollContentBackground(.hidden)
+                    .accessibilityLabel("Vision board description")
             }
         }
     }
@@ -114,6 +114,7 @@ struct EditVisionBoardView: View {
                     }
                     .foregroundStyle(Color.astralText)
                     .tint(Color.astralViolet)
+                    .accessibilityLabel("New goal")
 
                 Button("Add") {
                     let trimmed = newGoalText.trimmingCharacters(in: .whitespaces)
@@ -138,7 +139,11 @@ struct EditVisionBoardView: View {
                         Image(systemName: goals[i].isAchieved ? "checkmark.circle.fill" : "circle")
                             .foregroundStyle(goals[i].isAchieved ? Color.astralGold : Color.astralTextDim)
                             .font(.title3)
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
+                    .accessibilityLabel("Mark \(goals[i].title) as \(goals[i].isAchieved ? "incomplete" : "complete")")
+                    .accessibilityValue(goals[i].isAchieved ? "Completed" : "Incomplete")
 
                     Text(goals[i].title)
                         .foregroundStyle(Color.astralText)
@@ -151,7 +156,11 @@ struct EditVisionBoardView: View {
                     } label: {
                         Image(systemName: "trash")
                             .foregroundStyle(Color.astralError.opacity(0.7))
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
+                    .accessibilityLabel("Delete goal: \(goals[i].title)")
+                    .accessibilityHint("Double tap to remove this goal")
                 }
                 .padding(AstralTheme.Spacing.md)
                 .astralCard()
@@ -164,7 +173,7 @@ struct EditVisionBoardView: View {
         updated.title = title
         updated.description = description
         updated.manifestationGoals = goals
-        updated.updatedAt = Date()
+        updated.updatedAt = .now
         visionBoardManager.updateVisionBoard(updated)
         dismiss()
     }

@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct WelcomeView: View {
     @Environment(UserManager.self) var userManager
     @State private var showingSignUp = false
@@ -32,6 +33,7 @@ struct WelcomeView: View {
                     .blur(radius: 60)
                     .offset(x: -40, y: 200)
             }
+            .accessibilityHidden(true)
             .ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -88,11 +90,12 @@ struct WelcomeView: View {
                     .foregroundStyle(Color.auroraGradient)
             }
             .astralPulsing()
+            .accessibilityHidden(true)
 
             // Brand name + tagline
             VStack(spacing: AstralTheme.Spacing.sm) {
                 Text("ManifestMe")
-                    .font(.system(size: 38, weight: .bold, design: .rounded))
+                    .font(.system(.largeTitle, design: .rounded, weight: .bold))
                     .foregroundStyle(Color.auroraGradient)
 
                 Text("AI Future Self")
@@ -146,6 +149,8 @@ struct WelcomeView: View {
             }
             .font(.system(.subheadline, design: .rounded))
             .foregroundStyle(Color.astralTextMuted)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
     }
 }
@@ -162,25 +167,22 @@ struct WelcomeFeaturePill: View {
             Image(systemName: icon)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(color)
+                .accessibilityHidden(true)
 
             Text(text)
-                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .font(.system(.caption, design: .rounded, weight: .medium))
                 .foregroundStyle(Color.astralText)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(text)
         .padding(.horizontal, 12)
         .padding(.vertical, 9)
         .background {
-            if #available(iOS 26, *) {
-                Capsule()
-                    .fill(color.opacity(0.12))
-                    .glassEffect(.regular, in: Capsule())
-            } else {
-                Capsule()
-                    .fill(color.opacity(0.10))
-                    .overlay {
-                        Capsule().strokeBorder(color.opacity(0.25), lineWidth: 1)
-                    }
-            }
+            Capsule()
+                .fill(color.opacity(0.10))
+                .overlay {
+                    Capsule().strokeBorder(color.opacity(0.25), lineWidth: 1)
+                }
         }
     }
 }

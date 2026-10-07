@@ -141,8 +141,7 @@ struct FalAIService {
         // 2. Poll status
         let statusURL = URL(string: "\(queueBase)/\(model)/requests/\(requestID)/status")!
         for attempt in 0..<60 {
-            let delay: UInt64 = attempt < 5 ? 2_000_000_000 : 3_000_000_000
-            try await Task.sleep(nanoseconds: delay)
+            try await Task.sleep(for: .seconds(attempt < 5 ? 2 : 3))
 
             var statusReq = URLRequest(url: statusURL)
             statusReq.setValue("Key \(apiKey)", forHTTPHeaderField: "Authorization")

@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct HomeView: View {
     @Environment(UserManager.self) var userManager
     @Environment(VisionBoardManager.self) var visionBoardManager
@@ -28,6 +29,7 @@ struct HomeView: View {
                         .blur(radius: 80)
                         .offset(x: -100, y: 100)
                 }
+                .accessibilityHidden(true)
                 .ignoresSafeArea()
 
                 ScrollView {
@@ -74,7 +76,7 @@ struct HomeView: View {
     }
 
     private var timeGreeting: String {
-        let hour = Calendar.current.component(.hour, from: Date())
+        let hour = Calendar.current.component(.hour, from: .now)
         switch hour {
         case 5..<12: return "Good morning ✦"
         case 12..<17: return "Good afternoon ✦"
@@ -108,6 +110,8 @@ struct HomeView: View {
             }
         }
         .shadow(color: .astralViolet.opacity(0.4), radius: 10, x: 0, y: 4)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(userManager.currentUser != nil ? "\(userManager.currentUser!.username)'s profile picture" : "Profile picture")
     }
 
     private var subscriptionBadge: some View {
@@ -115,6 +119,7 @@ struct HomeView: View {
             Image(systemName: storeManager.hasActiveSubscription ? "crown.fill" : "sparkle")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(storeManager.hasActiveSubscription ? Color.astralGold : Color.astralTextMuted)
+                .accessibilityHidden(true)
 
             Text(storeManager.subscriptionDisplayName)
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
@@ -124,10 +129,12 @@ struct HomeView: View {
                 Button("Upgrade") { showingUpgradeView = true }
                     .font(.system(size: 11, weight: .bold, design: .rounded))
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 3)
+                    .padding(.vertical, 4)
                     .background(Color.astralGold)
                     .foregroundStyle(Color.black)
                     .clipShape(Capsule())
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
             }
         }
     }
@@ -197,6 +204,7 @@ struct HomeView: View {
                     )
                     .frame(width: 260, height: 60)
                     .blur(radius: 20)
+                    .accessibilityHidden(true)
 
                 Button("Start with Your Selfie") {
                     if storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards) {
@@ -220,6 +228,7 @@ struct HomeView: View {
                 Image(systemName: icon)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(color)
+                    .accessibilityHidden(true)
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -233,6 +242,7 @@ struct HomeView: View {
 
             Spacer()
         }
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: - Recent Vision Boards
@@ -251,8 +261,8 @@ struct HomeView: View {
                     .foregroundStyle(Color.auroraGradient)
             }
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: AstralTheme.Spacing.md) {
+            ScrollView(.horizontal) {
+                LazyHStack(spacing: AstralTheme.Spacing.md) {
                     ForEach(visionBoardManager.recentVisionBoards) { board in
                         VisionBoardCard(visionBoard: board)
                             .frame(width: sizeClass == .regular ? 220 : 180)
@@ -260,6 +270,7 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 2)
             }
+            .scrollIndicators(.hidden)
         }
     }
 
@@ -295,7 +306,7 @@ struct VisionBoardCard: View {
     @Environment(VisionBoardManager.self) var visionBoardManager
     @State private var showingDetail = false
 
-    var body: some View {
+    private var cardContent: some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .bottomLeading) {
                 if let firstImage = visionBoard.images.first?.image {
@@ -332,9 +343,10 @@ struct VisionBoardCard: View {
                         .font(.caption)
                         .foregroundStyle(Color.astralRose)
                         .padding(8)
+                        .accessibilityHidden(true)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: AstralTheme.Radius.md, style: .continuous))
+            .clipShape(.rect(cornerRadius: AstralTheme.Radius.md))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(visionBoard.title)
@@ -346,12 +358,13 @@ struct VisionBoardCard: View {
                     Image(systemName: "eye.fill")
                         .font(.system(size: 10))
                         .foregroundStyle(Color.astralIndigo.opacity(0.8))
+                        .accessibilityHidden(true)
                     Text("\(visionBoard.viewCount)")
-                        .font(.system(size: 11, design: .rounded))
+                        .font(.system(.caption2, design: .rounded))
                         .foregroundStyle(Color.astralTextMuted)
                     Spacer()
                     Text(visionBoard.formattedCreatedDate)
-                        .font(.system(size: 11, design: .rounded))
+                        .font(.system(.caption2, design: .rounded))
                         .foregroundStyle(Color.astralTextDim)
                 }
             }
@@ -361,10 +374,19 @@ struct VisionBoardCard: View {
         }
         .padding(AstralTheme.Spacing.sm)
         .astralCard()
-        .onTapGesture {
+    }
+
+    var body: some View {
+        Button {
             visionBoardManager.incrementViewCount(visionBoard)
             showingDetail = true
+        } label: {
+            cardContent
         }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(visionBoard.title)\(visionBoard.isFavorite ? ", Favorite" : ""), \(visionBoard.viewCount) views, created \(visionBoard.formattedCreatedDate)")
+        .accessibilityHint("Double tap to view vision board details")
         .sheet(isPresented: $showingDetail) {
             VisionBoardDetailView(visionBoard: visionBoard)
         }
@@ -388,6 +410,7 @@ struct IconRow: View {
                 Image(systemName: icon)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(iconColor)
+                    .accessibilityHidden(true)
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -401,6 +424,7 @@ struct IconRow: View {
 
             Spacer()
         }
+        .accessibilityElement(children: .combine)
     }
 }
 

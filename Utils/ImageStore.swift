@@ -2,8 +2,7 @@ import UIKit
 
 enum ImageStore {
     private static let directory: URL = {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let dir = docs.appendingPathComponent("VisionBoardImages", isDirectory: true)
+        let dir = URL.documentsDirectory.appending(path: "VisionBoardImages", directoryHint: .isDirectory)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }()
@@ -13,16 +12,16 @@ enum ImageStore {
             throw CocoaError(.fileWriteUnknown)
         }
         let name = filename.hasSuffix(".jpg") ? filename : "\(filename).jpg"
-        try data.write(to: directory.appendingPathComponent(name))
+        try data.write(to: directory.appending(path: name))
         return name
     }
 
     static func load(_ filename: String) -> UIImage? {
-        guard let data = try? Data(contentsOf: directory.appendingPathComponent(filename)) else { return nil }
+        guard let data = try? Data(contentsOf: directory.appending(path: filename)) else { return nil }
         return UIImage(data: data)
     }
 
     static func delete(_ filename: String) {
-        try? FileManager.default.removeItem(at: directory.appendingPathComponent(filename))
+        try? FileManager.default.removeItem(at: directory.appending(path: filename))
     }
 }

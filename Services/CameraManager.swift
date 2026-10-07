@@ -12,21 +12,22 @@ import SwiftUI
 import Vision
 
 @MainActor
-class CameraManager: NSObject, ObservableObject {
-    @Published var isAuthorized = false
-    @Published var session = AVCaptureSession()
-    @Published var preview: AVCaptureVideoPreviewLayer?
-    @Published var capturedImage: UIImage?
-    @Published var isCapturing = false
-    @Published var errorMessage: String?
-    @Published var faceDetected = false
-    @Published var faceQuality: FaceQuality = .unknown
+@Observable
+class CameraManager: NSObject {
+    var isAuthorized = false
+    var session = AVCaptureSession()
+    var preview: AVCaptureVideoPreviewLayer?
+    var capturedImage: UIImage?
+    var isCapturing = false
+    var errorMessage: String?
+    var faceDetected = false
+    var faceQuality: FaceQuality = .unknown
     
-    private var photoOutput = AVCapturePhotoOutput()
-    private var videoOutput = AVCaptureVideoDataOutput()
-    private let sessionQueue = DispatchQueue(label: "camera.session.queue")
+    @ObservationIgnored private var photoOutput = AVCapturePhotoOutput()
+    @ObservationIgnored private var videoOutput = AVCaptureVideoDataOutput()
+    @ObservationIgnored private let sessionQueue = DispatchQueue(label: "camera.session.queue")
     
-    enum FaceQuality {
+    enum FaceQuality: Sendable {
         case unknown
         case poor
         case good
@@ -73,15 +74,14 @@ class CameraManager: NSObject, ObservableObject {
         }
     }
     
-    private func requestPermission() {
-        AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
-            DispatchQueue.main.async {
-                self?.isAuthorized = granted
-                if granted {
-                    self?.setupCamera()
-                } else {
-                    self?.errorMessage = "Camera access denied"
-                }
+    func requestPermission() {
+        Task {
+            let granted = await AVCaptureDevice.requestAccess(for: .video)
+            self.isAuthorized = granted
+            if granted {
+                self.setupCamera()
+            } else {
+                self.errorMessage = "Camera access denied"
             }
         }
     }
@@ -103,8 +103,8 @@ class CameraManager: NSObject, ObservableObject {
             for: .video,
             position: .front
         ) else {
-            DispatchQueue.main.async {
-                self.errorMessage = "Front camera not available"
+            Task { @MainActor [weak self] in
+                self?.errorMessage = "Front camera not available"
             }
             return
         }
@@ -115,8 +115,8 @@ class CameraManager: NSObject, ObservableObject {
                 session.addInput(input)
             }
         } catch {
-            DispatchQueue.main.async {
-                self.errorMessage = "Failed to setup camera input: \(error.localizedDescription)"
+            Task { @MainActor [weak self] in
+                self?.errorMessage = "Failed to setup camera input: \(error.localizedDescription)"
             }
             return
         }
@@ -137,7 +137,8 @@ class CameraManager: NSObject, ObservableObject {
         
         session.commitConfiguration()
         
-        DispatchQueue.main.async {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
             self.preview = AVCaptureVideoPreviewLayer(session: self.session)
             self.preview?.videoGravity = .resizeAspectFill
         }
@@ -194,53 +195,30 @@ class CameraManager: NSObject, ObservableObject {
     
     // MARK: - Face Detection
     
-    private func detectFaces(in sampleBuffer: CMSampleBuffer) {
-        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        
-        let request = VNDetectFaceRectanglesRequest { [weak self] request, error in
-            DispatchQueue.main.async {
-                self?.processFaceDetectionResults(request.results)
-            }
-        }
-        
-        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
-        
-        do {
-            try handler.perform([request])
-        } catch {
-            print("Face detection error: \(error)")
-        }
-    }
-    
-    private func processFaceDetectionResults(_ results: [VNObservation]?) {
-        guard let faceObservations = results as? [VNFaceObservation] else {
+    func processFaceDetectionResults(_ faceObservations: [VNFaceObservation]?) {
+        guard let face = faceObservations?.first else {
             faceDetected = false
             faceQuality = .unknown
             return
         }
         
-        if let face = faceObservations.first {
-            faceDetected = true
-            
-            // Analyze face quality
-            let confidence = face.confidence
-            let boundingBox = face.boundingBox
-            
-            // Check if face is well-positioned and clear
-            let isWellPositioned = boundingBox.width > 0.3 && boundingBox.height > 0.3
-            let isCentered = abs(boundingBox.midX - 0.5) < 0.2 && abs(boundingBox.midY - 0.5) < 0.2
-            
-            if confidence > 0.9 && isWellPositioned && isCentered {
-                faceQuality = .excellent
-            } else if confidence > 0.7 && isWellPositioned {
-                faceQuality = .good
-            } else if confidence > 0.5 {
-                faceQuality = .poor
-            } else {
-                faceQuality = .unknown
-            }
+        faceDetected = true
+        
+        // Analyze face quality
+        let confidence = face.confidence
+        let boundingBox = face.boundingBox
+        
+        // Check if face is well-positioned and clear
+        let isWellPositioned = boundingBox.width > 0.3 && boundingBox.height > 0.3
+        let isCentered = abs(boundingBox.midX - 0.5) < 0.2 && abs(boundingBox.midY - 0.5) < 0.2
+        
+        if confidence > 0.9 && isWellPositioned && isCentered {
+            faceQuality = .excellent
+        } else if confidence > 0.7 && isWellPositioned {
+            faceQuality = .good
+        } else if confidence > 0.5 {
+            faceQuality = .poor
         } else {
-            faceDetected = false
             faceQuality = .unknown
         }
     }
@@ -248,25 +226,25 @@ class CameraManager: NSObject, ObservableObject {
 
 // MARK: - AVCapturePhotoCaptureDelegate
 
-extension CameraManager: @preconcurrency AVCapturePhotoCaptureDelegate {
-    func photoOutput(
+extension CameraManager: AVCapturePhotoCaptureDelegate {
+    nonisolated func photoOutput(
         _ output: AVCapturePhotoOutput,
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?
     ) {
         if let error = error {
-            DispatchQueue.main.async {
-                self.errorMessage = "Photo capture failed: \(error.localizedDescription)"
-                self.isCapturing = false
+            Task { @MainActor [weak self] in
+                self?.errorMessage = "Photo capture failed: \(error.localizedDescription)"
+                self?.isCapturing = false
             }
             return
         }
         
         guard let imageData = photo.fileDataRepresentation(),
               let image = UIImage(data: imageData) else {
-            DispatchQueue.main.async {
-                self.errorMessage = "Failed to process captured image"
-                self.isCapturing = false
+            Task { @MainActor [weak self] in
+                self?.errorMessage = "Failed to process captured image"
+                self?.isCapturing = false
             }
             return
         }
@@ -274,32 +252,31 @@ extension CameraManager: @preconcurrency AVCapturePhotoCaptureDelegate {
         // Mirror the image for selfie (since front camera is mirrored)
         let mirroredImage = image.withHorizontallyFlippedOrientation()
         
-        DispatchQueue.main.async {
-            self.capturedImage = mirroredImage
-            self.isCapturing = false
+        Task { @MainActor [weak self] in
+            self?.capturedImage = mirroredImage
+            self?.isCapturing = false
         }
     }
 }
 
 // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
 
-extension CameraManager: @preconcurrency AVCaptureVideoDataOutputSampleBufferDelegate {
-    func captureOutput(
+extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
+    nonisolated func captureOutput(
         _ output: AVCaptureOutput,
         didOutput sampleBuffer: CMSampleBuffer,
         from connection: AVCaptureConnection
     ) {
-        // Perform face detection on video frames
-        detectFaces(in: sampleBuffer)
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        
+        let request = VNDetectFaceRectanglesRequest { [weak self] request, _ in
+            let results = request.results as? [VNFaceObservation]
+            Task { @MainActor [weak self] in
+                self?.processFaceDetectionResults(results)
+            }
+        }
+        
+        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
+        try? handler.perform([request])
     }
 }
-
-// MARK: - UIImage Extension
-
-extension UIImage {
-    func withHorizontallyFlippedOrientation() -> UIImage {
-        guard let cgImage = self.cgImage else { return self }
-        return UIImage(cgImage: cgImage, scale: scale, orientation: .leftMirrored)
-    }
-}
-

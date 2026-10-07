@@ -8,6 +8,7 @@ enum AppTab: Hashable {
 
 // MARK: - Root Router
 
+@MainActor
 struct ContentView: View {
     @Environment(UserManager.self) var userManager
     @Environment(StoreManager.self) var storeManager
@@ -29,26 +30,37 @@ struct ContentView: View {
 
 // MARK: - Main Tab View
 
+@MainActor
 struct MainTabView: View {
     @Binding var selectedTab: AppTab
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("Home", systemImage: "house.fill", value: AppTab.home) {
-                HomeView()
-            }
-            Tab("Create", systemImage: "plus.circle.fill", value: AppTab.create) {
-                CreateVisionBoardView()
-            }
-            Tab("Gallery", systemImage: "photo.stack.fill", value: AppTab.gallery) {
-                VisionBoardGalleryView()
-            }
-            Tab("Profile", systemImage: "person.fill", value: AppTab.profile) {
-                ProfileView()
-            }
+            HomeView()
+                .tabItem {
+                    Label("Home", systemImage: "house.fill")
+                }
+                .tag(AppTab.home)
+
+            CreateVisionBoardView()
+                .tabItem {
+                    Label("Create", systemImage: "plus.circle.fill")
+                }
+                .tag(AppTab.create)
+
+            VisionBoardGalleryView()
+                .tabItem {
+                    Label("Gallery", systemImage: "photo.stack.fill")
+                }
+                .tag(AppTab.gallery)
+
+            ProfileView()
+                .tabItem {
+                    Label("Profile", systemImage: "person.fill")
+                }
+                .tag(AppTab.profile)
         }
         .tint(.astralViolet)
-        .tabViewStyle(.sidebarAdaptable)
     }
 }
 

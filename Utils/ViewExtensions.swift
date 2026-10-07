@@ -107,10 +107,10 @@ extension Color {
 extension Font {
     // MARK: - Custom Fonts
     
-    static let manifestationTitle = Font.system(size: 28, weight: .bold, design: .rounded)
-    static let manifestationSubtitle = Font.system(size: 20, weight: .semibold, design: .rounded)
-    static let manifestationBody = Font.system(size: 16, weight: .medium, design: .rounded)
-    static let manifestationCaption = Font.system(size: 12, weight: .regular, design: .rounded)
+    static let manifestationTitle = Font.system(.title, design: .rounded).bold()
+    static let manifestationSubtitle = Font.system(.title3, design: .rounded, weight: .semibold)
+    static let manifestationBody = Font.system(.body, design: .rounded)
+    static let manifestationCaption = Font.system(.caption, design: .rounded)
     
     // MARK: - Dynamic Type Support
     
@@ -167,7 +167,7 @@ extension Date {
     var relativeTimeString: String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: self, relativeTo: Date())
+        return formatter.localizedString(for: self, relativeTo: .now)
     }
     
     // MARK: - Calculations
@@ -177,7 +177,7 @@ extension Date {
     }
     
     var isThisWeek: Bool {
-        Calendar.current.isDate(self, equalTo: Date(), toGranularity: .weekOfYear)
+        Calendar.current.isDate(self, equalTo: .now, toGranularity: .weekOfYear)
     }
 }
 
@@ -227,6 +227,11 @@ extension UIImage {
         withRenderingMode(.alwaysTemplate).draw(in: CGRect(origin: .zero, size: size))
         
         return UIGraphicsGetImageFromCurrentImageContext()
+    }
+
+    func withHorizontallyFlippedOrientation() -> UIImage {
+        guard let cgImage = self.cgImage else { return self }
+        return UIImage(cgImage: cgImage, scale: scale, orientation: .leftMirrored)
     }
 }
 

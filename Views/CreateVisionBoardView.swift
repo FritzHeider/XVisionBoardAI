@@ -9,6 +9,7 @@
 import SwiftUI
 import PhotosUI
 
+@MainActor
 struct CreateVisionBoardView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(UserManager.self) var userManager
@@ -82,11 +83,10 @@ struct CreateVisionBoardView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .foregroundStyle(Color.astralText)
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel", action: dismiss.callAsFunction)
+                        .foregroundStyle(Color.astralText)
+                        .frame(minWidth: 44, minHeight: 44)
                 }
                 
                 ToolbarItem(placement: .principal) {
@@ -133,6 +133,8 @@ struct CreateVisionBoardView: View {
             ProgressView(value: currentStep.progress)
                 .progressViewStyle(LinearProgressViewStyle(tint: .cosmicPurple))
                 .scaleEffect(x: 1, y: 2, anchor: .center)
+                .accessibilityLabel("Creation progress")
+                .accessibilityValue("Step \(CreationStep.allCases.firstIndex(of: currentStep)! + 1) of \(CreationStep.allCases.count), \(currentStep.title)")
             
             HStack {
                 Text("Step \(CreationStep.allCases.firstIndex(of: currentStep)! + 1) of \(CreationStep.allCases.count)")
@@ -180,6 +182,7 @@ struct CreateVisionBoardView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(Color.astralViolet)
                 .pulsing()
+                .accessibilityHidden(true)
             
             VStack(spacing: 16) {
                 Text("Let's Get Personal")
@@ -209,11 +212,14 @@ struct CreateVisionBoardView: View {
                             Circle()
                                 .stroke(Color.cosmicPurple, lineWidth: 3)
                         )
+                        .accessibilityLabel("Your captured selfie")
                     
                     Button("Retake Photo") {
                         showingCamera = true
                     }
                     .foregroundStyle(Color.astralViolet)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                 }
             } else {
                 VStack(spacing: 16) {
@@ -272,19 +278,17 @@ struct CreateVisionBoardView: View {
                         .fontWeight(.medium)
                         .foregroundStyle(Color.astralText)
                     
-                    TextEditor(text: $description)
-                        .frame(minHeight: 120)
-                        .scrollContentBackground(.hidden)
+                    TextField("Describe your vision in detail...", text: $description, axis: .vertical)
+                        .lineLimit(4...8)
                         .padding()
                         .background(
                             RoundedRectangle(cornerRadius: 12)
                                 .fill(Color.astralSurface)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.astralViolet.opacity(0.3), lineWidth: 1)
-                                )
+                                .strokeBorder(Color.astralViolet.opacity(0.3), lineWidth: 1)
                         )
                         .foregroundStyle(Color.astralText)
+                        .accessibilityLabel("Vision Description")
+                        .accessibilityHint("Describe your vision in detail")
                 }
             }
             
@@ -410,7 +414,11 @@ struct CreateVisionBoardView: View {
                             }) {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundStyle(.red)
+                                    .frame(width: 44, height: 44)
+                                    .contentShape(Rectangle())
                             }
+                            .accessibilityLabel("Remove goal: \(manifestationGoals[index])")
+                            .accessibilityHint("Double tap to remove this goal from your vision board")
                         }
                         .padding()
                         .cosmicCard()
@@ -437,10 +445,14 @@ struct CreateVisionBoardView: View {
                         }
                         .font(.caption)
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
+                        .padding(.vertical, 8)
+                        .frame(minHeight: 44)
                         .background(Color.cosmicPurple.opacity(0.3))
                         .foregroundStyle(Color.astralText)
                         .clipShape(Capsule())
+                        .contentShape(Capsule())
+                        .accessibilityLabel("Add suggested goal: \(goal)")
+                        .accessibilityHint("Double tap to add this goal")
                     }
                 }
             }
@@ -450,13 +462,14 @@ struct CreateVisionBoardView: View {
     }
     
     // MARK: - Generate Step
-
+    
     private var generateStep: some View {
         VStack(spacing: 32) {
             Image(systemName: "brain.head.profile")
                 .font(.system(size: 80))
                 .foregroundStyle(Color.astralViolet)
                 .pulsing()
+                .accessibilityHidden(true)
 
             VStack(spacing: 16) {
                 Text("Creating Your Personalized Vision Board")
@@ -494,10 +507,13 @@ struct CreateVisionBoardView: View {
                 ProgressView(value: visionBoardManager.generationProgress)
                     .progressViewStyle(LinearProgressViewStyle(tint: .cosmicPurple))
                     .scaleEffect(x: 1, y: 3, anchor: .center)
+                    .accessibilityLabel("Generation progress")
+                    .accessibilityValue("\(Int(visionBoardManager.generationProgress * 100)) percent complete")
 
                 Text("\(Int(visionBoardManager.generationProgress * 100))% Complete")
                     .font(.subheadline)
                     .foregroundStyle(Color.astralText)
+                    .accessibilityHidden(true)
             }
             .padding()
             .cosmicCard()
@@ -537,6 +553,7 @@ struct CreateVisionBoardView: View {
                 .font(.system(size: 80))
                 .foregroundStyle(Color.astralSuccess)
                 .pulsing()
+                .accessibilityHidden(true)
             
             VStack(spacing: 16) {
                 Text("Vision Board Created!")
@@ -551,7 +568,7 @@ struct CreateVisionBoardView: View {
                 VStack(spacing: 16) {
                     Text(visionBoard.title)
                         .font(.title2)
-                        .fontWeight(.bold)
+                        .bold()
                         .foregroundStyle(Color.astralText)
                     
                     // Preview of first few images
@@ -567,15 +584,17 @@ struct CreateVisionBoardView: View {
                                     .aspectRatio(contentMode: .fill)
                                     .frame(height: 80)
                                     .clipped()
-                                    .cornerRadius(8)
+                                    .clipShape(.rect(cornerRadius: 8))
+                                    .accessibilityLabel("Generated vision board image preview")
                             } else {
                                 RoundedRectangle(cornerRadius: 8)
                                     .fill(Color.cosmicGray)
                                     .frame(height: 80)
                                     .overlay(
                                         ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .cosmicPurple))
+                                            .tint(.cosmicPurple)
                                     )
+                                    .accessibilityLabel("Loading image preview")
                             }
                         }
                     }
@@ -595,6 +614,8 @@ struct CreateVisionBoardView: View {
                     currentStep = .selfie
                 }
                 .foregroundStyle(Color.astralViolet)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
             }
         }
     }
@@ -608,6 +629,8 @@ struct CreateVisionBoardView: View {
                     previousStep()
                 }
                 .foregroundStyle(Color.astralText)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
             }
             
             Spacer()
@@ -754,6 +777,7 @@ struct LayoutOption: View {
                     .font(.title2)
                     .foregroundStyle(isSelected ? Color.astralGold : Color.astralText)
                     .frame(width: 30)
+                    .accessibilityHidden(true)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(layout.displayName)
@@ -770,6 +794,7 @@ struct LayoutOption: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(Color.astralGold)
+                        .accessibilityHidden(true)
                 }
             }
             .padding()
@@ -782,6 +807,10 @@ struct LayoutOption: View {
                     )
             )
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(layout.displayName), \(layout.description)")
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityHint("Double tap to select this layout")
     }
 }
 
@@ -821,6 +850,10 @@ struct StyleOption: View {
                 }
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(style.displayName), \(style.description)")
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityHint("Double tap to select this style")
     }
 }
 
@@ -832,6 +865,7 @@ struct GenerationStep: View {
         HStack(spacing: 12) {
             Image(systemName: isComplete ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(isComplete ? Color.astralSuccess : Color.astralTextDim)
+                .accessibilityHidden(true)
 
             Text(title)
                 .foregroundStyle(Color.astralText)
@@ -841,8 +875,12 @@ struct GenerationStep: View {
             if isComplete {
                 Image(systemName: "checkmark")
                     .foregroundStyle(Color.astralSuccess)
+                    .accessibilityHidden(true)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title)
+        .accessibilityValue(isComplete ? "Completed" : "In progress")
     }
 }
 

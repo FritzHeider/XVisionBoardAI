@@ -262,7 +262,7 @@ class VisionBoardManager {
         } else {
             visionBoards[boardIndex].manifestationGoals[goalIndex].markAchieved()
         }
-        visionBoards[boardIndex].updatedAt = Date()
+        visionBoards[boardIndex].updatedAt = .now
         saveVisionBoards()
     }
 

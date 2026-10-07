@@ -75,7 +75,7 @@ class UserManager {
         }
 
         // Simulate API call
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        try? await Task.sleep(for: .seconds(1))
         
         // Create new user
         let newUser = User(email: email, username: username)
@@ -107,7 +107,7 @@ class UserManager {
         }
 
         // Simulate API call
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        try? await Task.sleep(for: .seconds(1))
         
         // Mock successful login
         let user = User(email: email, username: email.components(separatedBy: "@").first ?? "User")
@@ -135,7 +135,7 @@ class UserManager {
         isLoading = true
         
         // Simulate API call
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        try? await Task.sleep(for: .seconds(1))
         
         signOut()
         isLoading = false
@@ -231,7 +231,7 @@ class UserManager {
     // MARK: - Streak
 
     func recordDailyVisit() {
-        let today = Calendar.current.startOfDay(for: Date())
+        let today = Calendar.current.startOfDay(for: .now)
         if let last = lastStreakDate {
             let lastDay = Calendar.current.startOfDay(for: last)
             let days = Calendar.current.dateComponents([.day], from: lastDay, to: today).day ?? 0
@@ -241,13 +241,13 @@ class UserManager {
                 currentStreak = 1
             }
             if days >= 1 {
-                lastStreakDate = Date()
+                lastStreakDate = .now
                 userDefaults.set(currentStreak, forKey: "currentStreak")
                 userDefaults.set(lastStreakDate, forKey: "lastStreakDate")
             }
         } else {
             currentStreak = 1
-            lastStreakDate = Date()
+            lastStreakDate = .now
             userDefaults.set(currentStreak, forKey: "currentStreak")
             userDefaults.set(lastStreakDate, forKey: "lastStreakDate")
         }

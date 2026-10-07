@@ -95,36 +95,26 @@ struct AstralGlassModifier: ViewModifier {
     var radius: CGFloat = AstralTheme.Radius.xl
 
     func body(content: Content) -> some View {
-        if #available(iOS 26, *) {
-            content
-                .background {
+        content
+            .background {
+                ZStack {
                     RoundedRectangle(cornerRadius: radius)
-                        .fill(tint.opacity(0.08))
-                        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: radius))
+                        .fill(.ultraThinMaterial)
+                    RoundedRectangle(cornerRadius: radius)
+                        .fill(tint.opacity(0.07))
+                    RoundedRectangle(cornerRadius: radius)
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [tint.opacity(0.55), Color.white.opacity(0.08), tint.opacity(0.18)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
                 }
-                .shadow(color: tint.opacity(0.18), radius: 14, x: 0, y: 6)
-        } else {
-            content
-                .background {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: radius)
-                            .fill(.ultraThinMaterial)
-                        RoundedRectangle(cornerRadius: radius)
-                            .fill(tint.opacity(0.07))
-                        RoundedRectangle(cornerRadius: radius)
-                            .strokeBorder(
-                                LinearGradient(
-                                    colors: [tint.opacity(0.55), Color.white.opacity(0.08), tint.opacity(0.18)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
-                    }
-                }
-                .shadow(color: tint.opacity(0.22), radius: 18, x: 0, y: 8)
-                .shadow(color: .black.opacity(0.50), radius: 32, x: 0, y: 16)
-        }
+            }
+            .shadow(color: tint.opacity(0.22), radius: 18, x: 0, y: 8)
+            .shadow(color: .black.opacity(0.50), radius: 32, x: 0, y: 16)
     }
 }
 
@@ -199,19 +189,15 @@ struct AstralButtonModifier: ViewModifier {
             .font(.system(.subheadline, design: .rounded, weight: .semibold))
             .padding(.horizontal, AstralTheme.Spacing.xl)
             .padding(.vertical, AstralTheme.Spacing.md)
+            .frame(minHeight: 44)
+            .contentShape(Capsule())
             .background {
-                if #available(iOS 26, *), style == .primary || style == .gold {
-                    Capsule()
-                        .fill(fill)
-                        .glassEffect(.regular.interactive(), in: Capsule())
-                } else {
-                    Capsule().fill(fill)
-                        .overlay {
-                            if style == .ghost || style == .secondary {
-                                Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
-                            }
+                Capsule().fill(fill)
+                    .overlay {
+                        if style == .ghost || style == .secondary {
+                            Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
                         }
-                }
+                    }
             }
             .shadow(color: glowColor.opacity(0.40), radius: 14, x: 0, y: 6)
             .scaleEffect(isEnabled ? (pressed ? 0.97 : 1.0) : 0.95)
@@ -247,20 +233,20 @@ struct AstralShimmerModifier: ViewModifier {
     func body(content: Content) -> some View {
         content.overlay {
             if !reduceMotion {
-                GeometryReader { geo in
-                    LinearGradient(
-                        colors: [.clear, Color.white.opacity(0.08), .clear],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .offset(x: phase * geo.size.width * 2)
-                    .animation(
-                        .linear(duration: 1.4).repeatForever(autoreverses: false),
-                        value: phase
-                    )
-                    .onAppear { phase = 1 }
+                LinearGradient(
+                    colors: [.clear, Color.white.opacity(0.08), .clear],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .visualEffect { gradient, proxy in
+                    gradient.offset(x: phase * proxy.size.width * 2)
                 }
+                .animation(
+                    .linear(duration: 1.4).repeatForever(autoreverses: false),
+                    value: phase
+                )
                 .clipShape(.rect(cornerRadius: AstralTheme.Radius.md))
+                .onAppear { phase = 1 }
             }
         }
     }

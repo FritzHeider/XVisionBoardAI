@@ -21,6 +21,7 @@ struct StatCard: View {
                             endPoint: .bottomTrailing
                         )
                     )
+                    .accessibilityHidden(true)
             }
 
             Text(value)
@@ -28,7 +29,7 @@ struct StatCard: View {
                 .foregroundStyle(Color.astralText)
 
             Text(title)
-                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .font(.system(.caption, design: .rounded, weight: .medium))
                 .foregroundStyle(Color.astralTextMuted)
                 .multilineTextAlignment(.center)
         }
@@ -36,5 +37,7 @@ struct StatCard: View {
         .padding(.vertical, AstralTheme.Spacing.md)
         .padding(.horizontal, AstralTheme.Spacing.sm)
         .astralCard()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 }

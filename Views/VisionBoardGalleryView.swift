@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct VisionBoardGalleryView: View {
     @Environment(VisionBoardManager.self) var visionBoardManager
     @Environment(UserManager.self) var userManager
@@ -33,9 +34,9 @@ struct VisionBoardGalleryView: View {
         }
         if !searchText.isEmpty {
             boards = boards.filter { board in
-                board.title.localizedCaseInsensitiveContains(searchText) ||
-                board.description.localizedCaseInsensitiveContains(searchText) ||
-                board.manifestationGoals.contains { $0.title.localizedCaseInsensitiveContains(searchText) }
+                board.title.localizedStandardContains(searchText) ||
+                board.description.localizedStandardContains(searchText) ||
+                board.manifestationGoals.contains { $0.title.localizedStandardContains(searchText) }
             }
         }
         return boards
@@ -66,7 +67,9 @@ struct VisionBoardGalleryView: View {
             }
         }
         .sheet(isPresented: $showingCreateView) { CreateVisionBoardView() }
-        .sheet(item: $selectedVisionBoard) { VisionBoardDetailView(visionBoard: $0) }
+        .sheet(item: $selectedVisionBoard) { board in
+            VisionBoardDetailView(visionBoard: board)
+        }
     }
 
     // MARK: - Search + Filters
@@ -76,15 +79,19 @@ struct VisionBoardGalleryView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(Color.astralTextMuted)
+                    .accessibilityHidden(true)
 
                 TextField("Search vision boards…", text: $searchText)
                     .foregroundStyle(Color.astralText)
                     .tint(Color.astralViolet)
+                    .accessibilityLabel("Search vision boards")
 
                 if !searchText.isEmpty {
                     Button("Clear") { searchText = "" }
                         .foregroundStyle(Color.astralViolet)
                         .font(.system(.caption, design: .rounded))
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
             }
             .padding(AstralTheme.Spacing.md)
@@ -141,6 +148,7 @@ struct VisionBoardGalleryView: View {
             Image(systemName: selectedFilter == .all ? "photo.stack" : selectedFilter.systemImage)
                 .font(.system(size: 56))
                 .foregroundStyle(Color.astralViolet.opacity(0.5))
+                .accessibilityHidden(true)
 
             VStack(spacing: AstralTheme.Spacing.sm) {
                 Text(emptyStateTitle)
@@ -194,12 +202,15 @@ struct FilterButton: View {
             HStack(spacing: 5) {
                 Image(systemName: filter.systemImage)
                     .font(.system(size: 11, weight: .semibold))
+                    .accessibilityHidden(true)
                 Text(filter.rawValue)
                     .font(.system(.caption, design: .rounded, weight: .semibold))
             }
             .foregroundStyle(isSelected ? Color.black : Color.astralText)
             .padding(.horizontal, AstralTheme.Spacing.md)
             .padding(.vertical, 7)
+            .frame(minHeight: 44)
+            .contentShape(Capsule())
             .background {
                 Capsule()
                     .fill(isSelected
@@ -207,6 +218,7 @@ struct FilterButton: View {
                           : AnyShapeStyle(Color.astralSurface))
             }
         }
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }
 
@@ -241,6 +253,7 @@ struct VisionBoardGridItem: View {
                                     Image(systemName: "photo.fill")
                                         .font(.title2)
                                         .foregroundStyle(Color.astralTextMuted)
+                                        .accessibilityHidden(true)
                                     Text("\(visionBoard.layout.imageCount) Images")
                                         .font(.system(.caption, design: .rounded))
                                         .foregroundStyle(Color.astralTextMuted)
@@ -286,6 +299,9 @@ struct VisionBoardGridItem: View {
             }
         }
         .astralCard()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(visionBoard.title)\(visionBoard.isFavorite ? ", Favorite" : ""), created \(visionBoard.formattedCreatedDate), \(visionBoard.viewCount) views")
+        .accessibilityHint("Double tap to open vision board")
     }
 }
 
@@ -300,6 +316,7 @@ struct PersonalizedBadge: View {
             .padding(.vertical, 3)
             .background(Color.astralGold)
             .clipShape(Capsule())
+            .accessibilityLabel("Personalized with your face")
     }
 }
 
@@ -317,6 +334,9 @@ struct FavoriteButton: View {
                 .padding(6)
                 .background(Circle().fill(Color.black.opacity(0.55)))
         }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Circle())
+        .accessibilityLabel(visionBoard.isFavorite ? "Remove \(visionBoard.title) from favorites" : "Add \(visionBoard.title) to favorites")
     }
 }
 
@@ -333,6 +353,7 @@ struct StyleBadge: View {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(style.primaryColor.opacity(0.75))
             }
+            .accessibilityLabel("Style: \(style.displayName)")
     }
 }
 
@@ -341,7 +362,9 @@ struct ViewCountBadge: View {
 
     var body: some View {
         HStack(spacing: 3) {
-            Image(systemName: "eye.fill").font(.system(size: 9))
+            Image(systemName: "eye.fill")
+                .font(.system(size: 9))
+                .accessibilityHidden(true)
             Text("\(count)").font(.system(size: 10, design: .rounded))
         }
         .foregroundStyle(Color.astralText)
@@ -350,6 +373,7 @@ struct ViewCountBadge: View {
         .background {
             RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.55))
         }
+        .accessibilityLabel("\(count) views")
     }
 }
 

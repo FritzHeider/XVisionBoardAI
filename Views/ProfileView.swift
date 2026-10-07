@@ -1,6 +1,7 @@
 import SwiftUI
 import RevenueCatUI
 
+@MainActor
 struct ProfileView: View {
     @Environment(UserManager.self) var userManager
     @Environment(StoreManager.self) var storeManager
@@ -15,7 +16,7 @@ struct ProfileView: View {
         let stored = UserDefaults.standard.object(forKey: "reminderTime") as? Date
         if let stored { return stored }
         var c = DateComponents(); c.hour = 8; c.minute = 0
-        return Calendar.current.date(from: c) ?? Date()
+        return Calendar.current.date(from: c) ?? .now
     }()
 
     var body: some View {
@@ -28,6 +29,7 @@ struct ProfileView: View {
                     .frame(width: 300, height: 300)
                     .blur(radius: 80)
                     .offset(x: 80, y: -200)
+                    .accessibilityHidden(true)
                     .ignoresSafeArea()
 
                 ScrollView {
@@ -108,6 +110,8 @@ struct ProfileView: View {
                         }
                 }
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(userManager.currentUser?.username ?? "User") profile photo")
 
             VStack(spacing: AstralTheme.Spacing.xs) {
                 Text(userManager.currentUser?.username ?? "Dreamer")
@@ -123,11 +127,14 @@ struct ProfileView: View {
                     Image(systemName: storeManager.hasActiveSubscription ? "crown.fill" : "sparkle")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(storeManager.hasActiveSubscription ? Color.astralGold : Color.astralTextMuted)
+                        .accessibilityHidden(true)
 
                     Text(storeManager.subscriptionDisplayName)
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                         .foregroundStyle(storeManager.hasActiveSubscription ? Color.astralGold : Color.astralTextMuted)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Subscription tier: \(storeManager.subscriptionDisplayName)")
                 .padding(.horizontal, AstralTheme.Spacing.md)
                 .padding(.vertical, 7)
                 .background {
@@ -181,6 +188,7 @@ struct ProfileView: View {
                                 .foregroundStyle(Color.astralSuccess)
                                 .font(.title3)
                         }
+                        .accessibilityHidden(true)
 
                         VStack(alignment: .leading, spacing: 3) {
                             Text("Active Subscription")
@@ -199,6 +207,7 @@ struct ProfileView: View {
                             Image(systemName: "calendar")
                                 .font(.caption)
                                 .foregroundStyle(Color.astralTextMuted)
+                                .accessibilityHidden(true)
                             Text(productID.capitalized + " plan")
                                 .font(.system(size: 12, design: .rounded))
                                 .foregroundStyle(Color.astralTextMuted)
@@ -218,6 +227,7 @@ struct ProfileView: View {
                                 .foregroundStyle(Color.astralGold)
                                 .font(.title3)
                         }
+                        .accessibilityHidden(true)
 
                         VStack(alignment: .leading, spacing: 3) {
                             Text("Upgrade to Pro")
@@ -297,7 +307,7 @@ struct ProfileView: View {
                     .frame(maxWidth: .infinity)
 
                 Button("Delete Account") { showingDeleteAccountAlert = true }
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, minHeight: 44)
                     .padding(.horizontal, AstralTheme.Spacing.xl)
                     .padding(.vertical, AstralTheme.Spacing.md)
                     .background {
@@ -307,6 +317,7 @@ struct ProfileView: View {
                                 Capsule().strokeBorder(Color.astralError.opacity(0.35), lineWidth: 1)
                             }
                     }
+                    .contentShape(Capsule())
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Color.astralError)
             }
@@ -330,6 +341,7 @@ struct ProfileView: View {
                         Image(systemName: "bell.badge.fill")
                             .font(.system(size: 44))
                             .foregroundStyle(Color.auroraGradient)
+                            .accessibilityHidden(true)
                         Text("Daily Reminder")
                             .font(.system(.title2, design: .rounded, weight: .bold))
                             .foregroundStyle(Color.astralText)
@@ -347,6 +359,7 @@ struct ProfileView: View {
                         .padding(AstralTheme.Spacing.lg)
                         .astralCard()
                         .padding(.horizontal, AstralTheme.Spacing.lg)
+                        .accessibilityLabel("Daily reminder time")
 
                     Button("Save Reminder") {
                         UserDefaults.standard.set(reminderTime, forKey: "reminderTime")
@@ -364,6 +377,8 @@ struct ProfileView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { showingNotificationSettings = false }
                         .foregroundStyle(Color.astralTextMuted)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                 }
             }
         }
@@ -406,6 +421,7 @@ struct SettingsRow: View {
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(iconColor)
                 }
+                .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
@@ -422,6 +438,7 @@ struct SettingsRow: View {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(Color.astralTextDim)
+                        .accessibilityHidden(true)
                 } else {
                     Text("Coming soon")
                         .font(.system(size: 11, design: .rounded))
@@ -433,7 +450,11 @@ struct SettingsRow: View {
             }
             .padding(.horizontal, AstralTheme.Spacing.md)
             .padding(.vertical, AstralTheme.Spacing.md)
+            .frame(minHeight: 44)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(subtitle)\(isEnabled ? "" : ", Coming soon")")
+        .accessibilityHint(isEnabled ? "Double tap to open \(title)" : "This feature is coming soon")
         .disabled(!isEnabled)
         .overlay(alignment: .bottom) {
             Rectangle()

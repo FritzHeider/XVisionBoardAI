@@ -9,15 +9,16 @@
 import SwiftUI
 import AVFoundation
 
+@MainActor
 struct CameraView: View {
-    @StateObject private var cameraManager = CameraManager()
+    @State private var cameraManager = CameraManager()
     @Binding var capturedImage: UIImage?
     @Binding var isPresented: Bool
     
     @State private var showingImagePicker = false
     @State private var showingPermissionAlert = false
     
-var body: some View {
+    var body: some View {
         ZStack {
             Color.cosmicBlack.ignoresSafeArea()
             
@@ -73,18 +74,15 @@ var body: some View {
     // MARK: - Camera Preview
     
     private var cameraPreviewView: some View {
-        GeometryReader { geometry in
-            ZStack {
-                // Camera preview
-                CameraPreview(session: cameraManager.session)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .clipped()
-                
-                // Face detection overlay
-                faceDetectionOverlay
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-            }
+        ZStack {
+            // Camera preview
+            CameraPreview(session: cameraManager.session)
+                .clipped()
+            
+            // Face detection overlay
+            faceDetectionOverlay
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     private var faceDetectionOverlay: some View {
@@ -99,49 +97,49 @@ var body: some View {
                 .scaleEffect(cameraManager.faceDetected ? 1.0 : 1.1)
                 .opacity(cameraManager.faceDetected ? 1.0 : 0.6)
                 .animation(.easeInOut(duration: 0.3), value: cameraManager.faceDetected)
-            
+                .accessibilityHidden(true)
+
             // Quality indicator
             VStack {
                 Spacer()
-                
+
                 Text(cameraManager.faceQuality.description)
                     .font(.headline)
                     .foregroundStyle(cameraManager.faceQuality.color)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.black.opacity(0.7))
-                    )
+                    .background(Color.black.opacity(0.7), in: .rect(cornerRadius: 20))
                     .padding(.bottom, 120)
+                    .accessibilityLabel("Face alignment: \(cameraManager.faceQuality.description)")
             }
         }
     }
-    
+
     // MARK: - Permission View
-    
+
     private var permissionView: some View {
         VStack(spacing: 24) {
             Image(systemName: "camera.fill")
                 .font(.system(size: 80))
                 .foregroundStyle(Color.astralViolet)
                 .pulsing()
-            
+                .accessibilityHidden(true)
+
             VStack(spacing: 16) {
                 Text("Camera Access Required")
                     .manifestationTitle()
-                
+
                 Text("To create personalized vision boards with your face, we need access to your camera.")
                     .manifestationBody()
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
             }
-            
+
             Button("Enable Camera") {
                 cameraManager.checkPermissions()
             }
             .cosmicButton()
-            
+
             Button("Choose from Photos") {
                 showingImagePicker = true
             }
@@ -149,29 +147,31 @@ var body: some View {
         }
         .padding()
     }
-    
+
     // MARK: - Controls
-    
+
     private var topControls: some View {
         HStack {
             Button("Cancel") {
                 isPresented = false
             }
             .foregroundStyle(Color.astralText)
+            .frame(minWidth: 44, minHeight: 44)
             .padding()
-            
+
             Spacer()
-            
+
             if cameraManager.isAuthorized {
                 Button("Photos") {
                     showingImagePicker = true
                 }
                 .foregroundStyle(Color.astralText)
+                .frame(minWidth: 44, minHeight: 44)
                 .padding()
             }
         }
     }
-    
+
     private var bottomControls: some View {
         VStack(spacing: 20) {
             // Capture tips
@@ -183,7 +183,7 @@ var body: some View {
                     }
                     .font(.caption)
                     .foregroundStyle(Color.astralText.opacity(0.8))
-                    
+
                     HStack(spacing: 16) {
                         Label("Center your face", systemImage: "target")
                         Label("Smile naturally", systemImage: "face.smiling.fill")
@@ -192,28 +192,30 @@ var body: some View {
                     .foregroundStyle(Color.astralText.opacity(0.8))
                 }
                 .padding(.bottom, 8)
+                .accessibilityElement(children: .combine)
             }
-            
+
             // Capture button
             if cameraManager.isAuthorized {
-                Button(action: {
-                    cameraManager.capturePhoto()
-                }) {
+                Button(action: cameraManager.capturePhoto) {
                     ZStack {
                         Circle()
                             .fill(Color.white)
                             .frame(width: 80, height: 80)
-                        
+
                         Circle()
                             .stroke(Color.cosmicPurple, lineWidth: 4)
                             .frame(width: 90, height: 90)
-                        
+
                         if cameraManager.isCapturing {
                             ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .cosmicPurple))
+                                .tint(.cosmicPurple)
                         }
                     }
                 }
+                .accessibilityLabel("Capture Photo")
+                .accessibilityValue(cameraManager.faceQuality.description)
+                .accessibilityHint(cameraManager.faceQuality == .poor ? "Position face in circle to capture" : "Takes a photo")
                 .disabled(cameraManager.isCapturing || cameraManager.faceQuality == .poor)
                 .scaleEffect(cameraManager.faceQuality == .excellent ? 1.1 : 1.0)
                 .animation(.easeInOut(duration: 0.2), value: cameraManager.faceQuality)

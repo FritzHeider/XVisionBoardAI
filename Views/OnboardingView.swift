@@ -36,6 +36,7 @@ private let onboardingPages: [OnboardingPage] = [
 
 // MARK: - OnboardingView
 
+@MainActor
 struct OnboardingView: View {
     @Binding var showOnboarding: Bool
     @Environment(UserManager.self) var userManager
@@ -92,6 +93,7 @@ struct OnboardingView: View {
                 .offset(x: 80, y: 80)
                 .animation(reduceMotion ? .none : AstralTheme.Motion.smooth, value: currentPage)
         }
+        .accessibilityHidden(true)
         .ignoresSafeArea()
     }
 
@@ -114,6 +116,8 @@ struct OnboardingView: View {
                 Button("Skip") { complete() }
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(Color.astralTextMuted)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
             } else {
                 Button("Get Started") { complete() }
                     .astralButton(.primary)
@@ -136,6 +140,8 @@ struct OnboardingView: View {
                     .animation(reduceMotion ? .none : AstralTheme.Motion.quick, value: currentPage)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Page \(currentPage + 1) of \(onboardingPages.count)")
     }
 
     private func complete() {
@@ -206,22 +212,15 @@ private struct OnboardingPageView: View {
                 .frame(width: 120, height: 120)
 
             // Inner fill
-            if #available(iOS 26, *) {
-                Circle()
-                    .fill(page.accentColor.opacity(0.15))
-                    .glassEffect(.regular, in: Circle())
-                    .frame(width: 118, height: 118)
-            } else {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [page.accentColor.opacity(0.2), page.glowColor.opacity(0.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [page.accentColor.opacity(0.2), page.glowColor.opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
-                    .frame(width: 118, height: 118)
-            }
+                )
+                .frame(width: 118, height: 118)
 
             // Icon
             Image(systemName: page.icon)
@@ -235,6 +234,7 @@ private struct OnboardingPageView: View {
                 )
         }
         .astralPulsing()
+        .accessibilityHidden(true)
     }
 }
 

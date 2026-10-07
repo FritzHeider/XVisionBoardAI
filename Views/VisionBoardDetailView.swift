@@ -10,6 +10,7 @@ import SwiftUI
 import AVFoundation // if using AVSpeechSynthesizer
 import UserNotifications
 
+@MainActor
 struct VisionBoardDetailView: View {
     let visionBoard: VisionBoard
     @Environment(\.dismiss) private var dismiss
@@ -61,11 +62,12 @@ struct VisionBoardDetailView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .topBarLeading) {
                     Button("Close") {
                         dismiss()
                     }
                     .foregroundStyle(Color.astralText)
+                    .frame(minWidth: 44, minHeight: 44)
                 }
                 
                 ToolbarItem(placement: .principal) {
@@ -75,8 +77,8 @@ struct VisionBoardDetailView: View {
                         .lineLimit(1)
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu("Options", systemImage: "ellipsis.circle") {
                         Button(action: { showingEditView = true }) {
                             Label("Edit Vision Board", systemImage: "pencil")
                         }
@@ -97,10 +99,8 @@ struct VisionBoardDetailView: View {
                         Button("Delete", role: .destructive) {
                             showingDeleteAlert = true
                         }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .foregroundStyle(Color.astralText)
                     }
+                    .labelStyle(.iconOnly)
                 }
             }
         }
@@ -205,7 +205,7 @@ struct VisionBoardDetailView: View {
             HStack {
                 Text("Your Personalized Vision")
                     .font(.title2)
-                    .fontWeight(.bold)
+                    .bold()
                     .foregroundStyle(Color.astralText)
                 
                 if visionBoard.isPersonalized {
@@ -244,7 +244,7 @@ struct VisionBoardDetailView: View {
             HStack {
                 Text("Your Affirmations")
                     .font(.title2)
-                    .fontWeight(.bold)
+                    .bold()
                     .foregroundStyle(Color.astralText)
                 
                 Spacer()
@@ -255,6 +255,9 @@ struct VisionBoardDetailView: View {
                 }
                 .font(.caption)
                 .foregroundStyle(Color.astralViolet)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+                .accessibilityLabel("Read current affirmation aloud")
             }
             
             if !visionBoard.affirmations.isEmpty {
@@ -266,6 +269,7 @@ struct VisionBoardDetailView: View {
                             .foregroundStyle(
                                 LinearGradient(colors: [.cosmicGold, .cosmicPurple], startPoint: .leading, endPoint: .trailing)
                             )
+                            .accessibilityHidden(true)
 
                         Text(visionBoard.affirmations[currentAffirmationIndex])
                             .font(.system(.title3, design: .rounded, weight: .semibold))
@@ -288,6 +292,7 @@ struct VisionBoardDetailView: View {
                                 .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentAffirmationIndex)
                         }
                     }
+                    .accessibilityHidden(true)
 
                     // All affirmations list
                     VStack(alignment: .leading, spacing: 10) {
@@ -297,6 +302,7 @@ struct VisionBoardDetailView: View {
                                     .fill(Color.cosmicGold.opacity(0.7))
                                     .frame(width: 6, height: 6)
                                     .padding(.top, 6)
+                                    .accessibilityHidden(true)
 
                                 Text(visionBoard.affirmations[index])
                                     .font(.system(.subheadline, design: .rounded))
@@ -320,12 +326,12 @@ struct VisionBoardDetailView: View {
             HStack {
                 Text("Manifestation Goals")
                     .font(.title2)
-                    .fontWeight(.bold)
+                    .bold()
                     .foregroundStyle(Color.astralText)
 
                 Spacer()
 
-                let achieved = currentBoard.manifestationGoals.filter { $0.isAchieved }.count
+                let achieved = currentBoard.manifestationGoals.filter(\.isAchieved).count
                 let total = currentBoard.manifestationGoals.count
                 if total > 0 {
                     Text("\(achieved)/\(total)")
@@ -399,6 +405,7 @@ struct VisionBoardDetailView: View {
                     Image(systemName: icon)
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(iconColor)
+                        .accessibilityHidden(true)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -415,10 +422,13 @@ struct VisionBoardDetailView: View {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Color.astralText.opacity(0.3))
+                    .accessibilityHidden(true)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(description)")
         .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(Color.cosmicWhite.opacity(0.06))
@@ -518,11 +528,13 @@ struct InfoBadge: View {
             Image(systemName: icon)
                 .font(.caption)
                 .foregroundStyle(Color.astralGold)
+                .accessibilityHidden(true)
             
             Text(text)
                 .font(.caption)
                 .foregroundStyle(Color.astralText.opacity(0.8))
         }
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -548,6 +560,8 @@ struct StyleInfoCard: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color.cosmicGray)
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 
@@ -573,8 +587,10 @@ struct VisionBoardImageView: View {
                     .padding(4)
                 }
             }
-            .cornerRadius(8)
+            .clipShape(.rect(cornerRadius: 8))
         }
+        .accessibilityLabel(image.isPersonalized ? "Personalized vision board image" : "Vision board image")
+        .accessibilityHint("Double tap to view full screen")
     }
 
     @ViewBuilder
@@ -613,6 +629,7 @@ struct GoalCard: View {
             HStack {
                 Image(systemName: isAchieved ? "checkmark.circle.fill" : "target")
                     .foregroundStyle(isAchieved ? Color.astralSuccess : Color.astralGold)
+                    .accessibilityHidden(true)
                 Spacer()
                 if isAchieved {
                     Text("Done")
@@ -621,6 +638,7 @@ struct GoalCard: View {
                         .padding(.horizontal, 7)
                         .padding(.vertical, 3)
                         .background(Capsule().fill(Color.astralSuccess))
+                        .accessibilityHidden(true)
                 }
             }
 
@@ -645,6 +663,10 @@ struct GoalCard: View {
                 }
         }
         .animation(AstralTheme.Motion.quick, value: isAchieved)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(goal), \(isAchieved ? "Achieved" : "Not achieved")")
+        .accessibilityValue(isAchieved ? "Completed" : "Incomplete")
+        .accessibilityHint("Double tap to toggle completion status")
     }
 }
 
@@ -671,6 +693,7 @@ struct FullScreenImageView: View {
                     }
                 }
             }
+            .accessibilityLabel("Full screen vision board image")
             .pinchToZoom()
             
             VStack {
@@ -681,6 +704,7 @@ struct FullScreenImageView: View {
                         onDismiss()
                     }
                     .foregroundStyle(.white)
+                    .frame(minWidth: 44, minHeight: 44)
                     .padding()
                 }
                 

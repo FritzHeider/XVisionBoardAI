@@ -25,7 +25,7 @@ struct ManifestationGoal: Codable, Identifiable, Hashable, Equatable {
 
     mutating func markAchieved() {
         isAchieved = true
-        achievedAt = Date()
+        achievedAt = .now
     }
 
     mutating func unmarkAchieved() {
@@ -70,8 +70,8 @@ struct VisionBoard: Codable, Identifiable {
         self.style = style
         self.images = []
         self.affirmations = []
-        self.createdAt = Date()
-        self.updatedAt = Date()
+        self.createdAt = .now
+        self.updatedAt = .now
         self.isPersonalized = true
         self.manifestationGoals = []
         self.viewCount = 0
@@ -128,12 +128,12 @@ struct VisionBoard: Codable, Identifiable {
 
     mutating func incrementViewCount() {
         viewCount += 1
-        updatedAt = Date()
+        updatedAt = .now
     }
 
     mutating func toggleFavorite() {
         isFavorite.toggle()
-        updatedAt = Date()
+        updatedAt = .now
     }
 }
 

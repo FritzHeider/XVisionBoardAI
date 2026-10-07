@@ -1,7 +1,8 @@
 import SwiftUI
 
 // MARK: - SignUpView
-
+ 
+@MainActor
 struct SignUpView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(UserManager.self) var userManager
@@ -34,6 +35,7 @@ struct SignUpView: View {
                     .frame(width: 300, height: 300)
                     .blur(radius: 80)
                     .offset(x: 60, y: -200)
+                    .accessibilityHidden(true)
                     .ignoresSafeArea()
 
                 ScrollView {
@@ -56,6 +58,7 @@ struct SignUpView: View {
                                     .foregroundStyle(Color.auroraGradient)
                             }
                             .astralPulsing()
+                            .accessibilityHidden(true)
 
                             VStack(spacing: AstralTheme.Spacing.xs) {
                                 Text("Join ManifestMe")
@@ -88,6 +91,7 @@ struct SignUpView: View {
                                     Image(systemName: agreeToTerms ? "checkmark.square.fill" : "square")
                                         .foregroundStyle(agreeToTerms ? Color.astralViolet : Color.astralTextDim)
                                         .font(.system(size: 18))
+                                        .accessibilityHidden(true)
 
                                     Text("I agree to the Terms of Service and Privacy Policy")
                                         .font(.system(.caption, design: .rounded))
@@ -96,7 +100,13 @@ struct SignUpView: View {
 
                                     Spacer()
                                 }
+                                .frame(minHeight: 44)
+                                .contentShape(Rectangle())
                             }
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel("I agree to the Terms of Service and Privacy Policy")
+                            .accessibilityValue(agreeToTerms ? "Checked" : "Unchecked")
+                            .accessibilityHint("Double tap to toggle agreement")
                         }
                         .padding(.horizontal, AstralTheme.Spacing.lg)
                         .opacity(appeared ? 1 : 0)
@@ -137,6 +147,8 @@ struct SignUpView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                         .foregroundStyle(Color.astralTextMuted)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                 }
             }
         }
@@ -151,6 +163,7 @@ struct SignUpView: View {
 
 // MARK: - SignInView
 
+@MainActor
 struct SignInView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(UserManager.self) var userManager
@@ -173,6 +186,7 @@ struct SignInView: View {
                     .frame(width: 280, height: 280)
                     .blur(radius: 80)
                     .offset(x: -60, y: -160)
+                    .accessibilityHidden(true)
                     .ignoresSafeArea()
 
                 VStack(spacing: AstralTheme.Spacing.xl) {
@@ -196,6 +210,7 @@ struct SignInView: View {
                                 .foregroundStyle(Color.auroraGradient)
                         }
                         .astralPulsing()
+                        .accessibilityHidden(true)
 
                         VStack(spacing: AstralTheme.Spacing.xs) {
                             Text("Welcome Back")
@@ -241,6 +256,8 @@ struct SignInView: View {
                         Button("Forgot Password?") { }
                             .font(.system(.subheadline, design: .rounded))
                             .foregroundStyle(Color.astralViolet)
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
                     }
                     .opacity(appeared ? 1 : 0)
                     .animation(reduceMotion ? .none : AstralTheme.Motion.smooth.delay(0.3), value: appeared)
@@ -253,6 +270,8 @@ struct SignInView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                         .foregroundStyle(Color.astralTextMuted)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                 }
             }
         }
@@ -283,14 +302,15 @@ struct AstralTextField: View {
 
             Group {
                 if isSecure {
-                    SecureField("", text: $text)
+                    SecureField(title, text: $text)
                 } else {
-                    TextField("", text: $text)
+                    TextField(title, text: $text)
                 }
             }
+            .accessibilityLabel(title)
             .keyboardType(keyboardType)
-            .autocapitalization(.none)
-            .disableAutocorrection(true)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled(true)
             .padding(AstralTheme.Spacing.md)
             .background {
                 RoundedRectangle(cornerRadius: AstralTheme.Radius.md)

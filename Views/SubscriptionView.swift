@@ -14,6 +14,7 @@ import RevenueCatUI
 // Presents the RevenueCat Paywall configured in the RC dashboard.
 // Falls back to a hand-crafted paywall if no RC template is configured.
 
+@MainActor
 struct SubscriptionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(StoreManager.self) var storeManager
@@ -43,6 +44,7 @@ struct SubscriptionView: View {
 // Shown only when the RC offering hasn't loaded. Provides basic upgrade UI
 // and retries loading the offering on appear.
 
+@MainActor
 private struct FallbackPaywallView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(StoreManager.self) var storeManager
@@ -57,6 +59,7 @@ private struct FallbackPaywallView: View {
                     .frame(width: 340, height: 340)
                     .blur(radius: 90)
                     .offset(x: 60, y: -200)
+                    .accessibilityHidden(true)
                     .ignoresSafeArea()
 
                 ScrollView {
@@ -81,6 +84,7 @@ private struct FallbackPaywallView: View {
                                     )
                             }
                             .astralPulsing()
+                            .accessibilityHidden(true)
 
                             Text("Unlock ManifestMe Pro")
                                 .font(.system(.title, design: .rounded, weight: .bold))
@@ -100,10 +104,13 @@ private struct FallbackPaywallView: View {
                             Image(systemName: "gift.fill")
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(Color.astralGold)
+                                .accessibilityHidden(true)
                             Text("3-Day Free Trial — then $49.99/year")
                                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                                 .foregroundStyle(Color.astralGold)
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("3-Day Free Trial, then 49 dollars and 99 cents per year")
                         .padding(.horizontal, 18)
                         .padding(.vertical, 10)
                         .background {
@@ -140,6 +147,8 @@ private struct FallbackPaywallView: View {
                                 }
                                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                 .foregroundStyle(Color.astralViolet)
+                                .frame(minHeight: 44)
+                                .contentShape(Rectangle())
                             }
                         }
 
@@ -148,6 +157,8 @@ private struct FallbackPaywallView: View {
                         }
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(Color.astralTextMuted)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
 
                         Spacer(minLength: 60)
                     }
@@ -159,6 +170,8 @@ private struct FallbackPaywallView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
                         .foregroundStyle(Color.astralTextMuted)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                 }
             }
         }
@@ -175,14 +188,21 @@ private struct FallbackPaywallView: View {
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(color)
             }
+            .accessibilityHidden(true)
+
             Text(title)
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                 .foregroundStyle(Color.astralText)
+
             Spacer()
+
             Image(systemName: "checkmark")
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(Color.astralSuccess)
+                .accessibilityHidden(true)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Included: \(title)")
     }
 }
 
@@ -190,6 +210,7 @@ private struct FallbackPaywallView: View {
 
 extension View {
     /// Presents a RevenueCat Paywall if the user doesn't have the Pro entitlement.
+    @MainActor
     func requiresProEntitlement(isPresented: Binding<Bool>) -> some View {
         self.sheet(isPresented: isPresented) {
             SubscriptionView()
