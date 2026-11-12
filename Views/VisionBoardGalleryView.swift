@@ -214,7 +214,7 @@ struct VisionBoardGridItem: View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: AstralTheme.Spacing.sm) {
                 ZStack {
-                    if let firstImage = visionBoard.images.first?.image {
+                    if let firstImage = visionBoard.visibleImages.first?.image {
                         Image(uiImage: firstImage)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
@@ -290,7 +290,7 @@ struct VisionBoardGridItem: View {
             [
                 visionBoard.title,
                 "created \(visionBoard.formattedCreatedDate)",
-                visionBoard.images.first?.prompt
+                visionBoard.visibleImages.first?.prompt
             ]
             .compactMap { $0 }
             .joined(separator: ", ")

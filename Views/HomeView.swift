@@ -13,6 +13,7 @@ struct HomeView: View {
 
     @State private var showingCreateView = false
     @State private var showingUpgradeView = false
+    @State private var upgradeTrigger: PaywallTrigger = .general
     @State private var showingInsightSheet = false
 
     var body: some View {
@@ -52,7 +53,14 @@ struct HomeView: View {
             .onAppear { userManager.recordDailyVisit() }
         }
         .sheet(isPresented: $showingCreateView) { CreateVisionBoardView() }
-        .sheet(isPresented: $showingUpgradeView) { SubscriptionView() }
+        .sheet(isPresented: $showingUpgradeView, onDismiss: {
+            // Someone who upgraded because they hit the board limit came here
+            // to make a board: take them straight into it.
+            if upgradeTrigger == .boardLimit,
+               storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards) {
+                showingCreateView = true
+            }
+        }) { SubscriptionView(trigger: upgradeTrigger) }
         .sheet(isPresented: $showingInsightSheet) {
             InsightAnswerSheet(
                 question: userManager.nextInsightQuestion,
@@ -140,7 +148,10 @@ struct HomeView: View {
             }
 
             if !storeManager.hasActiveSubscription {
-                Button("Upgrade") { showingUpgradeView = true }
+                Button("Upgrade") {
+                    upgradeTrigger = .general
+                    showingUpgradeView = true
+                }
                     .scaledFont(size: 11, relativeTo: .caption2, weight: .bold, design: .rounded)
                     // Keep the label on one line so the capsule grows around it
                     // instead of the text wrapping inside a fixed pill.
@@ -370,6 +381,7 @@ struct HomeView: View {
                 if storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards) {
                     showingCreateView = true
                 } else {
+                    upgradeTrigger = .boardLimit
                     showingUpgradeView = true
                 }
             } label: {
@@ -431,6 +443,7 @@ struct HomeView: View {
                         if storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards) {
                             showingCreateView = true
                         } else {
+                            upgradeTrigger = .boardLimit
                             showingUpgradeView = true
                         }
                     } label: {
@@ -477,7 +490,7 @@ struct VisionBoardCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .bottomLeading) {
-                if let firstImage = visionBoard.images.first?.image {
+                if let firstImage = visionBoard.visibleImages.first?.image {
                     Image(uiImage: firstImage)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -557,7 +570,7 @@ struct VisionBoardCard: View {
             [
                 visionBoard.title,
                 "created \(visionBoard.formattedCreatedDate)",
-                visionBoard.images.first?.prompt
+                visionBoard.visibleImages.first?.prompt
             ]
             .compactMap { $0 }
             .joined(separator: ", ")

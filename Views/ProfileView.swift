@@ -77,11 +77,12 @@ struct ProfileView: View {
             Button("Delete", role: .destructive) {
                 Task { await userManager.deleteAccount(boardManager: visionBoardManager) }
             }
+            if storeManager.hasActiveSubscription {
+                Button("Manage Subscription") { showingCustomerCenter = true }
+            }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text(userManager.isGuest
-                 ? "This will permanently delete all your vision boards and reset the app. This action cannot be undone."
-                 : "This will permanently delete your account and all vision boards. This action cannot be undone.")
+            Text(deleteAlertMessage)
         }
     }
 
@@ -355,6 +356,15 @@ struct ProfileView: View {
     }
 
     // MARK: - Helpers
+
+    /// Apple asks apps to say that deleting an account does not cancel an App
+    /// Store subscription, which is billed and managed by Apple, not by us.
+    private var deleteAlertMessage: String {
+        let base = userManager.isGuest
+            ? "This will permanently delete all your vision boards and reset the app. This action cannot be undone."
+            : "This will permanently delete your account and all vision boards. This action cannot be undone."
+        return base + "\n\nIf you subscribe to ManifestMe Pro, deleting doesn't cancel it. Subscriptions are billed by Apple. Cancel in Settings > your name > Subscriptions."
+    }
 
     /// A guest has no account to delete, but the data wipe is still offered.
     private var destructiveActionTitle: String {

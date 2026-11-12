@@ -116,8 +116,15 @@ struct CreateVisionBoardView: View {
         .sheet(isPresented: $showingCamera) {
             CameraView(capturedImage: $capturedSelfie, isPresented: $showingCamera)
         }
-        .sheet(isPresented: $showingUpgrade) {
-            SubscriptionView()
+        .sheet(isPresented: $showingUpgrade, onDismiss: {
+            // After upgrading from the selfie step, carry on where they left off.
+            // (The limit card on its own swaps to the normal flow once Pro is active.)
+            if currentStep == .selfie,
+               storeManager.canCreateVisionBoard(currentCount: visionBoardManager.totalVisionBoards) {
+                currentStep = .details
+            }
+        }) {
+            SubscriptionView(trigger: .boardLimit)
         }
         // Resume generation only if consent was actually granted; dismissing
         // without agreeing leaves the user on the goals step with nothing sent.

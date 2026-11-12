@@ -16,13 +16,19 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            if showOnboarding && !userManager.hasCompletedOnboarding {
-                OnboardingView(showOnboarding: $showOnboarding)
-            } else if userManager.isLoggedIn {
-                MainTabView(selectedTab: $selectedTab)
+            #if targetEnvironment(simulator)
+            // Screenshot/QA hook: `-paywallPreview boardLimit|audio|general`
+            // opens straight to the paywall. Simulator only: it can never ship in a
+            // device or App Store build. (#if DEBUG isn't usable here: this target
+            // doesn't define DEBUG.)
+            if let trigger = Self.debugPaywallTrigger {
+                SubscriptionView(trigger: trigger)
             } else {
-                WelcomeView()
+                router
             }
+            #else
+            router
+            #endif
         }
         // The whole palette is hardcoded dark (astralBlack surfaces, cream text),
         // but nothing locked the color scheme. In Light Mode the status bar drew
@@ -31,6 +37,29 @@ struct ContentView: View {
         // rendered light over dark content.
         .preferredColorScheme(.dark)
     }
+
+    @ViewBuilder
+    private var router: some View {
+        if showOnboarding && !userManager.hasCompletedOnboarding {
+            OnboardingView(showOnboarding: $showOnboarding)
+        } else if userManager.isLoggedIn {
+            MainTabView(selectedTab: $selectedTab)
+        } else {
+            WelcomeView()
+        }
+    }
+
+    #if targetEnvironment(simulator)
+    private static var debugPaywallTrigger: PaywallTrigger? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-paywallPreview") else { return nil }
+        switch args.indices.contains(i + 1) ? args[i + 1] : "" {
+        case "audio":   return .audio
+        case "general": return .general
+        default:        return .boardLimit
+        }
+    }
+    #endif
 }
 
 // MARK: - Main Tab View

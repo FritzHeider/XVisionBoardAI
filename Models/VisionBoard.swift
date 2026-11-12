@@ -121,6 +121,11 @@ struct VisionBoard: Codable, Identifiable {
         }
     }
 
+    /// Images that may be shown or exported: everything except reported ones.
+    var visibleImages: [VisionBoardImage] {
+        images.filter { !$0.isReported }
+    }
+
     var userImage: UIImage? {
         ImageStore.load(userImageFilename)
     }
@@ -190,6 +195,11 @@ struct VisionBoardImage: Codable, Identifiable {
     var isPersonalized: Bool
     var position: Int
     var aspectRatio: Double
+    /// Set when the person reports this image. A reported image is hidden
+    /// everywhere it would be shown or exported until it is regenerated.
+    var reportedAt: Date?
+
+    var isReported: Bool { reportedAt != nil }
 
     init(prompt: String, position: Int, isPersonalized: Bool = true) {
         self.id = UUID()
@@ -200,7 +210,7 @@ struct VisionBoardImage: Codable, Identifiable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, imageData, imageFilename, imageURL, prompt, isPersonalized, position, aspectRatio
+        case id, imageData, imageFilename, imageURL, prompt, isPersonalized, position, aspectRatio, reportedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -213,6 +223,7 @@ struct VisionBoardImage: Codable, Identifiable {
         isPersonalized = try container.decodeIfPresent(Bool.self, forKey: .isPersonalized) ?? true
         position = try container.decodeIfPresent(Int.self, forKey: .position) ?? 0
         aspectRatio = try container.decodeIfPresent(Double.self, forKey: .aspectRatio) ?? 1.0
+        reportedAt = try container.decodeIfPresent(Date.self, forKey: .reportedAt)
     }
 
     /// Decoded once, then served from BoardImageCache — never re-decoded per body evaluation.

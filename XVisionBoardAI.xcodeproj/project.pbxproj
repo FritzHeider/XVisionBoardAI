@@ -39,6 +39,8 @@
 		341 /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340 /* APIConfig.swift */; };
 		343 /* AppAttestManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342 /* AppAttestManager.swift */; };
 		351 /* GeminiTextService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350 /* GeminiTextService.swift */; };
+		361 /* Services/ContentReportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 360 /* Services/ContentReportService.swift */; };
+		363 /* Views/ReportImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 362 /* Views/ReportImageView.swift */; };
 		9E86F9132FC97C5600510CC9 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 9E86F9112FC97C5600510CC9 /* RevenueCat */; };
 		9E86F9142FC97C5600510CC9 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 9E86F9122FC97C5600510CC9 /* RevenueCatUI */; };
 		B21BEFA02E43409E00EDBF92 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21BEF9F2E43409E00EDBF92 /* SpeechManager.swift */; };
@@ -48,6 +50,7 @@
 		913 /* AccountDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904 /* Tests/AccountDeletionTests.swift */; };
 		914 /* AIConsentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 905 /* Tests/AIConsentTests.swift */; };
 		915 /* GuestModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 906 /* Tests/GuestModeTests.swift */; };
+		916 /* ContentReportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907 /* Tests/ContentReportTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -94,6 +97,9 @@
 		904 /* Tests/AccountDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/AccountDeletionTests.swift; sourceTree = "<group>"; };
 		905 /* Tests/AIConsentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/AIConsentTests.swift; sourceTree = "<group>"; };
 		906 /* Tests/GuestModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/GuestModeTests.swift; sourceTree = "<group>"; };
+		907 /* Tests/ContentReportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/ContentReportTests.swift; sourceTree = "<group>"; };
+		360 /* Services/ContentReportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ContentReportService.swift; sourceTree = "<group>"; };
+		362 /* Views/ReportImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ReportImageView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -149,6 +155,8 @@
 				342 /* AppAttestManager.swift */,
 				340 /* APIConfig.swift */,
 				350 /* GeminiTextService.swift */,
+				360 /* Services/ContentReportService.swift */,
+				362 /* Views/ReportImageView.swift */,
 				148 /* Views/EditVisionBoardView.swift */,
 				150 /* Views/OnboardingView.swift */,
 				200 /* Secrets.xcconfig */,
@@ -176,6 +184,7 @@
 				904 /* Tests/AccountDeletionTests.swift */,
 				905 /* Tests/AIConsentTests.swift */,
 				906 /* Tests/GuestModeTests.swift */,
+				907 /* Tests/ContentReportTests.swift */,
 			);
 			name = Tests;
 			sourceTree = "<group>";
@@ -326,6 +335,8 @@
 				351 /* GeminiTextService.swift in Sources */,
 				149 /* Views/EditVisionBoardView.swift in Sources */,
 				151 /* Views/OnboardingView.swift in Sources */,
+				361 /* Services/ContentReportService.swift in Sources */,
+				363 /* Views/ReportImageView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -339,6 +350,7 @@
 				913 /* AccountDeletionTests.swift in Sources */,
 				914 /* AIConsentTests.swift in Sources */,
 				915 /* GuestModeTests.swift in Sources */,
+				916 /* ContentReportTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

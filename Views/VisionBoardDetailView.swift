@@ -32,6 +32,7 @@ struct VisionBoardDetailView: View {
     @State private var shareImage: UIImage?
     @State private var showingImageShare = false
     @State private var showingFullScreenImage: VisionBoardImage?
+    @State private var reportingImage: VisionBoardImage?
     @State private var currentAffirmationIndex = 0
     @State private var affirmationTask: Task<Void, Never>?
     @State private var actionFeedback: String?
@@ -122,9 +123,12 @@ struct VisionBoardDetailView: View {
             Text("Are you sure you want to delete this vision board? This action cannot be undone.")
         }
         .fullScreenCover(item: $showingFullScreenImage) { image in
-            FullScreenImageView(image: image) {
+            FullScreenImageView(image: image, boardID: currentBoard.id) {
                 showingFullScreenImage = nil
             }
+        }
+        .sheet(item: $reportingImage) { image in
+            ReportImageView(boardID: currentBoard.id, image: image)
         }
         .alert("Manifestation Actions", isPresented: $showingActionFeedbackAlert, presenting: actionFeedback) { _ in
             Button("OK", role: .cancel) {}
@@ -134,7 +138,7 @@ struct VisionBoardDetailView: View {
         .onChange(of: actionFeedback) { _, fb in
             showingActionFeedbackAlert = (fb != nil)
         }
-        .sheet(isPresented: $showingUpgrade) { SubscriptionView() }
+        .sheet(isPresented: $showingUpgrade) { SubscriptionView(trigger: .audio) }
         .onAppear {
             startAffirmationCycle()
         }
@@ -238,7 +242,8 @@ struct VisionBoardDetailView: View {
                                     imageID: image.id
                                 )
                             }
-                        }
+                        },
+                        onReport: { reportingImage = image }
                     )
                 }
             }
@@ -521,7 +526,8 @@ struct VisionBoardDetailView: View {
         let width: Double = isHD ? 1200 : 400
         let spacing: Double = isHD ? 12 : 4
         let tileHeight: Double = isHD ? 360 : 120
-        let tiles = Array(visionBoard.images.prefix(9))
+        // Reported images never leave the app in an export or wallpaper.
+        let tiles = Array(currentBoard.visibleImages.prefix(9))
         let rows = stride(from: 0, to: tiles.count, by: 3).map { start in
             Array(tiles[start..<min(start + 3, tiles.count)])
         }
@@ -577,6 +583,14 @@ struct VisionBoardDetailView: View {
             return
         }
         Task {
+            // Ask for add-only access explicitly. Without this, performChanges
+            // requests full library access, which needs
+            // NSPhotoLibraryUsageDescription, a key the app no longer declares.
+            let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+            guard status == .authorized || status == .limited else {
+                actionFeedback = "ManifestMe can't save to Photos. Turn on Photos access for ManifestMe in Settings, then try again."
+                return
+            }
             do {
                 try await PHPhotoLibrary.shared().performChanges {
                     PHAssetChangeRequest.creationRequestForAsset(from: img)
@@ -707,6 +721,7 @@ struct VisionBoardImageView: View {
     let image: VisionBoardImage
     let action: () -> Void
     var onRetry: (() -> Void)? = nil
+    var onReport: (() -> Void)? = nil
 
     @State private var isRetrying = false
 
@@ -718,7 +733,9 @@ struct VisionBoardImageView: View {
 
     var body: some View {
         Group {
-            if generationFailed, let onRetry {
+            if image.isReported {
+                reportedPlaceholder
+            } else if generationFailed, let onRetry {
                 Button {
                     isRetrying = true
                     onRetry()
@@ -748,6 +765,12 @@ struct VisionBoardImageView: View {
                     .clipShape(.rect(cornerRadius: 8))
                 }
                 .accessibilityLabel("Vision board image: \(image.prompt)")
+                .contextMenu {
+                    if let onReport {
+                        Button("Report Image", systemImage: "flag", role: .destructive, action: onReport)
+                    }
+                }
+                .accessibilityAction(named: "Report image") { onReport?() }
             }
         }
         .onChange(of: image.imageFilename) { _, _ in isRetrying = false }
@@ -777,6 +800,39 @@ struct VisionBoardImageView: View {
         RoundedRectangle(cornerRadius: 8)
             .fill(Color.cosmicGray)
             .overlay(ProgressView().progressViewStyle(.circular).tint(.astralViolet))
+    }
+
+    /// Shown in place of a reported image until it is regenerated.
+    private var reportedPlaceholder: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .fill(Color.cosmicGray)
+            .frame(minHeight: 100)
+            .overlay {
+                VStack(spacing: 6) {
+                    Image(systemName: "eye.slash")
+                        .scaledFont(size: 22, relativeTo: .title3)
+                        .foregroundStyle(Color.astralTextMuted)
+                    Text("Hidden after report")
+                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .foregroundStyle(Color.astralTextMuted)
+                        .multilineTextAlignment(.center)
+                    if let onRetry {
+                        if isRetrying {
+                            ProgressView().progressViewStyle(.circular).tint(.astralViolet)
+                        } else {
+                            Button("Regenerate") {
+                                isRetrying = true
+                                onRetry()
+                            }
+                            .font(.system(.caption, design: .rounded, weight: .bold))
+                            .foregroundStyle(Color.astralViolet)
+                            .frame(minHeight: 44)
+                        }
+                    }
+                }
+                .padding(8)
+            }
+            .accessibilityElement(children: .combine)
     }
 
     private var failedPlaceholder: some View {
@@ -846,7 +902,11 @@ struct GoalCard: View {
 
 struct FullScreenImageView: View {
     let image: VisionBoardImage
+    /// When set, the viewer offers Report. Nil hides it (e.g. previews).
+    var boardID: UUID? = nil
     let onDismiss: () -> Void
+
+    @State private var showingReport = false
 
     var body: some View {
         ZStack {
@@ -871,12 +931,25 @@ struct FullScreenImageView: View {
             
             VStack {
                 HStack {
+                    if boardID != nil {
+                        Button {
+                            showingReport = true
+                        } label: {
+                            Label("Report", systemImage: "flag")
+                        }
+                        .foregroundStyle(.white)
+                        .frame(minHeight: 44)
+                        .padding()
+                        .accessibilityLabel("Report this image")
+                    }
+
                     Spacer()
                     
                     Button("Done") {
                         onDismiss()
                     }
                     .foregroundStyle(.white)
+                    .frame(minHeight: 44)
                     .padding()
                 }
                 
@@ -897,6 +970,14 @@ struct FullScreenImageView: View {
                             )
                     }
                     .padding(.bottom, 40)
+                }
+            }
+        }
+        .sheet(isPresented: $showingReport) {
+            if let boardID {
+                ReportImageView(boardID: boardID, image: image) {
+                    // The image is hidden now; there is nothing left to view.
+                    onDismiss()
                 }
             }
         }

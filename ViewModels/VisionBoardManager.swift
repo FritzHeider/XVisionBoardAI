@@ -338,6 +338,15 @@ class VisionBoardManager {
                 imageSize: FalImageSize.forLayout(board.layout)
             )
             image.imageURL = url
+            if image.isReported {
+                // Regenerating is how a reported tile comes back. Drop the old
+                // pixels first so a failed download below can never fall back
+                // to the image the person reported.
+                image.imageFilename = nil
+                image.imageData = nil
+                BoardImageCache.shared.removeObject(forKey: image.id.uuidString as NSString)
+                image.reportedAt = nil
+            }
             if let imageURL = URL(string: url),
                let (imgData, _) = try? await URLSession.shared.data(from: imageURL),
                UIImage(data: imgData) != nil,
@@ -358,6 +367,16 @@ class VisionBoardManager {
 
     // MARK: - Vision Board Management
     
+    /// Hides a reported image on this device right away, before the report is
+    /// sent, so the person never has to look at it again.
+    func markImageReported(boardID: UUID, imageID: UUID) {
+        guard let boardIndex = visionBoards.firstIndex(where: { $0.id == boardID }),
+              let imageIndex = visionBoards[boardIndex].images.firstIndex(where: { $0.id == imageID }) else { return }
+        visionBoards[boardIndex].images[imageIndex].reportedAt = .now
+        visionBoards[boardIndex].updatedAt = .now
+        save(visionBoards[boardIndex])
+    }
+
     func toggleGoalAchieved(_ goal: ManifestationGoal, in boardID: UUID) {
         guard let boardIndex = visionBoards.firstIndex(where: { $0.id == boardID }),
               let goalIndex = visionBoards[boardIndex].manifestationGoals.firstIndex(where: { $0.id == goal.id }) else {

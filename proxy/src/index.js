@@ -68,6 +68,16 @@ const ALLOWED_PATHS = {
   ],
 };
 
+// --- Content reports ---
+// The app's Report Image sheet posts here. Reports are stored in ATTEST_KV under
+// "report:<receivedAt>:<reportId>" for 180 days. List them with:
+//   wrangler kv key list --binding ATTEST_KV --prefix report: --remote
+// Keep REPORT_REASONS in sync with ContentReportReason in the iOS app.
+const REPORT_REASONS = new Set(["sexual", "violent", "hateful", "not_me", "other"]);
+const REPORT_MAX_BYTES = 4096;
+const REPORT_TTL_SECONDS = 60 * 60 * 24 * 180;
+const UUID_RE = /^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$/;
+
 function pathAllowed(providerName, path) {
   const patterns = ALLOWED_PATHS[providerName];
   if (!patterns) return false;
@@ -112,6 +122,7 @@ export default {
     try {
       if (root === "attest" && rest[0] === "challenge") return challenge(env);
       if (root === "attest" && rest[0] === "verify") return handleAttestVerify(request, env);
+      if (root === "report" && rest.length === 0) return handleReport(request, env);
       if (PROVIDERS[root]) return forward(root, rest.join("/"), url.search, request, env);
       return json({ error: "not found" }, 404);
     } catch (err) {
@@ -136,24 +147,8 @@ async function forward(providerName, path, search, request, env) {
     : await request.arrayBuffer();
   const body = bodyBuf ? new Uint8Array(bodyBuf) : new Uint8Array(0);
 
-  const mode = env.ATTEST_MODE || "off";
-  if (mode !== "off") {
-    const keyId = request.headers.get("X-Attest-Key-Id");
-    const assertion = request.headers.get("X-Attest-Assertion");
-    let ok = false, reason = "missing attestation headers";
-    if (keyId && assertion) {
-      try {
-        await verifyAssertion({ keyIdB64: keyId, assertionB64: assertion, body, env });
-        ok = true;
-      } catch (e) { reason = e.message; }
-    }
-    if (ok) {
-      console.log(`[attest] ok key=${keyId?.slice(0, 12)}… ${providerName}/${path}`);
-    } else {
-      console.warn(`[attest] FAIL (${reason}) key=${keyId?.slice(0, 12)}… ${providerName}/${path}`);
-      if (mode === "enforce") return json({ error: "attestation required" }, 401);
-    }
-  }
+  const denied = await checkAttestation(request, body, env, `${providerName}/${path}`);
+  if (denied) return denied;
 
   let target = `${provider.base}/${path}`;
   const params = new URLSearchParams(search);
@@ -183,7 +178,78 @@ async function forward(providerName, path, search, request, env) {
   });
 }
 
+// --- Content reports ---
+
+async function handleReport(request, env) {
+  if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
+
+  const buf = await request.arrayBuffer();
+  if (buf.byteLength === 0 || buf.byteLength > REPORT_MAX_BYTES) {
+    return json({ error: "invalid body size" }, 413);
+  }
+  const body = new Uint8Array(buf);
+
+  const denied = await checkAttestation(request, body, env, "report");
+  if (denied) return denied;
+
+  let r;
+  try {
+    r = JSON.parse(new TextDecoder().decode(body));
+  } catch {
+    return json({ error: "invalid json" }, 400);
+  }
+  if (!r || typeof r !== "object") return json({ error: "invalid report" }, 400);
+  if (!REPORT_REASONS.has(r.reason)) return json({ error: "invalid reason" }, 400);
+  if (!UUID_RE.test(r.reportId || "") || !UUID_RE.test(r.imageId || "")) {
+    return json({ error: "invalid id" }, 400);
+  }
+
+  const text = (v, max) => (typeof v === "string" ? v.slice(0, max) : "");
+  const receivedAt = new Date().toISOString();
+  const record = {
+    reportId: r.reportId,
+    imageId: r.imageId,
+    reason: r.reason,
+    details: text(r.details, 500),
+    prompt: text(r.prompt, 1000),
+    style: text(r.style, 64),
+    isPersonalized: r.isPersonalized === true,
+    appVersion: text(r.appVersion, 32),
+    clientCreatedAt: text(r.createdAt, 40),
+    receivedAt,
+  };
+
+  await env.ATTEST_KV.put(`report:${receivedAt}:${record.reportId}`, JSON.stringify(record), {
+    expirationTtl: REPORT_TTL_SECONDS,
+  });
+  console.log(`[report] ${record.reason} report=${record.reportId} image=${record.imageId}`);
+  return json({ ok: true });
+}
+
 // --- App Attest ---
+
+// Returns a 401 Response when the request must be rejected, otherwise null.
+// In "monitor" mode failures are logged but the request goes through.
+async function checkAttestation(request, body, env, label) {
+  const mode = env.ATTEST_MODE || "off";
+  if (mode === "off") return null;
+
+  const keyId = request.headers.get("X-Attest-Key-Id");
+  const assertion = request.headers.get("X-Attest-Assertion");
+  let ok = false, reason = "missing attestation headers";
+  if (keyId && assertion) {
+    try {
+      await verifyAssertion({ keyIdB64: keyId, assertionB64: assertion, body, env });
+      ok = true;
+    } catch (e) { reason = e.message; }
+  }
+  if (ok) {
+    console.log(`[attest] ok key=${keyId?.slice(0, 12)}… ${label}`);
+    return null;
+  }
+  console.warn(`[attest] FAIL (${reason}) key=${keyId?.slice(0, 12)}… ${label}`);
+  return mode === "enforce" ? json({ error: "attestation required" }, 401) : null;
+}
 
 async function challenge(env) {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
